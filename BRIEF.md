@@ -63,6 +63,15 @@ Video-like, auto-playing animated product simulations built in HTML/CSS/JS (no v
 - Security language describes practices (least-privilege access, human approval for sensitive actions, audit logs, business-grade AI providers whose terms exclude training on your data), not certifications or guarantees. The founder will review all claims.
 - No prices. Engagements are scoped; the free assessment is the primary call to action.
 
+## Numbers policy (founder requirement)
+
+Every number a visitor sees (dollars saved, hours returned, response times, reply rates, cost per lead, margins, productivity gains) must be **realistic and grounded in researched, real-world benchmarks**, not invented to sound impressive.
+
+- The evidence base is `content/BENCHMARKS.md`: verified figures from government statistics (e.g. BLS wages and benefit costs), peer-reviewed or working-paper studies of AI productivity, and large-sample industry benchmark reports, each with its source and URL.
+- Model inputs (loaded hourly costs, share of a task AI can take on, ad cost per lead, cold-email reply rates, industry margins, etc.) use the **conservative-to-base** values recommended there. When in doubt, pick the smaller number.
+- Savings come from specific, task-level workflows (e.g. "drafting replies to routine emails"), never from whole-job replacement or blanket "10x productivity" claims.
+- A calibration pass aligns all content numbers with `content/BENCHMARKS.md` before the site is built. The results page's methodology section lists the sources.
+
 ## Brand feel
 
 Very professional, high-level, premium and promising: a firm a business owner would trust with their operations. Modern, confident and precise; never gimmicky, never generic "AI purple hype", never cluttered. Copy is plain-spoken, specific and outcome-first, without jargon.
