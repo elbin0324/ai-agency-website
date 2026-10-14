@@ -224,6 +224,13 @@ const host = (href: string) => { try { return new URL(href).hostname.replace(/^w
   .method-source__c { overflow-wrap: anywhere; }
   .method-source__link { display: inline-flex; align-items: center; gap: 2px; color: var(--fg); font-weight: 500; text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; overflow-wrap: anywhere; }
   .method-source__link:hover { text-decoration-color: currentColor; }
+  /* Touch: wrapped rows of table source ids sit 24px apart, and padding (cancelled by the margin, so
+     the lines don't move) grows the tap targets: 28px for the ids, 25px for the source links. */
+  @media (pointer: coarse) {
+    .method-table__s { line-height: 2; }
+    .method-table__s a { display: inline-block; padding-block: 2px; margin-block: -2px; }
+    .method-source__link { padding-block: 3px; margin-block: -3px; }
+  }
 
   .method-fine { display: grid; gap: 16px; max-width: 72ch; font-size: 0.9375rem; line-height: 1.65; color: var(--fg-2); }
   .method-fine__ask { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; color: var(--fg); font-weight: 500; }

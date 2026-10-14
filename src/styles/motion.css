@@ -32,8 +32,11 @@
 @keyframes m-failsafe { to { visibility: visible; } }
 
 /* ---------- 3. split: each word rises inside its own mask. The mask is padded (and pulled back
-   with negative margins, so layout doesn't move) to leave room for italic overhang and descenders. */
-.m-word-mask { display: inline-block; padding: 0.14em 0.12em 0.24em; margin: -0.14em -0.12em -0.24em; }
+   with negative margins, so layout doesn't move) to leave room for italic overhang and descenders.
+   vertical-align: top, because SplitText clips the mask (overflow: clip) and WebKit then puts an
+   inline-block's baseline at its bottom margin edge: on the baseline, every line grew ~6px while
+   split and snapped back when the split reverted. Top-aligned, the words sit where the text does. */
+.m-word-mask { display: inline-block; vertical-align: top; padding: 0.14em 0.12em 0.24em; margin: -0.14em -0.12em -0.24em; }
 .m-word { display: inline-block; }
 
 /* ---------- 4. count: the ticking number keeps its final width and uses tabular figures (§4.4).

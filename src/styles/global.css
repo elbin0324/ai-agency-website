@@ -508,23 +508,27 @@
   .aw-player { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 10px 20px 12px; background: var(--color-navy-900); border-top: 1px solid var(--color-rule-dark); }
   .aw-ctrl { display: flex; align-items: center; gap: 8px; }
   .aw-btn { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--color-on-2); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); transition: color 0.2s, box-shadow 0.2s, background-color 0.2s; }
-  .aw-btn:hover { color: var(--color-on); box-shadow: inset 0 0 0 1px rgb(224 191 127 / 0.5); }
   .aw-btn > .icon { width: 14px; height: 14px; }
   .aw-btn--main { color: var(--color-navy-900); background: var(--color-brass-300); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4); }
-  .aw-btn--main:hover { color: var(--color-navy-900); background: var(--color-brass-200); }
   .aw-btn--main > .icon { fill: currentColor; stroke: none; }
   .aw-btn .i-pause, .is-playing .aw-btn--main .i-play { display: none; }
   .is-playing .aw-btn--main .i-pause { display: block; }
   .aw-skip { height: 32px; padding: 0 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 550; color: var(--color-on-2); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); white-space: nowrap; }
-  .aw-skip:hover { color: var(--color-on); }
   .aw-chapters { display: flex; gap: 4px; min-width: 0; }
   .aw-chapter { flex: var(--w, 1) 1 0; min-width: 0; padding: 8px 0; text-align: left; cursor: pointer; }
   .aw-chapter__bar { display: block; height: 3px; overflow: hidden; border-radius: 3px; background: rgb(255 255 255 / 0.1); transition: background-color 0.2s; }
   .aw-chapter__fill { display: block; width: var(--p, 0%); height: 100%; border-radius: 3px; background: var(--color-brass-300); }
   .aw-chapter.is-done .aw-chapter__fill { width: 100%; background: var(--color-brass-400); }
-  .aw-chapter:hover .aw-chapter__bar { background: rgb(255 255 255 / 0.2); }
   .aw-chapter__label { display: block; margin-top: 7px; overflow: hidden; font-size: 0.75rem; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
   .aw-chapter.is-current .aw-chapter__label { color: var(--color-on); }
+  /* Hover only where a pointer really hovers: iOS Safari keeps :hover after a tap, which left the
+     tapped Play button pale (brass-200) and a tapped chapter bar lit until the next tap elsewhere. */
+  @media (hover: hover) {
+    .aw-btn:hover { color: var(--color-on); box-shadow: inset 0 0 0 1px rgb(224 191 127 / 0.5); }
+    .aw-btn--main:hover { color: var(--color-navy-900); background: var(--color-brass-200); }
+    .aw-skip:hover { color: var(--color-on); }
+    .aw-chapter:hover .aw-chapter__bar { background: rgb(255 255 255 / 0.2); }
+  }
   .aw-time { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-on-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .aw-paused { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-brass-300); }
   /* Result card overlay: slides up over the lower part of the stage (>= 768px), sits under the panes on phones */
@@ -569,8 +573,10 @@
     .aw-ticker { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 12px; overflow: hidden; background: var(--color-navy-900); border-top: 1px solid var(--color-rule-dark); font-size: 0.8125rem; color: var(--color-on-2); white-space: nowrap; text-overflow: ellipsis; }
     .aw-ticker .icon { color: var(--color-sage); }
     .aw-caption { flex-direction: column; gap: 4px; padding: 10px 12px; }
+    .aw-caption > span { min-height: 2.9em; } /* two lines of 14px / 1.45, so a one-line caption doesn't shift the stage */
     .aw-player { grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 10px 12px 12px; }
     .aw-btn { width: 44px; height: 44px; }
+    .aw-chapter { padding-block: 20px 21px; } /* 44px tap area, as tall as the buttons beside it */
     .aw-time, .aw-chapter__label, .aw-skip { display: none; }
     .aw-toast { left: 12px; right: 12px; bottom: 12px; }
     .aw-result { position: static; width: auto; margin: 12px; opacity: 1; visibility: visible; transform: none; }
@@ -650,6 +656,7 @@
   .site-header.is-scrolled { border-bottom-color: var(--color-rule); background: rgb(245 240 230 / 0.94); }
   .site-header__inner { display: flex; align-items: center; gap: 16px; height: var(--header-h); padding-top: 3px; }
   .brand { display: inline-flex; align-items: center; gap: 11px; color: var(--fg); text-decoration: none; }
+  a.brand { min-height: 44px; } /* tap target; the link only: an inline mark (href={null}) keeps its size */
   .brand__mark { flex: none; width: 30px; height: 30px; }
   .brand__word { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 470; line-height: 1; letter-spacing: -0.018em; }
   .site-nav { flex: 1; min-width: 0; }
@@ -701,6 +708,10 @@
   .site-footer a:not(.btn):hover { color: var(--color-on); }
   .footer-col__title { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-on-3); }
   .footer-col ul { display: grid; gap: 10px; margin-top: 16px; font-size: 0.9375rem; }
+  @media (width < 64rem) { /* touch widths: 44px link rows instead of 19px links 10px apart */
+    .footer-col ul { gap: 0; margin-top: 8px; }
+    .footer-col li > a { display: flex; align-items: center; min-height: 44px; }
+  }
   .footer-legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--color-rule-dark); font-size: 0.8125rem; line-height: 1.55; color: var(--color-on-3); }
 
   /* Page hero (inner pages) */

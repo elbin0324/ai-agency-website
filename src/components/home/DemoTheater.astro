@@ -5,9 +5,10 @@
 //   - Only the selected demo plays. On tabs:change the old demo gets demo:pause and the new one demo:play
 //     (a paused demo resumes when its tab comes back; a finished one replays).
 //   - About 4 s after the selected demo's demo:ended, the next tab is selected, unless the visitor has
-//     interacted with the theater (click, tap, key or focus). The next tab fills in while it counts down;
-//     the countdown holds while the pointer is over the theater, the theater is out of view or the page is
-//     hidden. It stops after the last demo and never runs with reduced motion.
+//     interacted with the theater (click, tap, key or focus; a touch that only scrolls the page past it doesn't
+//     count). The next tab fills in while it counts down; the countdown holds while the pointer is over the
+//     theater, the theater is out of view or the page is hidden. It stops after the last demo and never runs
+//     with reduced motion.
 //   - Phones: the tab strip scrolls sideways, fades the edge that has more tabs and keeps the selected one in view.
 //   - Lazy demos (phone performance): only the first demo is live DOM at load. The other five wait inside a
 //     <template> (parsed, never styled or laid out) and are moved into their panel and mounted the first time
@@ -50,7 +51,7 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
     <a class="link-arrow mt-3" href={url(site.ctas.demos.href)}><span>See all six demos</span><Icon name="arrow-right" /></a>
   </SectionHeader>
 
-  <div class="theater" data-theater data-reveal>
+  <div class="theater" id="demos-player" data-theater data-reveal>
     <Tabs
       label="Demos"
       idPrefix={PREFIX}
@@ -229,8 +230,14 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
       stopCountdown();
     };
 
-    // Any click, tap, key press or focus inside the theater means the visitor is driving.
-    theater.addEventListener('pointerdown', interact);
+    // Any click, tap, key press or focus inside the theater means the visitor is driving. A mouse counts on
+    // press; a finger or pen only on a finished tap (click), because a touch that scrolls the page past the
+    // theater also fires pointerdown (then pointercancel, no click). Nothing here or in the demo engine
+    // dispatches clicks, so auto-advance never trips this.
+    theater.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse') interact();
+    });
+    theater.addEventListener('click', interact);
     theater.addEventListener('keydown', interact);
     theater.addEventListener('focusin', interact);
     theater.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && hold('hover', true));

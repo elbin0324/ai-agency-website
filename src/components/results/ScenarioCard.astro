@@ -206,6 +206,12 @@ const sourceLinks = s.sources.map((id) => ({ id, href: `#src-${id}` }));
   .sc__sources-k { margin-right: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-2); }
   .sc__sources a { white-space: nowrap; color: var(--fg-2); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
   .sc__sources a:hover { color: var(--fg); text-decoration-color: currentColor; }
+  /* Touch: wrapped rows of source ids sit 24px apart, and padding (cancelled by the margin, so the
+     lines don't move) grows each link's tap target to 28px. */
+  @media (pointer: coarse) {
+    .sc__sources { line-height: 2; }
+    .sc__sources a { display: inline-block; padding-block: 2px; margin-block: -2px; }
+  }
 
   @media (width < 40rem) {
     .sc__facts { grid-template-columns: minmax(0, 1fr); }

@@ -66,6 +66,12 @@ const tabs = items.map(({ demo }) => ({ id: demo.id, label: demo.label, icon: de
   .svc-ex__sources { margin-top: 12px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.8; color: var(--fg-3); }
   .svc-ex__sources a { white-space: nowrap; color: var(--fg-2); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
   .svc-ex__sources a:hover { color: var(--fg); text-decoration-color: currentColor; }
+  /* Touch: wrapped rows of source ids sit 24px apart, and padding (cancelled by the margin, so the
+     lines don't move) grows each link's tap target to 28px. */
+  @media (pointer: coarse) {
+    .svc-ex__sources { line-height: 2; }
+    .svc-ex__sources a { display: inline-block; padding-block: 2px; margin-block: -2px; }
+  }
   @media (width < 64rem) {
     .svc-ex__notes { grid-template-columns: minmax(0, 1fr); padding: 0; }
   }

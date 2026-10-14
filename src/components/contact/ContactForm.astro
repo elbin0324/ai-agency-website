@@ -344,6 +344,20 @@ const id = (s: string) => `cf-${s}`;
       return ok;
     }
     const focusTarget = (el: HTMLElement) => (el.tagName === 'FIELDSET' ? el.querySelector<HTMLElement>('input') : el);
+    const scrollBehavior = (): ScrollBehavior => (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+    // Focus the first problem and bring its whole field (label, control, message) into view below the
+    // sticky header. Left to focus(), engines disagree: WebKit scrolls the minimum distance and ignores
+    // scroll-padding-top, so the label lands under the header, while Chrome centres the control.
+    function reveal(el: HTMLElement) {
+      focusTarget(el)?.focus({ preventScroll: true });
+      const box = (el.closest<HTMLElement>('.field') ?? el).getBoundingClientRect();
+      const pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+      const room = window.innerHeight - pad;
+      if (box.top >= pad && box.bottom <= window.innerHeight) return;
+      // Centre the field in the space below the header; a field taller than that space starts at its top.
+      const top = window.scrollY + box.top - pad - Math.max(0, (room - box.height) / 2);
+      window.scrollTo({ top, behavior: scrollBehavior() });
+    }
 
     targets().forEach((el) => {
       const evt = el.tagName === 'FIELDSET' || el.tagName === 'SELECT' ? 'change' : 'input';
@@ -402,7 +416,7 @@ const id = (s: string) => `cf-${s}`;
       if (thanks) thanks.textContent = firstName ? `Thanks, ${firstName}. We’ve got it.` : 'Thanks. We’ve got it.';
       if (panel) panel.hidden = true;
       if (done) { done.hidden = false; done.focus({ preventScroll: true }); }
-      root?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+      root?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
     }
 
     form.addEventListener('submit', async (e) => {
@@ -412,7 +426,7 @@ const id = (s: string) => `cf-${s}`;
       if (errorNote) errorNote.hidden = true;
       const invalid = targets().filter((el) => !check(el));
       if (invalid.length) {
-        focusTarget(invalid[0])?.focus();
+        reveal(invalid[0]);
         return;
       }
       const data = collect();

@@ -46,7 +46,7 @@ const copy: Record<DemoId, Omit<DemoCopy, 'id' | 'anchor' | 'label' | 'icon'>> =
     link: { label: 'Explore the Customer Agent', href: role('customer') },
   },
   analyst: {
-    intro: 'A distributor’s messy sales export becomes clean data, a chart and a plain-English answer.',
+    intro: 'A distributor’s messy sales export becomes a chart and a plain-English answer.',
     eyebrow: 'AI Agents · Analyst Agent',
     headline: 'A messy export becomes a clear answer.',
     promise:
@@ -72,7 +72,7 @@ const copy: Record<DemoId, Omit<DemoCopy, 'id' | 'anchor' | 'label' | 'icon'>> =
     link: { label: 'Explore the Executive Assistant', href: role('assistant') },
   },
   marketing: {
-    intro: 'A dental group’s ad audit finds the waste, runs tests and moves budget within set limits.',
+    intro: 'A dental group’s ads get audited, tested and rebalanced within set limits.',
     eyebrow: 'AI Marketing Director',
     headline: 'An ad audit becomes a running test plan.',
     promise:

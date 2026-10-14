@@ -132,7 +132,7 @@ The full working example is `src/components/demo/SampleDemo.astro` + `sample-dem
 | Window | The stage is `aria-hidden` and `inert` while playing or paused. The transcript (`Read the step-by-step`) lists every caption, the `transcript` lines and the result metrics |
 | Reduced motion | Final state at once, the result card under the panes, and the caption bar replaced by the COPY.md §1.6 line plus the step list. **Play** steps through end states (Previous / Next / chapters) with no animation |
 | No JavaScript | Same final state, the "This demo needs JavaScript…" line, the step list and the result card; the player is hidden. Pure CSS, so there is no flash before JS loads |
-| Phones (< 768px) | Caption and player move above the stage, 44px buttons, pane tabs (`tabs`) follow `step.pane`. If the visitor taps another tab, it holds until the next step and a brass dot marks the pane with news. The ticker shows the latest action |
+| Phones (< 768px) | Caption and player move above the stage. The player is one 44px row: 44px buttons, chapters that are 44px tap targets (labels, timecode and skip hide), and `Paused` at the end of the chapter row, so pausing never changes the window's height. Pane tabs (`tabs`) follow `step.pane`. If the visitor taps another tab, it holds until the next step and a brass dot marks the pane with news. The ticker shows the latest action |
 | Pause | The virtual clock freezes. Every wait, tween, typing schedule, WAAPI animation and CSS keyframe inside the stage pauses with it |
 
 ## 4. Start-state attributes
