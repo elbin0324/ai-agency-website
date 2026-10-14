@@ -83,22 +83,13 @@ Internal links always go through `url()` from `@/lib/url` (`url('/services/sales
 
 The site is published from the `gh-pages` branch.
 
-1. Build and check:
+```sh
+npm run deploy
+```
 
-   ```sh
-   npm run build
-   node scripts/check-links.mjs
-   ```
+That builds the site (the internal `/dev/` test pages are removed from the output), then force-pushes `dist/` to the `gh-pages` branch with `scripts/deploy-pages.mjs`. The push includes `.nojekyll`, which stops GitHub's Jekyll step from hiding the `_astro/` asset folder. Run `npm run check:links` first if you changed links or pages.
 
-2. Publish `dist/` to the `gh-pages` branch:
-
-   ```sh
-   npx gh-pages -d dist --dotfiles
-   ```
-
-   `--dotfiles` matters: it publishes `.nojekyll`, which stops GitHub's Jekyll step from hiding the `_astro/` asset folder. (Without the `gh-pages` package: copy the contents of `dist/`, including `.nojekyll`, into a checkout of the `gh-pages` branch, then commit and push.)
-
-3. First time only: in the repository's **Settings → Pages**, set **Source** to "Deploy from a branch", branch `gh-pages`, folder `/ (root)`.
+GitHub Pages is already set to serve the `gh-pages` branch (**Settings → Pages**: "Deploy from a branch", `gh-pages`, `/ (root)`).
 
 The site appears at <https://elbin0324.github.io/ai-agency-website/> a minute or two later. `dist/404.html` is served for unknown paths.
 
