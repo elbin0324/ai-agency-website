@@ -260,7 +260,7 @@ const queuePct = `${(approval.queue.used / approval.queue.cap) * 100}%`;
 </AppWindow>
 
 <script>
-  import { mountDemos } from '@/scripts/demo-engine';
+  import { registerDemo } from '@/scripts/demo-engine';
   import demo from './sales/sales-demo';
-  mountDemos(demo);
+  registerDemo(demo);
 </script>

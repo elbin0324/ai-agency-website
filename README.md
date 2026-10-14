@@ -48,6 +48,18 @@ Everything a founder is likely to change lives in **`src/config/site.ts`**:
 
 After renaming the firm, run `node scripts/og-image.mjs` so the social share image matches.
 
+## Share card
+
+`public/og.png` (1200 × 630) is the picture shown when a link to the site is shared in iMessage, LinkedIn, Slack and similar apps. It is a screenshot of the internal page `src/pages/dev/og.astro` (preview it at <http://localhost:4321/ai-agency-website/dev/og/>), which takes the name, headline and service line from `src/config/site.ts` and draws the sample agent console beside them. After changing the brand name:
+
+```sh
+npm run dev       # leave it running
+npm run og        # in a second terminal: rewrites public/og.png with your local Chrome
+npm run deploy
+```
+
+If the page fails to render or the text no longer fits, `npm run og` stops and keeps the old card. If the dev server runs on another port, pass the page URL: `npm run og -- http://localhost:4322/ai-agency-website/dev/og/`. Use `npm run og` rather than `node scripts/og-image.mjs`, which draws the older, plain card. Apps cache share images, so links shared before a change can keep the old card for a few days; LinkedIn's Post Inspector and Facebook's Sharing Debugger refresh it on request.
+
 ## Content sources
 
 - **`content/*.md`** is the source of truth for words and numbers: `COPY.md` (every page's copy, page titles and meta descriptions), `DEMOS.md` (the six demo storyboards), `SCENARIOS.md` (illustrative scenarios, narrative only), `BENCHMARKS.md` (every cited figure, with sources), `DECISIONS.md` (founder decisions that override defaults).

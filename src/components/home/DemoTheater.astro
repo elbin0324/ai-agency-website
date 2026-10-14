@@ -9,6 +9,11 @@
 //     the countdown holds while the pointer is over the theater, the theater is out of view or the page is
 //     hidden. It stops after the last demo and never runs with reduced motion.
 //   - Phones: the tab strip scrolls sideways, fades the edge that has more tabs and keeps the selected one in view.
+//   - Lazy demos (phone performance): only the first demo is live DOM at load. The other five wait inside a
+//     <template> (parsed, never styled or laid out) and are moved into their panel and mounted the first time
+//     their tab is selected (mountDemos(panel), DEMO_ENGINE.md "Lazy mounting"). When the countdown to the
+//     next demo starts, that demo is instantiated in its hidden panel, so auto-advance switches instantly.
+//     Without JavaScript the first demo shows its final state, and "See all six demos" leads to /demos/.
 import Section from '@/components/ui/Section.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import Icon from '@/components/ui/Icon.astro';
@@ -67,7 +72,7 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
             <p class="theater__line"><b>{d.label}.</b> {d.intro}</p>
             <a class="link-arrow theater__link" href={url(d.link.href)}><span>{d.link.label}</span><Icon name="arrow-right" /></a>
           </div>
-          <Demo />
+          {i === 0 ? <Demo /> : <template data-theater-demo><Demo /></template>}
         </div>
       );
     })}
@@ -117,8 +122,10 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
 
 <script>
   import { selectTab, type TabsChangeDetail } from '@/components/blocks/tabs';
+  import { getDemo, mountDemos } from '@/scripts/demo-engine';
 
   const ADVANCE_MS = 4000;
+  const idle = (fn: () => void) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 200));
 
   function initTheater(theater: HTMLElement) {
     if (theater.hasAttribute('data-theater-ready')) return;
@@ -133,6 +140,30 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
     const panelOf = (id: string | null) => (id ? theater.querySelector<HTMLElement>(`[data-theater-panel="${id}"]`) : null);
     const demoOf = (id: string | null) => panelOf(id)?.querySelector<HTMLElement>('[data-demo]') ?? null;
     const send = (el: HTMLElement | null, type: 'demo:play' | 'demo:pause') => el?.dispatchEvent(new CustomEvent(type));
+
+    // ---- Lazy demos: only the first panel's demo is live at load. Each other one waits in a <template> until its
+    // tab is first selected (or the countdown to it starts), then moves into its panel and mounts.
+    let waiting: HTMLElement | null = null; // selected, but its definition has not registered yet
+    const instantiate = (panel: HTMLElement | null) => {
+      const tpl = panel?.querySelector<HTMLTemplateElement>(':scope > template[data-theater-demo]');
+      if (!panel || !tpl) return;
+      tpl.replaceWith(tpl.content); // used once, so move the nodes instead of cloning them
+      mountDemos(panel);
+    };
+    const play = (id: string) => {
+      instantiate(panelOf(id));
+      const root = demoOf(id);
+      waiting = root && !getDemo(root) ? root : null;
+      if (!waiting) send(root, 'demo:play');
+    };
+    // A demo whose definition registers after its markup went in mounts then (DEMO_ENGINE.md "Lazy mounting").
+    theater.addEventListener('demo:ready', (e) => {
+      if (!waiting || e.target !== waiting) return;
+      waiting = null;
+      send(e.target as HTMLElement, 'demo:play');
+    });
+    // A tab picked before this script ran (tabs.ts can load first) still gets its demo; it autoplays in view.
+    instantiate(panelOf(tabs.find((t) => t.getAttribute('aria-selected') === 'true')?.dataset.tab ?? null));
 
     // ---- Tab strip on phones: edge fades and keep the selected tab in view
     const edges = () => {
@@ -222,7 +253,10 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
       if (!panel || panel.hidden) return;
       const i = tabs.findIndex((t) => t.dataset.tab === panel.dataset.theaterPanel);
       const tab = tabs[i + 1];
-      if (tab) startCountdown(tab);
+      if (!tab) return;
+      startCountdown(tab);
+      // Instantiate the next demo in its hidden panel now, so the switch is instant.
+      idle(() => instantiate(panelOf(tab.dataset.tab ?? null)));
     });
 
     // Only the selected demo plays.
@@ -230,7 +264,7 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
       const d = (e as CustomEvent<TabsChangeDetail>).detail;
       stopCountdown();
       send(demoOf(d.previousId), 'demo:pause');
-      send(demoOf(d.id), 'demo:play');
+      play(d.id);
       keepInView(d.tab);
     });
   }

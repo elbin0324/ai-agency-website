@@ -135,9 +135,9 @@ const spark = linePath(minutes.map((m, i) => [4 + i * (112 / 7), 4 + (1 - m / 44
 </AppWindow>
 
 <script>
-  import { mountDemos } from '@/scripts/demo-engine';
+  import { registerDemo } from '@/scripts/demo-engine';
   import demo from './sample-demo';
-  mountDemos(demo);
+  registerDemo(demo);
 </script>
 
 <style>

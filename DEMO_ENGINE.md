@@ -13,10 +13,10 @@ Each demo is two files in `src/components/demos/`:
 
 | File | Holds |
 |---|---|
-| `SalesDemo.astro` | The **final-state** markup inside `<AppWindow>`, plus a 3-line `<script>` that mounts it |
+| `SalesDemo.astro` | The **final-state** markup inside `<AppWindow>`, plus a 3-line `<script>` that registers it |
 | `sales-demo.ts` | `defineDemo({ id, steps })`: captions, durations and the `run(ctx)` choreography |
 
-The component imports the `.ts` file twice: in the frontmatter, so AppWindow can render the chapters, captions, step list and transcript on the server, and in the `<script>`, to mount the behavior. Captions live in one place only.
+The component imports the `.ts` file twice: in the frontmatter, so AppWindow can render the chapters, captions, step list and transcript on the server, and in the `<script>`, to register the behavior (`registerDemo` mounts every instance on the page, and any added later, §6). Captions live in one place only.
 
 **The three rules that make it work:**
 
@@ -106,9 +106,9 @@ import demo from './sales-demo';
 </AppWindow>
 
 <script>
-  import { mountDemos } from '@/scripts/demo-engine';
+  import { registerDemo } from '@/scripts/demo-engine';
   import demo from './sales-demo';
-  mountDemos(demo); // mounts every instance on the page
+  registerDemo(demo); // mounts every instance on the page; instances added later mount with mountDemos(container)
 </script>
 
 <style>
@@ -231,11 +231,14 @@ Also on `ctx`: `instant` (true while fast-forwarding; skip purely decorative wor
 ## 6. API
 
 ```ts
-import { defineDemo, mountDemos, getDemo } from '@/scripts/demo-engine';
+import { defineDemo, registerDemo, mountDemos, getDemo } from '@/scripts/demo-engine';
 
 defineDemo({ id, steps, reset?(ctx), final?(ctx) })  // types the definition
-mountDemos(def, scope = document)                     // → DemoController[] for every [data-demo="id"]; idempotent
+registerDemo(def)                                     // in the demo's <script>: remembers def, mounts every [data-demo="id"] on the page → DemoController[]
+mountDemos(container)                                 // mounts every registered [data-demo] inside container (markup added later) → DemoController[]
+mountDemos(def, scope = document)                     // registers def and mounts its roots inside scope (the older form; same as registerDemo for the page)
 getDemo(rootEl)                                       // → DemoController | undefined
+// All of them are idempotent: a root mounts once.
 
 interface DemoStep { label?; caption; duration; pane?; transcript?: string | string[]; run(ctx) }
 interface DemoController { root; state; step; play(); pause(); toggle(); replay(); jump(i); skip(); reset(); destroy() }
@@ -253,10 +256,40 @@ Dispatch on the `[data-demo]` root; the engine answers with bubbling events.
 | in | `demo:play` | play, resume, or replay from the end. Ignored under reduced motion (the static view stays) |
 | in | `demo:pause` | pause (never auto-resumed) |
 | in | `demo:reset` | back to the idle final-state poster (or the static view) |
+| out | `demo:ready` | `{ id }` when the root mounts (lazily added demos: once their markup is in and their definition registered) |
 | out | `demo:step` | `{ id, index, total, label, caption }` when a step starts |
 | out | `demo:ended` | `{ id }` when the result card holds |
 
-Tab switch recipe (see the `<script>` in `src/pages/dev/demo-engine.astro`): hide the old panel and send it `demo:reset`, unhide the new panel, send it `demo:play`. Hidden panels never autoplay. A panel that becomes visible autoplays once at 50% unless its AppWindow has `autoplay={false}`.
+Commands sent to a root that has not mounted yet go nowhere: check `getDemo(root)` first, or wait for its `demo:ready`.
+
+Tab switch recipe (see the `<script>` in `src/pages/dev/demo-engine.astro`): hide the old panel and send it `demo:reset`, unhide the new panel, send it `demo:play`. Hidden panels never autoplay. A panel that becomes visible autoplays once at 50% unless its AppWindow has `autoplay={false}`. With several demos on one switcher, mount them lazily (next section).
+
+### Lazy mounting (one demo at a time)
+
+Each demo is roughly 700 to 1,300 elements. A switcher that shows one at a time keeps the others out of the live DOM until they are needed. The home DemoTheater does this: at load only its first demo is live (the home page went from about 8,600 elements to about 3,400), and the other five wait in a `<template>`, which the browser parses but never styles or lays out. Hidden panels were already skipped by style and layout, so the saving at load is mostly the five players that no longer mount (about 8% less main-thread work on a 4x-throttled phone), and document-wide queries walk well under half the elements.
+
+```astro
+<div role="tabpanel" id="theater-panel-sales" hidden>
+  <template data-theater-demo><SalesDemo /></template>   <!-- the first panel renders <CustomerAgentDemo /> directly -->
+</div>
+```
+
+```ts
+import { getDemo, mountDemos } from '@/scripts/demo-engine';
+
+function instantiate(panel: HTMLElement) {
+  const tpl = panel.querySelector<HTMLTemplateElement>(':scope > template[data-theater-demo]');
+  if (!tpl) return;                 // already live
+  tpl.replaceWith(tpl.content);     // used once, so move the nodes instead of cloning them
+  mountDemos(panel);                // synchronous when the definition is registered
+}
+// On tab change: instantiate(panel), then demo:play if getDemo(root), otherwise play it on its demo:ready.
+```
+
+- **Definitions still register at load.** Astro emits each demo's `<script>` ahead of the section's markup, outside the template, so `registerDemo` runs at load and finds no root yet; `mountDemos(panel)` then mounts at once. If a script ever ends up inside a template, it runs when the template content is inserted, `registerDemo` mounts the waiting root, and `demo:ready` says when.
+- **Prepare before an automatic switch.** DemoTheater instantiates the next demo in its hidden panel when the countdown to it starts (4 s ahead, in an idle callback), so auto-advance plays at once. A tab the visitor picks is instantiated on the click, which costs about what unhiding it did before.
+- **Behavior is unchanged.** A lazily mounted demo starts idle on its final-state poster (static under reduced motion), and the switcher's `demo:play` / `demo:pause` work as before. Without JavaScript the first demo shows its final state, and the page links to `/demos/`, where every demo is live.
+- `/demos/` and the service pages render their demos directly and mount them all at load.
 
 ### AppWindow props
 
@@ -288,6 +321,7 @@ Keep the scene inside the design canvas: the window is 1120 × 700, so a scene o
 - Only playing demos run a frame loop (one `requestAnimationFrame` per playing instance). Idle, paused and ended demos cost nothing. No timers exist outside the engine's virtual clock.
 - Reserve space: fixed scene height, `data-ghost` for things that appear in place, `min-height` on boxes that fill up, `.demo-stack` for swaps. Playback must never move the page.
 - Keep scenes lean: a few hundred elements, inline SVG only, no images, no web fonts beyond the site's.
+- A page that shows one demo at a time keeps the hidden ones in a `<template>` and mounts each on first use (§6 "Lazy mounting"), so phones mount only the demo on screen and the live DOM stays small.
 - Steps may only touch the DOM through `ctx` or right after an awaited helper. Never keep an element reference across steps: reset rebuilds the scene, so look elements up with `'@name'` inside `run`.
 
 **Accessibility**

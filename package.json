@@ -12,6 +12,7 @@
     "astro": "astro",
     "postbuild": "node -e \"require('fs').rmSync('dist/dev',{recursive:true,force:true})\"",
     "check:links": "node scripts/check-links.mjs",
+    "og": "node scripts/make-og.mjs",
     "deploy": "npm run build && node scripts/deploy-pages.mjs"
   },
   "dependencies": {

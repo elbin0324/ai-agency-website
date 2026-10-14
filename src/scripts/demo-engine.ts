@@ -26,8 +26,10 @@
  *  3. Steps: defineDemo({ id, steps: [{ label, caption, duration, pane?, run(ctx) }] }).
  *     run() choreographs with ctx helpers; the engine holds every step to its `duration`
  *     (animation + reading hold), so the progress bar and timecode stay exact.
- *  4. In the demo component: <script> import { mountDemos } ...; mountDemos(demo); </script>
- *     mounts every [data-demo="<id>"] on the page (any number of instances).
+ *  4. In the demo component: <script> import { registerDemo } ...; registerDemo(demo); </script>
+ *     registers the definition and mounts every [data-demo="<id>"] on the page (any number of instances).
+ *     Markup added later (the home DemoTheater keeps its other demos in <template>s until their tab opens)
+ *     mounts with mountDemos(container); a root added before its definition loads mounts when it registers.
  *
  * PLAYER (DEMOS.md §0.1, §0.2, §0.6, §0.7)
  *  - Autoplays once when >= 50% of the window is visible (relative to the viewport height for tall
@@ -38,7 +40,8 @@
  *  - prefers-reduced-motion: renders the final state at once with the result card below the panes;
  *    Play then steps through end states (Previous / Next) with no animation.
  *  - Programmatic control: dispatch 'demo:play' | 'demo:pause' | 'demo:reset' on the [data-demo] root.
- *    The root dispatches 'demo:step' {id, index, total, label, caption} and 'demo:ended' {id} (bubbling).
+ *    The root dispatches 'demo:ready' {id} once mounted, 'demo:step' {id, index, total, label, caption} and
+ *    'demo:ended' {id} (all bubbling).
  *
  * Every ctx helper respects pause (virtual clock) and abort (a replay mid-step never leaks into the next
  * run: pending helpers simply never resolve, and the scene DOM is rebuilt from the final-state template).
@@ -247,11 +250,42 @@ export function defineDemo(def: DemoDefinition): DemoDefinition {
 }
 
 const controllers = new WeakMap<HTMLElement, Player>();
+/** Registered definitions by id, so markup inserted after load can mount (mountDemos(container)). */
+const definitions = new Map<string, DemoDefinition>();
 
-/** Mount every [data-demo="<def.id>"] inside `scope`. Safe to call more than once. */
-export function mountDemos(def: DemoDefinition, scope: ParentNode = document): DemoController[] {
-  const roots = Array.from(scope.querySelectorAll<HTMLElement>(`[data-demo="${CSS.escape(def.id)}"]`));
-  return roots.map((root) => controllers.get(root) ?? new Player(root, def));
+/** [data-demo] roots inside `scope` (and `scope` itself), optionally for one id. */
+function rootsIn(scope: ParentNode, id?: string): HTMLElement[] {
+  const sel = id ? `[data-demo="${CSS.escape(id)}"]` : '[data-demo]';
+  const roots = Array.from(scope.querySelectorAll<HTMLElement>(sel));
+  if (scope instanceof HTMLElement && scope.matches(sel)) roots.unshift(scope);
+  return roots;
+}
+const mount = (root: HTMLElement, def: DemoDefinition): DemoController => controllers.get(root) ?? new Player(root, def);
+
+/** Register a definition and mount every [data-demo="<def.id>"] on the page: the one call in a demo
+ *  component's <script>. Roots added later mount with mountDemos(container), or here when they were added
+ *  before the definition loaded. Safe to call more than once. */
+export function registerDemo(def: DemoDefinition): DemoController[] {
+  definitions.set(def.id, def);
+  return rootsIn(document, def.id).map((root) => mount(root, def));
+}
+
+/** mountDemos(container): mount every [data-demo] inside `container` (markup added after load, such as a
+ *  <template>'s content) whose definition is registered. A root whose definition has not registered yet
+ *  mounts as soon as it does; its 'demo:ready' event says when.
+ *  mountDemos(def, scope = document): register `def` and mount its roots inside `scope`.
+ *  Both are idempotent and return the controllers. */
+export function mountDemos(container: ParentNode): DemoController[];
+export function mountDemos(def: DemoDefinition, scope?: ParentNode): DemoController[];
+export function mountDemos(target: DemoDefinition | ParentNode, scope: ParentNode = document): DemoController[] {
+  if (target instanceof Node) {
+    return rootsIn(target).flatMap((root) => {
+      const def = definitions.get(root.dataset.demo ?? '');
+      return def ? [mount(root, def)] : [];
+    });
+  }
+  definitions.set(target.id, target);
+  return rootsIn(scope, target.id).map((root) => mount(root, target));
 }
 
 /** The controller of a mounted demo root (for page code that needs direct control). */
@@ -545,6 +579,7 @@ class Player implements DemoController {
     if (this.reduced) this.enterStatic();
     else this.enterIdle();
     this.observe();
+    this.emit('demo:ready', {});
   }
 
   // ---------- public controls

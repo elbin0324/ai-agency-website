@@ -154,9 +154,9 @@ const ids = (s: string) => s.replace(/\b([a-z]+)-(\d+)\b/g, `$1-${WJ}$2`);
 </AppWindow>
 
 <script>
-  import { mountDemos } from '@/scripts/demo-engine';
+  import { registerDemo } from '@/scripts/demo-engine';
   import demo from './consulting/consulting-demo';
-  mountDemos(demo);
+  registerDemo(demo);
 </script>
 
 <style>

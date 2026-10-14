@@ -1,0 +1,215 @@
+---
+// Share card (og:image) render target: exactly 1200 x 630. OWNER: og. Internal page (noindex; /dev/ is
+// left out of the sitemap and removed from the build), not part of the site.
+//
+//   npm run dev, then npm run og   ->  scripts/make-og.mjs screenshots this page into public/og.png
+//
+// Everything that can change comes from data, so a rename only needs a re-run: the wordmark is site.name,
+// the headline is site.tagline (its last two words are the brass italic phrase, as in the Home hero),
+// the service line is site.brandLine, and the console shows the hero console's sample data
+// (src/components/home/hero/console-data.ts) for the same fictional business, unnamed here.
+//
+// Scale: the console is the site's own window, classes and chips at 2x (zoom: 2), so the 600 x 315
+// thumbnail shows it at the site's real size and no text on the card is under 24px (DESIGN.md §8.3).
+import '@fontsource-variable/fraunces/opsz.css';
+import '@fontsource-variable/fraunces/opsz-italic.css';
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
+import '@/styles/global.css';
+import Icon from '@/components/ui/Icon.astro';
+import Badge from '@/components/ui/Badge.astro';
+import Logo from '@/components/ui/Logo.astro';
+import { site } from '@/config/site';
+import { url } from '@/lib/url';
+import {
+  agent, approvals, counters, hoursTotal, roster, sparkline,
+} from '@/components/home/hero/console-data';
+
+// Headline: the hero's split (Hero.astro), with the brass phrase on its own line.
+const words = site.tagline.trim().split(/\s+/);
+const cut = Math.max(1, words.length - 2);
+const titleLead = words.slice(0, cut).join(' ');
+const titleEm = words.slice(cut).join(' ');
+
+// Service line: compound words ("mid-size") never break at their hyphen.
+const lineParts = site.brandLine.split(/(\S+-\S+)/).filter(Boolean);
+
+const fmt1 = (n: number) => n.toFixed(1);
+
+// Console content: three agents on shift, the budget approval, the hours KPI.
+const shift = ['customer', 'analyst', 'sales']
+  .map((id) => roster.find((r) => r.id === id))
+  .filter((r): r is (typeof roster)[number] => Boolean(r));
+const approval = approvals.find((a) => /budget/i.test(a.who)) ?? approvals[0];
+
+// Sparkline in a 60 x 22 box, as on the hero KPI: context line, then the latest step and dot in the accent.
+const lo = Math.min(...sparkline);
+const hi = Math.max(...sparkline);
+const pts = sparkline.map((v, i) => [
+  +((i * 60) / (sparkline.length - 1)).toFixed(1),
+  +(22 - ((v - lo) / (hi - lo)) * 20).toFixed(1),
+]);
+const ctxPath = 'M' + pts.slice(0, -1).map((p) => p.join(' ')).join(' L');
+const [px, py] = pts[pts.length - 2];
+const [lx, ly] = pts[pts.length - 1];
+
+const consoleLabel =
+  `Illustration of the agent console: ${shift.length} agents at work, ` +
+  `${fmt1(hoursTotal)} hours back in 7 days, and a budget change waiting for your approval.`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1200" />
+    <meta name="robots" content="noindex" />
+    <title>Share card | {site.name}</title>
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+  </head>
+  <body>
+    <main class="og" data-og-card aria-label={`${site.name} share card`}>
+      <div class="og-copy">
+        <Logo variant="dark" href={null} class="og-brand" />
+        <div class="og-copy__main">
+          <h1 class="og-title">{titleLead}{titleEm && <><br /><em>{titleEm}</em></>}</h1>
+          <p class="og-line">{lineParts.map((part) => (part.includes('-') ? <span class="og-keep">{part}</span> : part))}</p>
+        </div>
+      </div>
+
+      <div class="og-stage">
+        <div class="app-window og-win" role="img" aria-label={consoleLabel}>
+          <div class="aw-bar">
+            <span class="aw-dots"><i></i><i></i><i></i></span>
+            <span class="aw-crumb">
+              <Logo variant="dark" href={null} wordmark={false} size={16} class="og-win__mark" />
+              <b>Agent activity</b>
+            </span>
+            <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+          </div>
+
+          <div class="og-body">
+            <ul class="og-agents">
+              {shift.map((r, i) => (
+                <li class:list={['og-agent', i === 0 && 'is-sel']}>
+                  <span class="vg-glyph og-glyph"><Icon name={agent(r.id).icon} /></span>
+                  <b>{agent(r.id).name}</b>
+                </li>
+              ))}
+            </ul>
+
+            <div class="kpi og-kpi">
+              <span class="kpi__label">Hours back, 7 days</span>
+              <span class="kpi__value">{fmt1(hoursTotal)}<small>h</small></span>
+              <span class="kpi__delta"><b class="is-good">▲ {fmt1(counters.hoursDelta)} h</b>vs prior week</span>
+              <svg class="og-spark" viewBox="-3 -3 66 28" aria-hidden="true">
+                <path d={ctxPath} fill="none" stroke="var(--viz-context)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d={`M${px} ${py} L${lx} ${ly}`} fill="none" stroke="var(--viz-accent)" stroke-width="2" stroke-linecap="round" />
+                <circle cx={lx} cy={ly} r="3" fill="var(--viz-accent)" stroke="var(--color-navy-700)" stroke-width="2" />
+              </svg>
+            </div>
+
+            <div class="og-appr">
+              <div class="og-appr__head"><span class="aw-label">Waiting on you</span><Badge variant="count">{counters.waitingOnYou}</Badge></div>
+              <div class="og-appr__item">
+                <span class="vg-glyph og-glyph og-glyph--you"><Icon name="user-check" /></span>
+                <p class="og-appr__what">{approval.what}</p>
+                <span class="app-btn app-btn--primary">Approve</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <p class="og-note">Share card, 1200 × 630. <code>npm run og</code> saves this picture as public/og.png (README, "Share card").</p>
+    <script is:inline>
+      // Fit the left column so a new name, tagline or service line never overflows the card:
+      // 1. the logo lockup scales down to two thirds of its size, and a name still too wide wraps to two lines;
+      // 2. the headline, then the service line, step down until the column holds them.
+      // Then data-og-ready is set to "ok", or to "overflow" if even the smallest sizes do not fit;
+      // scripts/make-og.mjs waits for it and refuses to write a card that overflows.
+      (async () => {
+        await document.fonts.ready;
+        const copy = document.querySelector('.og-copy');
+        const brand = copy.querySelector('.og-brand');
+        const title = copy.querySelector('.og-title');
+        const line = copy.querySelector('.og-line');
+        const edge = copy.getBoundingClientRect().right;
+        const brandFits = () => brand.getBoundingClientRect().right <= edge + 0.5;
+        const tooTall = () => copy.scrollHeight > copy.clientHeight + 0.5 || title.scrollWidth > title.clientWidth + 0.5;
+
+        let k = 225; // --k in hundredths
+        while (!brandFits() && k > 150) copy.style.setProperty('--k', String((k -= 5) / 100));
+        if (!brandFits()) brand.classList.add('is-wrapped');
+
+        let size = parseFloat(getComputedStyle(title).fontSize);
+        while (tooTall() && size > 56) title.style.fontSize = `${(size -= 2)}px`;
+        size = parseFloat(getComputedStyle(line).fontSize);
+        while (tooTall() && size > 24) line.style.fontSize = `${(size -= 1)}px`;
+
+        document.documentElement.dataset.ogReady = tooTall() || !brandFits() ? 'overflow' : 'ok';
+      })();
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  /* The card: a 1200 x 630 navy-800 field (DESIGN.md §8.3) with the navy band's light and grid (§7.3). */
+  html, body { margin: 0; min-height: 100%; overflow: hidden; background: var(--color-navy-950); background-image: none; }
+  body { display: grid; place-items: start center; align-content: start; gap: 16px; min-height: 100vh; }
+  astro-dev-toolbar { display: none !important; }
+  /* For people who open /dev/og/: below the card, so never in the picture */
+  .og-note { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--color-on-3); }
+  .og-note code { color: var(--color-on-2); }
+
+  .og {
+    position: relative; isolation: isolate; overflow: hidden; width: 1200px; height: 630px; color: var(--color-on);
+    background: radial-gradient(1100px 620px at 80% -12%, rgb(38 71 110 / 0.55), transparent 70%), var(--color-navy-800);
+  }
+  /* Letterhead rule: the header's 3px brass rule (§7.4), at card scale */
+  .og::before { content: ""; position: absolute; inset: 0 0 auto 0; z-index: 2; height: 6px; background: linear-gradient(90deg, var(--color-brass-600), var(--color-brass-400) 45%, var(--color-brass-600)); }
+  .og::after {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background-image: linear-gradient(rgb(169 180 194 / 0.045) 1px, transparent 1px), linear-gradient(90deg, rgb(169 180 194 / 0.045) 1px, transparent 1px);
+    background-size: 80px 80px; background-position: -8px -8px;
+    -webkit-mask-image: radial-gradient(900px 560px at 30% 0%, #000, transparent 75%); mask-image: radial-gradient(900px 560px at 30% 0%, #000, transparent 75%);
+  }
+
+  /* ---- Left: the firm's voice ---------------------------------------------------------------- */
+  .og-copy { --k: 2.25; position: absolute; left: 72px; top: 72px; bottom: 44px; width: 440px; display: flex; flex-direction: column; justify-content: space-between; }
+  /* The header lockup (mark 30, wordmark 24, gap 11: DESIGN.md §8.2) times --k, centered on the console's title bar */
+  .og-brand { align-self: flex-start; min-height: 72px; gap: calc(11px * var(--k)); margin-left: calc(-5.625px * var(--k)); }   /* the mark's left stem (x 6 of 32) on the text edge */
+  .og-brand .brand__mark { width: calc(30px * var(--k)); height: calc(30px * var(--k)); }
+  .og-brand .brand__word { font-size: calc(24px * var(--k)); white-space: nowrap; }
+  .og-brand.is-wrapped .brand__word { white-space: normal; line-height: 1.04; text-wrap: balance; }   /* a very long name */
+  .og-copy__main { margin-top: 48px; }   /* the least room between the lockup and the headline */
+  .og-title { font-family: var(--font-serif); font-optical-sizing: auto; font-size: 92px; font-weight: 360; line-height: 1.02; letter-spacing: -0.03em; color: var(--color-on); }
+  .og-title em { font-style: italic; font-weight: 330; letter-spacing: -0.02em; color: var(--color-brass-300); }
+  .og-line { margin-top: 28px; font-size: 26px; line-height: 1.4; color: var(--color-on-2); text-wrap: balance; }
+  .og-keep { white-space: nowrap; }
+
+  /* ---- Right: the product, the site's console at 2x and cropped by the card edge -------------- */
+  .og-stage { position: absolute; left: 560px; top: 72px; }
+  .og-win { zoom: 2; width: 340px; height: 300px; }
+  /* A faint light edge over everything, so the window separates from the navy field around it */
+  .og-win::after { content: ""; position: absolute; inset: 0; z-index: 9; border-radius: inherit; pointer-events: none; box-shadow: inset 0 0 0 0.5px var(--color-rule-dark-strong); }
+  .og-win .aw-bar { height: 36px; gap: 10px; padding: 0 32px 0 12px; }   /* 20px of the right edge is past the card */
+  .og-win__mark { gap: 0; }
+  .og-body { display: grid; grid-template-columns: minmax(0, 1fr) 148px; gap: 10px; padding: 10px 30px 10px 10px; }
+
+  .og-agents { display: grid; align-content: space-between; }
+  .og-agent { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; gap: 8px; height: 32px; padding: 0 6px; border-radius: 9px; }
+  .og-agent.is-sel { background: rgb(255 255 255 / 0.035); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }   /* the hero sidebar's selected row */
+  .og-agent b { overflow: hidden; font-size: 12.5px; font-weight: 550; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+  .og-glyph { width: 24px; height: 24px; border-radius: 7px; }
+
+  .og-kpi { align-self: start; }
+  .og-spark { position: absolute; top: 33px; right: 12px; width: 52px; height: 20px; }
+
+  .og-appr { grid-column: 1 / -1; border-radius: 12px; background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark), inset 0 1px 0 rgb(255 255 255 / 0.03); }
+  .og-appr__head { display: flex; align-items: center; justify-content: space-between; height: 34px; padding: 0 12px; border-bottom: 1px solid var(--color-rule-dark); }
+  .og-appr__item { display: flex; align-items: center; gap: 10px; margin: 8px; padding: 9px 11px; border-radius: 10px; background: var(--color-navy-800); box-shadow: inset 0 0 0 1px var(--chip-att-ring); }
+  /* The human decision: the agents' glyph tile in the approval semantic (sky, user-check: DESIGN.md §2.4) */
+  .og-glyph--you { color: var(--color-sky); background: var(--chip-att-bg); box-shadow: inset 0 0 0 1px var(--chip-att-ring); }
+  .og-appr__what { flex: 1; min-width: 0; max-width: 11.5em; font-size: 13px; font-weight: 550; line-height: 1.4; color: var(--color-on); text-wrap: balance; }
+  .og-appr__item .app-btn { margin-left: auto; }
+</style>

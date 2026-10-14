@@ -51,7 +51,7 @@ const { autoplay = true, class: className } = Astro.props;
 </AppWindow>
 
 <script>
-  import { mountDemos } from '@/scripts/demo-engine';
+  import { registerDemo } from '@/scripts/demo-engine';
   import demo from './assistant/assistant-demo';
-  mountDemos(demo);
+  registerDemo(demo);
 </script>

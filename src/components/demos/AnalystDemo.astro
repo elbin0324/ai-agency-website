@@ -73,9 +73,9 @@ const ids = (s: string) => s.replace(/\b([a-z]+)-(\d+)\b/g, '$1-\u2060$2');
 </AppWindow>
 
 <script>
-  import { mountDemos } from '@/scripts/demo-engine';
+  import { registerDemo } from '@/scripts/demo-engine';
   import demo from './analyst/analyst-demo';
-  mountDemos(demo);
+  registerDemo(demo);
 </script>
 
 <style>
