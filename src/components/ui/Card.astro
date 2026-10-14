@@ -1,0 +1,23 @@
+---
+// Cards are for objects (DESIGN.md §6.5): .card (raised; soft shadow + rule ring on paper, dark ring on navy)
+// or .card-quiet (60% paper, hairline, no shadow: the muted side of a comparison).
+// With `href` the whole card is the link and rises 2px with the float shadow on hover (250ms).
+import type { HTMLAttributes } from 'astro/types';
+import { url, isExternal } from '@/lib/url';
+
+interface Props extends HTMLAttributes<'div'> {
+  variant?: 'default' | 'quiet';
+  href?: string;
+  as?: 'div' | 'article' | 'li' | 'figure' | 'aside';
+  class?: string;
+}
+const { variant = 'default', href, as: Tag = 'div', class: className, ...rest } = Astro.props;
+const base = variant === 'quiet' ? 'card-quiet' : 'card';
+const linkCls = 'block transition-[translate,box-shadow] duration-250 ease-out-soft hover:-translate-y-0.5 hover:shadow-float';
+const finalHref = href ? (isExternal(href) || href.startsWith('#') ? href : url(href)) : undefined;
+---
+{finalHref ? (
+  <a class:list={[base, linkCls, className]} href={finalHref} {...rest}><slot /></a>
+) : (
+  <Tag class:list={[base, className]} {...rest}><slot /></Tag>
+)}

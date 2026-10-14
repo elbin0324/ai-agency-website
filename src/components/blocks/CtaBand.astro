@@ -1,0 +1,151 @@
+---
+// Closing CTA band (DESIGN.md §6.24, §7.6). Renders its own section.
+//   tone navy (default): .band-navy.cta, copy on 7 cols (eyebrow, .type-h2 without italic, lead,
+//     .btn-brass + .btn-outline-dark, micro line) and the sail engraving on 5 cols.
+//   tone paper / sunken: a mid-page CTA, no art: headline on 6 cols, lead + .btn-primary + .btn-secondary
+//     on the right 6 (stacked under 1024px).
+// Optional "What you leave with" row (label on 3 cols, list on 9) and a closing note.
+// Brand-story pieces of the sail (the HALYARD label and the dictionary caption) follow site.brandStory.
+//
+//   <CtaBand eyebrow="Free AI assessment" title="Which agent would give you the most time back?" subtitle="…"
+//     secondary={site.ctas.calculator} micro="No cost, no obligation. Written summary either way." />
+import Button from '@/components/ui/Button.astro';
+import Container from '@/components/ui/Container.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { site } from '@/config/site';
+
+type Cta = { label: string; href: string; icon?: IconName };
+type LeaveItem = string | { title: string; body?: string };
+
+interface Props {
+  id?: string;
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+  /** Primary CTA (default: site.cta with an arrow). */
+  primary?: Cta;
+  /** Second action (outline on navy, secondary on paper). */
+  secondary?: Cta;
+  /** Micro line under the buttons. Use {email} to insert site.email as a mailto link. */
+  micro?: string;
+  tone?: 'navy' | 'paper' | 'sunken';
+  /** The sail engraving (navy only; default true). */
+  art?: boolean;
+  leaveWith?: LeaveItem[];
+  leaveWithLabel?: string;
+  /** Closing line under the list ("The findings are yours to keep…"). */
+  note?: string;
+  titleId?: string;
+  /** data-reveal on the copy, art and list (default true). */
+  reveal?: boolean;
+  class?: string;
+}
+
+const {
+  id = 'cta', eyebrow, title, subtitle, primary, secondary, micro, tone = 'navy', art = true, leaveWith = [],
+  leaveWithLabel = 'What you leave with', note, titleId = `${id}-title`, reveal = true, class: className,
+} = Astro.props;
+
+const dark = tone === 'navy';
+const showArt = dark && art;
+const primaryCta: Cta = primary ?? { label: site.cta.label, href: site.cta.href, icon: 'arrow-right' };
+const leave = leaveWith.map((l) => (typeof l === 'string' ? { title: l } : l));
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+const microParts = micro ? micro.split('{email}') : [];
+const gradId = `sail-wash-${id}`;
+---
+<section
+  id={id}
+  data-section={id}
+  aria-labelledby={titleId}
+  class:list={['section', 'cta', dark && 'band-navy', tone === 'sunken' && 'band-sunken', !dark && 'cta--light', className]}
+>
+  <Container>
+    <div class:list={['cta-grid', !showArt && 'cta-grid--solo']}>
+      <div class="cta-grid__copy" {...revealAttr}>
+        <div class="cta__head">
+          {eyebrow && <Eyebrow as="p">{eyebrow}</Eyebrow>}
+          <h2 class="type-h2" id={titleId}>{title}</h2>
+        </div>
+        <div class="cta__body">
+          {subtitle && <p class="type-lead">{subtitle}</p>}
+          <div class="cta__btns">
+            <Button href={primaryCta.href} variant={dark ? 'brass' : 'primary'} size="lg" icon={primaryCta.icon ?? 'arrow-right'}>{primaryCta.label}</Button>
+            {secondary && (
+              <Button href={secondary.href} variant={dark ? 'outline-dark' : 'secondary'} size="lg" icon={secondary.icon}>{secondary.label}</Button>
+            )}
+          </div>
+          {micro && (
+            <p class="cta__micro">
+              {microParts.map((part, i) => (
+                <Fragment>{part}{i < microParts.length - 1 && <a class="link" href={`mailto:${site.email}`}>{site.email}</a>}</Fragment>
+              ))}
+            </p>
+          )}
+        </div>
+      </div>
+      {showArt && (
+        <figure class="cta-grid__art" aria-hidden="true" {...revealAttr}>
+          <svg class="sail" viewBox="0 0 460 430" focusable="false">
+            <defs><linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D1AE6C" stop-opacity=".10" /><stop offset="1" stop-color="#D1AE6C" stop-opacity="0" /></linearGradient></defs>
+            <path d="M18 392 Q 236 414 450 392" fill="none" stroke="#A9B4C2" stroke-opacity=".22" />
+            <path d="M60 404 Q 236 420 420 404" fill="none" stroke="#A9B4C2" stroke-opacity=".12" />
+            <path d="M292 44 Q 214 214 72 356 L 292 356 Z" fill={`url(#${gradId})`} stroke="#D1AE6C" stroke-opacity=".5" />
+            <g fill="none" stroke="#D1AE6C" stroke-opacity=".16"><path d="M292 44 L104 356M292 44 L136 356M292 44 L168 356M292 44 L200 356M292 44 L232 356M292 44 L262 356" /></g>
+            <path d="M300 70 L 436 372 L 312 362 Z" fill="none" stroke="#D1AE6C" stroke-opacity=".34" />
+            <g fill="none" stroke="#D1AE6C" stroke-opacity=".12"><path d="M300 70 L 352 365M300 70 L 394 368" /></g>
+            <path d="M300 22 V 384" stroke="#A9B4C2" stroke-opacity=".5" stroke-width="1.5" />
+            <path d="M300 356 H 58" stroke="#A9B4C2" stroke-opacity=".4" stroke-width="1.5" />
+            <path d="M292 44 C 292 30, 296 24, 302 22 C 309 20, 312 26, 312 34 V 318" fill="none" stroke="#E0BF7F" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M306 318 h12" stroke="#E0BF7F" stroke-width="1.6" stroke-linecap="round" />
+            <g fill="#0E2136" stroke="#E0BF7F" stroke-width="1.3"><circle cx="302" cy="21" r="4" /><circle cx="292" cy="44" r="3.4" /><circle cx="72" cy="356" r="3.4" /><circle cx="292" cy="356" r="3.4" /><circle cx="436" cy="372" r="3" /></g>
+            <g font-family="Geist Mono Variable, ui-monospace, monospace" font-size="11.5" letter-spacing="1.2" fill="#A9B4C2" fill-opacity=".75"><text x="318" y="16">MASTHEAD</text><text x="250" y="40" text-anchor="end">HEAD</text><text x="64" y="378" text-anchor="middle">CLEW</text><text x="276" y="378" text-anchor="end">TACK</text></g>
+            {site.brandStory && (
+              <text data-brand-story x="326" y="190" transform="rotate(90 326 190)" font-family="Geist Mono Variable, ui-monospace, monospace" font-size="11.5" letter-spacing="2.2" fill="#E0BF7F">{site.name.toUpperCase()}</text>
+            )}
+          </svg>
+          {site.brandStory && (
+            <figcaption class="brand-def" data-brand-story><b>hal·yard</b> <i>(n.)</i> The line that raises the sail.</figcaption>
+          )}
+        </figure>
+      )}
+    </div>
+    {leave.length > 0 && (
+      <div class="leave-with" {...revealAttr}>
+        <span class="type-label leave-with__label">{leaveWithLabel}</span>
+        <ol class="leave-with__list">
+          {leave.map((l) => (
+            <li><Icon name="check" /><div><b>{l.title}</b>{l.body && <p>{l.body}</p>}</div></li>
+          ))}
+        </ol>
+      </div>
+    )}
+    {note && <p class="cta__note">{note}</p>}
+  </Container>
+</section>
+
+<style>
+  /* Ported unchanged from the reference page CSS (design-lab/reference/index.html, .cta*). */
+  .cta .type-h2 { margin-top: 20px; max-width: 15ch; font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.75rem); }
+  .cta .type-lead { margin-top: 20px; max-width: 52ch; }
+  .cta__btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+  .cta__micro { margin-top: 14px; font-size: 0.8125rem; color: var(--fg-3); }
+  .sail { display: block; width: 100%; height: auto; overflow: visible; }
+  @media (width < 40rem) { .cta__btns :global(.btn) { width: 100%; } }
+
+  /* Navy without art: the copy takes 9 columns. Paper and sunken: an editorial split, the headline
+     on 6 columns and the lead, buttons and micro line on the right 6, so both buttons share a row. */
+  .cta-grid--solo .cta-grid__copy { grid-column: 1 / span 9; }
+  .cta--light .cta-grid__copy { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px 24px; align-items: end; }
+  .cta--light .cta__head { grid-column: 1 / span 6; }
+  .cta--light .cta__body { grid-column: 7 / span 6; }
+  .cta--light .type-h2 { max-width: 20ch; font-size: var(--text-h2); }
+  .cta--light .type-lead { margin-top: 0; }
+  .cta--light .cta__btns { margin-top: 24px; }
+  .cta__note { margin-top: 20px; font-size: 0.875rem; color: var(--fg-3); }
+  @media (width < 64rem) {
+    .cta-grid--solo .cta-grid__copy, .cta--light .cta__head, .cta--light .cta__body { grid-column: 1 / -1; }
+  }
+</style>

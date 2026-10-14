@@ -1,0 +1,80 @@
+---
+// Spreadsheet grid base for demo windows (the client's own sheet, on paper). OWNER: demo engine.
+// Rows are their own grid boxes, so they can cascade in, collapse (ctx.strike) and highlight (.hl).
+//
+//   <SheetGrid el="orders" formula="=SUM(D2:D7)" cell="D8" index      // phones: hideMobile columns drop out
+//     columns={['Order', 'Customer', { label: 'Day', hideMobile: true }, { label: 'Total', num: true }]}
+//     rows={[['#1041', 'Harbor Café', 'Mon', '$420'], …]}
+//     rowAttrs={[{}, { 'data-el': 'dup', 'data-final-class': 'hl hl-amber hl--tint' }]}
+//     total={['', 'Week total', '', { v: '$4,182', attrs: { 'data-count': '' } }]} />
+//   run: ctx.cascade('@orders-row'), ctx.highlight('@dup'), ctx.strike('@dup'), ctx.countUp('[data-el=orders-total] [data-count]')
+import './demo.css';
+
+type Attrs = Record<string, string | undefined>;
+/** A cell: text, or { v, attrs, class, html } (html is trusted markup appended after v, e.g. an .hl-tag). */
+type Cell = string | number | { v: string | number; attrs?: Attrs; class?: string; html?: string };
+interface Column {
+  label: string;
+  /** CSS grid track (default minmax(0, 1fr)). */
+  width?: string;
+  /** Right-aligned tabular number column. */
+  num?: boolean;
+  /** Hidden under 768px (wide tables keep their key columns on phones). */
+  hideMobile?: boolean;
+}
+interface Props {
+  columns: (string | Column)[];
+  rows: Cell[][];
+  /** Row-number column; a number sets the first row's number (default 1). */
+  index?: boolean | number;
+  /** Formula bar text and cell reference. */
+  formula?: string;
+  cell?: string;
+  /** Extra attributes per row (data-el, data-hide, data-final-class, …). Rows get data-el="{el}-row" by default. */
+  rowAttrs?: Attrs[];
+  /** Start state for the engine: rows data-hide (default true). */
+  animate?: boolean;
+  total?: Cell[];
+  totalAttrs?: Attrs;
+  /** Wide sheet on phones: keeps a minimum width (34rem, or `minWidth`) and fades out at the right edge
+   *  (DEMOS.md §0.8). Default false: columns with hideMobile drop out instead. */
+  fade?: boolean;
+  minWidth?: string;
+  /** Paper document surface (.aw-doc) around the grid (default true). */
+  doc?: boolean;
+  el?: string;
+  class?: string;
+}
+
+const { columns, rows, index = false, formula, cell, rowAttrs = [], animate = true, total, totalAttrs = {}, fade = false, minWidth, doc = true, el, class: className } = Astro.props;
+const cols: Column[] = columns.map((c) => (typeof c === 'string' ? { label: c } : c));
+const start = typeof index === 'number' ? index : 1;
+const trackList = (list: Column[]) => [index !== false ? '2.25rem' : '', ...list.map((c) => c.width ?? 'minmax(0, 1fr)')].filter(Boolean).join(' ');
+const tracks = trackList(cols);
+const tracksMobile = trackList(cols.filter((c) => !c.hideMobile));
+const style = [`--sheet-cols:${tracks}`, `--sheet-cols-m:${tracksMobile}`, minWidth ? `--sheet-min-w:${minWidth}` : ''].filter(Boolean).join(';');
+const value = (c: Cell | undefined) => (c == null ? '' : typeof c === 'object' ? c.v : c);
+const attrs = (c: Cell | undefined): Attrs => (c != null && typeof c === 'object' ? (c.attrs ?? {}) : {});
+const cellClass = (c: Cell | undefined) => (c != null && typeof c === 'object' ? c.class : undefined);
+const extra = (c: Cell | undefined) => (c != null && typeof c === 'object' ? c.html : undefined);
+const colClass = (c: Column) => ['sheet__cell', c.num && 'sheet__cell--num', c.hideMobile && 'demo-hide-m'];
+---
+<div class:list={['sheet', doc && 'aw-doc', fade && 'sheet--wide demo-fade-x', className]} style={style} data-el={el}>
+  {(formula || cell) && <div class="sheet__bar">{cell && <b>{cell}</b>}<span>{formula}</span></div>}
+  <div class="sheet__row sheet__row--head">
+    {index !== false && <span class="sheet__cell sheet__idx"></span>}
+    {cols.map((c) => <span class:list={colClass(c)}>{c.label}</span>)}
+  </div>
+  {rows.map((r, i) => (
+    <div class="sheet__row" {...{ 'data-el': el && `${el}-row`, 'data-hide': animate ? '' : undefined, ...rowAttrs[i] }}>
+      {index !== false && <span class="sheet__cell sheet__idx">{start + i}</span>}
+      {cols.map((c, j) => <span class:list={[...colClass(c), cellClass(r[j])]} {...attrs(r[j])}>{value(r[j])}{extra(r[j]) && <Fragment set:html={extra(r[j])} />}</span>)}
+    </div>
+  ))}
+  {total && (
+    <div class="sheet__row sheet__row--total" {...{ 'data-el': el && `${el}-total`, ...totalAttrs }}>
+      {index !== false && <span class="sheet__cell sheet__idx"></span>}
+      {cols.map((c, j) => <span class:list={[...colClass(c), cellClass(total[j])]} {...attrs(total[j])}>{value(total[j])}</span>)}
+    </div>
+  )}
+</div>

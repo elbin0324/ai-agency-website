@@ -1,0 +1,81 @@
+---
+// Integrations strip (DESIGN.md §6.19). Tool names in plain text with a mono category, never logos.
+//   mode 'marquee' (default here): a seamless loop that pauses on hover, on focus inside the strip
+//     (global .marquee rule) and with its Pause / Play button (WCAG 2.2.2). The second copy of the items is aria-hidden, so screen readers hear each
+//     tool once. With prefers-reduced-motion it becomes a static wrapped list and the button hides.
+//     DESIGN.md: at most once per page, never in the first viewport.
+//   mode 'grid': the static .integrations grid (DESIGN.md's default for the Home strip).
+// Items default to the 16 in @/data/integrations.
+//
+//   <Marquee label="Tools we connect to" />          <Marquee mode="grid" items={integrations.slice(0, 8)} />
+import Icon from '@/components/ui/Icon.astro';
+import { integrations } from '@/data/integrations';
+
+interface Props {
+  items?: { name: string; category?: string }[];
+  mode?: 'marquee' | 'grid';
+  /** Accessible name of the list. */
+  label?: string;
+  /** Seconds per loop (default 60). */
+  duration?: number;
+  /** data-reveal (default true). */
+  reveal?: boolean;
+  class?: string;
+}
+
+const { items = integrations, mode = 'marquee', label = 'Tools we connect to', duration = 60, reveal = true, class: className } = Astro.props;
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+---
+{mode === 'grid' ? (
+  <ul class:list={['integrations', className]} role="list" aria-label={label} {...revealAttr}>
+    {items.map((it) => <li class="integration"><span><b>{it.name}</b>{it.category && <small>{it.category}</small>}</span></li>)}
+  </ul>
+) : (
+  <div class:list={['mq', className]} data-marquee {...revealAttr}>
+    <div class="marquee">
+      <ul class="marquee__track" role="list" aria-label={label} style={`animation-duration: ${duration}s`}>
+        {items.map((it) => <li class="integration"><span><b>{it.name}</b>{it.category && <small>{it.category}</small>}</span></li>)}
+        {items.map((it) => <li class="integration" aria-hidden="true"><span><b>{it.name}</b>{it.category && <small>{it.category}</small>}</span></li>)}
+      </ul>
+    </div>
+    <div class="mq__ctrl">
+      <button type="button" class="btn btn-ghost mq__btn" data-marquee-toggle>
+        <Icon name="pause" fill class="btn__icon mq__i-pause" />
+        <Icon name="play" fill class="btn__icon mq__i-play" />
+        <span class="mq__label">Pause</span>
+        <span class="sr-only">the scrolling list of tools</span>
+      </button>
+    </div>
+  </div>
+)}
+
+<style>
+  /* Seamless loop: the track moves by -50% of its own width, so the trailing padding equals the
+     40px gap between items (the gap after the last original item). */
+  .mq .marquee__track { padding-right: 40px; }
+  .mq .marquee__track > li { flex: none; }
+  .mq__ctrl { display: flex; justify-content: flex-end; margin-top: 6px; }
+  .mq__btn { font-size: 0.875rem; color: var(--fg-2); }
+  .mq__btn :global(.mq__i-play) { display: none; }
+  .mq.is-paused .mq__btn :global(.mq__i-play) { display: block; }
+  .mq.is-paused .mq__btn :global(.mq__i-pause) { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .mq__ctrl { display: none; }
+    .mq .marquee__track { gap: 18px 24px; padding-right: 0; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-marquee]').forEach((root) => {
+    const strip = root.querySelector<HTMLElement>('.marquee');
+    const btn = root.querySelector<HTMLButtonElement>('[data-marquee-toggle]');
+    const label = btn?.querySelector<HTMLElement>('.mq__label');
+    if (!strip || !btn || !label) return;
+    btn.addEventListener('click', () => {
+      const paused = !root.classList.contains('is-paused');
+      root.classList.toggle('is-paused', paused);
+      strip.classList.toggle('is-paused', paused);
+      label.textContent = paused ? 'Play' : 'Pause';
+    });
+  });
+</script>

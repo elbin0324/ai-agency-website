@@ -1,0 +1,28 @@
+---
+// Label / value pairs on hairlines (DESIGN.md §6.8 `.ledger-rows`, a <dl>): send rules, hours by agent,
+// audit-log summaries, "today vs after" lists. Values are Geist 600 tabular, right-aligned.
+// layout 'stacked' puts each value under its label (for long, sentence-like values).
+//
+//   <LedgerRows title="Send rules" rows={[{ label: 'First email', value: 'Needs your OK' }, { label: 'Daily limit', value: '18 of 40' }]} />
+interface Props {
+  rows: { label: string; value: string }[];
+  /** Mono label above the rows. */
+  title?: string;
+  layout?: 'inline' | 'stacked';
+  class?: string;
+}
+const { rows, title, layout = 'inline', class: className } = Astro.props;
+---
+<div class:list={['lrows', className]}>
+  {title && <p class="type-label lrows__title">{title}</p>}
+  <dl class:list={['ledger-rows', layout === 'stacked' && 'lrows--stacked']}>
+    {rows.map((r) => <div><dt>{r.label}</dt><dd>{r.value}</dd></div>)}
+  </dl>
+</div>
+
+<style>
+  .lrows__title { padding-bottom: 8px; border-bottom: 1px solid var(--line-strong); }
+  .lrows--stacked > div { display: block; }
+  .lrows--stacked dt { font-size: 0.8125rem; color: var(--fg-3); }
+  .lrows--stacked dd { margin-top: 2px; text-align: left; font-weight: 550; line-height: 1.45; }
+</style>

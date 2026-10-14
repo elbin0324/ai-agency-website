@@ -1,0 +1,41 @@
+---
+// A page section with the DESIGN.md surfaces and rhythm (§5, §7):
+//   tone  'paper' (default, page grain) · 'sunken' (.band-sunken: demos, why-us, industries)
+//         · 'navy' (.band-navy, dark context: calculator, final CTA; max two per page, never adjacent)
+//   size  'default' (.section 64->104px) · 'tight' (.section-tight 48->72px) · 'none'
+//   tightTop  second of two neighbors that share a background (top padding = tight)
+// data-section={name ?? id} is the hook for screenshots: --selector "[data-section=services]".
+import type { HTMLAttributes } from 'astro/types';
+import Container from './Container.astro';
+
+interface Props extends HTMLAttributes<'section'> {
+  id?: string;
+  /** data-section value; defaults to id. */
+  name?: string;
+  tone?: 'paper' | 'sunken' | 'navy';
+  size?: 'default' | 'tight' | 'none';
+  tightTop?: boolean;
+  /** Wrap the slot in <Container> (default true). Set false for full-bleed content. */
+  container?: boolean;
+  width?: 'page' | 'longform' | 'measure';
+  as?: 'section' | 'div' | 'aside' | 'footer';
+  class?: string;
+}
+
+const {
+  id, name, tone = 'paper', size = 'default', tightTop = false, container = true, width = 'page',
+  as: Tag = 'section', class: className, ...rest
+} = Astro.props;
+
+const classes = [
+  size === 'default' && 'section',
+  size === 'tight' && 'section-tight',
+  tone === 'sunken' && 'band-sunken',
+  tone === 'navy' && 'band-navy',
+  tightTop && 'pt-[var(--spacing-section-tight)]',
+  className,
+];
+---
+<Tag id={id} data-section={name ?? id} class:list={classes} {...rest}>
+  {container ? <Container width={width}><slot /></Container> : <slot />}
+</Tag>

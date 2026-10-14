@@ -1,0 +1,97 @@
+---
+// Icon + title + text items in 2, 3 or 4 columns (DESIGN.md §6.5, §6.17). Three looks:
+//   cards  .card objects with a brass marker icon ("Why us" cards, capabilities). With href the whole
+//          card is the link (rises 2px) and shows its linkLabel as an arrow link.
+//   guard  .guard-grid hairline cells with a navy .icon-tile--sm (guardrails, security, controls).
+//   cells  .cell-grid hairline cells with the icon inline in the title (industries, "included every time").
+// Columns drop to 2 under 1024px and to 1 under 640px. Works on paper, sunken and navy (role colors).
+//
+//   <FeatureGrid variant="guard" cols={3} items={[{ icon: 'key-round', title: 'Least-privilege access', body: '…' }]} />
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { url, isExternal } from '@/lib/url';
+
+type Item = {
+  icon?: IconName;
+  title: string;
+  body?: string;
+  /** cards only: makes the whole card a link. */
+  href?: string;
+  /** cards only: arrow-link text shown at the bottom of a linked card (default "Learn more"). */
+  linkLabel?: string;
+};
+
+interface Props {
+  items: Item[];
+  cols?: 2 | 3 | 4;
+  variant?: 'cards' | 'guard' | 'cells';
+  /** Heading tag for item titles (default 3: under a section's h2). */
+  level?: 3 | 4;
+  /** Accessible name for the list. */
+  label?: string;
+  /** data-reveal on the grid (default true). */
+  reveal?: boolean;
+  class?: string;
+}
+
+const { items, cols = 3, variant = 'cards', level = 3, label, reveal = true, class: className } = Astro.props;
+const H = `h${level}` as 'h3' | 'h4';
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+const hrefOf = (h: string) => (h.startsWith('#') || isExternal(h) ? h : url(h));
+const listClass = variant === 'guard' ? 'guard-grid' : variant === 'cells' ? 'cell-grid' : 'fgrid';
+---
+<ul class:list={[listClass, className]} style={`--cols: ${cols}`} role="list" aria-label={label} {...revealAttr}>
+  {items.map((it) => (
+    variant === 'guard' ? (
+      <li class="guard">
+        <span class="icon-tile icon-tile--sm"><Icon name={it.icon ?? 'check'} size={18} /></span>
+        <H class="guard__title">{it.title}</H>
+        {it.body && <p class="guard__body">{it.body}</p>}
+      </li>
+    ) : variant === 'cells' ? (
+      <li class="cell">
+        <H class="cell__title">{it.icon && <Icon name={it.icon} />}{it.title}</H>
+        {it.body && <p class="cell__body">{it.body}</p>}
+      </li>
+    ) : (
+      <li class="fgrid__item">
+        {it.href ? (
+          <a class="card fgrid__card fgrid__card--link" href={hrefOf(it.href)}>
+            {it.icon && <Icon name={it.icon} size={20} class="fgrid__icon" />}
+            <H class="type-h4 fgrid__title">{it.title}</H>
+            {it.body && <p class="fgrid__body">{it.body}</p>}
+            <span class="link-arrow fgrid__more"><span>{it.linkLabel ?? 'Learn more'}</span><Icon name="arrow-right" /></span>
+          </a>
+        ) : (
+          <div class="card fgrid__card">
+            {it.icon && <Icon name={it.icon} size={20} class="fgrid__icon" />}
+            <H class="type-h4 fgrid__title">{it.title}</H>
+            {it.body && <p class="fgrid__body">{it.body}</p>}
+          </div>
+        )}
+      </li>
+    )
+  ))}
+</ul>
+
+<style>
+  /* Card look, ported from the reference .why-cards rules (design-lab/reference/index.html). */
+  .fgrid { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 16px; }
+  .fgrid__item { display: flex; min-width: 0; }
+  .fgrid__card { display: flex; flex-direction: column; width: 100%; }
+  .fgrid__card :global(.fgrid__icon) { color: var(--accent); }
+  .fgrid__title { margin-top: 14px; }
+  .fgrid__body { margin-top: 8px; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .fgrid__more { margin-top: auto; padding-top: 12px; }
+  .fgrid__card--link { text-decoration: none; color: inherit; transition: translate 0.25s var(--ease-out-soft), box-shadow 0.25s var(--ease-out-soft); }
+  .fgrid__card--link:hover { translate: 0 -2px; box-shadow: var(--shadow-float); }
+  .fgrid__card--link:hover .fgrid__more > span { background-size: 100% 1px; }
+  .fgrid__card--link:hover .fgrid__more > :global(.icon) { transform: translateX(3px); }
+  /* Cells in one row share a height: keep each cell's title and body at the top, and start the
+     icon on the first line of a wrapped title. */
+  .guard { align-content: start; }
+  .cell__title { align-items: flex-start; }
+  .cell__title :global(.icon) { margin-top: 0.2em; }
+  @media (width < 64rem) { .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (width < 40rem) { .fgrid { grid-template-columns: minmax(0, 1fr); } }
+</style>

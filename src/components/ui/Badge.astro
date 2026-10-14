@@ -1,0 +1,32 @@
+---
+// Small status and window badges (DESIGN.md §2.4, §6.9, §6.10). A status always carries an icon AND a word.
+//   done      .chip-done       check        "Booked", "Sent"                   (success / sage)
+//   attention .chip-attention  user-check   "Your OK", "Waiting on you"        (attention / sky: a human decides)
+//   handoff   .chip-handoff    user-check   "Handed off"                       (outline sky)
+//   blocked   .chip-blocked    x            "Failed check"                     (danger / clay)
+//   running   .chip-running    typing dots  "Drafting"                         (outline)
+//   window    .aw-tag          none         "Simulated demo", "Illustrative"   (window title-bar badge)
+//   count     .count           none         "2" (sky count next to "Waiting on you")
+// Colors flip automatically on navy (inside .app-window / .band-navy / .ctx-dark).
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+type Variant = 'done' | 'attention' | 'handoff' | 'blocked' | 'running' | 'window' | 'count';
+interface Props {
+  variant?: Variant;
+  /** Override the default icon, or false for none (status chips should keep one). */
+  icon?: IconName | false;
+  class?: string;
+}
+const { variant = 'done', icon, class: className } = Astro.props;
+const defaults: Partial<Record<Variant, IconName>> = { done: 'check', attention: 'user-check', handoff: 'user-check', blocked: 'x' };
+const iconName = icon === false ? undefined : (icon ?? defaults[variant]);
+const isChip = variant !== 'window' && variant !== 'count';
+const cls = isChip ? ['chip', `chip-${variant}`] : variant === 'window' ? ['aw-tag'] : ['count'];
+const showDots = variant === 'running' && icon === undefined;
+---
+<span class:list={[...cls, className]}>
+  {showDots && <span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>}
+  {isChip && iconName && <Icon name={iconName} />}
+  <slot />
+</span>

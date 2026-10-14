@@ -1,0 +1,72 @@
+---
+// Numbered process with the rising halyard line (DESIGN.md §6.21, §7.5). Desktop: one row, a brass
+// rope rising left to right and each step's knot set higher (the last knot filled). Under 1024px: 2-up
+// with a vertical brass rule; under 640px: one column. Optional duration line (clock) and "You get" line.
+// `surface` matches the knot's ring to the band it sits on (paper, sunken or navy).
+//
+//   <Steps steps={[{ title: 'Assess', body: '…', time: 'Typically a 30-minute call', get: 'Your top opportunities, ranked' }]} />
+import Icon from '@/components/ui/Icon.astro';
+
+type Step = {
+  title: string;
+  body?: string;
+  /** Duration line with a clock icon ("Typically 1 to 2 weeks"). */
+  time?: string;
+  /** The deliverable, shown under a mono "You get" label. */
+  get?: string;
+};
+
+interface Props {
+  steps: Step[];
+  /** Label above each deliverable (default "You get"). */
+  getLabel?: string;
+  /** Accessible name for the list (default "Steps"). */
+  label?: string;
+  /** The rising rope across the row on desktop (default true). */
+  rope?: boolean;
+  /** Background the steps sit on, so the knot ring matches it (default paper). */
+  surface?: 'paper' | 'sunken' | 'navy';
+  /** Heading tag for step titles (default 3). */
+  level?: 3 | 4;
+  /** data-reveal on the row (default true). */
+  reveal?: boolean;
+  class?: string;
+}
+
+const {
+  steps, getLabel = 'You get', label = 'Steps', rope = true, surface = 'paper', level = 3, reveal = true, class: className,
+} = Astro.props;
+const H = `h${level}` as 'h3' | 'h4';
+const pad = (n: number) => String(n).padStart(2, '0');
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+---
+<div class:list={['steps', className]} style={`--n: ${steps.length}`} data-surface={surface} role="list" aria-label={label} {...revealAttr}>
+  {rope && (
+    <svg class="steps__rope" aria-hidden="true" focusable="false">
+      <line class="steps__rope-shade" x1="0" y1="54" x2="100%" y2="18" />
+      <line x1="0" y1="52" x2="100%" y2="16" />
+    </svg>
+  )}
+  {steps.map((s, i) => (
+    <div class="step" role="listitem" style={`--k: ${i}`}>
+      <span class="step__knot" aria-hidden="true"></span>
+      <span class="step__n">{pad(i + 1)}</span>
+      <H class="step__title">{s.title}</H>
+      {s.body && <p class="step__body">{s.body}</p>}
+      {s.time && <p class="step__time"><Icon name="clock" />{s.time}</p>}
+      {s.get && <p class="step__get"><span>{getLabel}</span>{s.get}</p>}
+    </div>
+  ))}
+</div>
+
+<style>
+  /* The rope's soft shadow line (the reference draws it in ink at 25%). */
+  .steps__rope-shade { stroke: var(--color-ink); stroke-opacity: 0.25; }
+  .steps[data-surface="navy"] .steps__rope-shade { stroke: var(--color-navy-950); stroke-opacity: 0.7; }
+
+  /* Knot ring = the band color, so the rope reads as passing behind the knot. */
+  .steps[data-surface="sunken"] .step__knot { background: var(--color-paper-sunken); box-shadow: inset 0 0 0 1.5px var(--color-brass-600), 0 0 0 4px var(--color-paper-sunken); }
+  .steps[data-surface="navy"] .step__knot { background: var(--color-navy-800); box-shadow: inset 0 0 0 1.5px var(--color-brass-400), 0 0 0 4px var(--color-navy-800); }
+  .steps[data-surface="sunken"] .step:last-child .step__knot { background: var(--color-brass-500); }
+  .steps[data-surface="navy"] .step:last-child .step__knot { background: var(--color-brass-400); }
+</style>

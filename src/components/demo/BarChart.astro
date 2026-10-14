@@ -1,0 +1,70 @@
+---
+// Column chart for demo windows (DESIGN.md §3.5): HTML labels that never scale below 12px, bars that grow
+// from one baseline. OWNER: demo engine. Surface-aware: navy inside a window, paper in .aw-doc / .ctx-light.
+//
+//   <BarChart el="daily" label="Thursday was the busiest day at $1,310" format={(n) => currency(n)}
+//     bars={[{ label: 'Mon', value: 640 }, …, { label: 'Thu', value: 1310, accent: true }]} />
+//   run: ctx.grow('@daily-bar') then ctx.cascade('@daily-val')
+//
+// One series uses --viz-1. Mark one bar `accent` to switch to the emphasis style (accent vs context gray).
+import { frac, niceMax, niceTicks } from './chart';
+import './demo.css';
+
+interface Bar {
+  label: string;
+  value: number;
+  /** Value label text (default format(value)). */
+  display?: string;
+  /** The one bar the story is about (brass accent; the rest turn context gray). */
+  accent?: boolean;
+}
+interface Props {
+  bars: Bar[];
+  /** Axis maximum (default: a round number above the largest bar). */
+  max?: number;
+  /** Gridline intervals (3–5). */
+  ticks?: number;
+  format?: (n: number) => string;
+  /** The finding, for role="img" (DESIGN.md §3.6). */
+  label: string;
+  title?: string;
+  sub?: string;
+  /** Provenance note under the plot ("Illustrative example: fictional data"). */
+  note?: string;
+  /** Plot height in px (default 150). */
+  plot?: number;
+  /** Value labels: all (default), accent (only the accent bar) or none. */
+  values?: 'all' | 'accent' | 'none';
+  /** Start state for the engine: bars data-grow, values data-ghost (default true). */
+  animate?: boolean;
+  /** Handle prefix: bars get data-el="{el}-bar", values "{el}-val", the figure "{el}". */
+  el?: string;
+  class?: string;
+}
+
+const { bars, ticks = 4, format = (n: number) => n.toLocaleString('en-US'), label, title, sub, note, plot = 150, values = 'all', animate = true, el, class: className } = Astro.props;
+const max = Astro.props.max ?? niceMax(Math.max(...bars.map((b) => b.value)), ticks);
+const lines = niceTicks(max, ticks);
+const emphasis = bars.some((b) => b.accent);
+const flag = (on: boolean) => (on ? '' : undefined);
+---
+<figure class:list={['chart', className]} data-el={el}>
+  {(title || sub) && (
+    <figcaption class="chart__head"><div>{title && <p class="chart__title">{title}</p>}{sub && <p class="chart__sub">{sub}</p>}</div></figcaption>
+  )}
+  <div class="bc" style={`--plot:${plot}px`} role="img" aria-label={label}>
+    <div class="bc__grid" aria-hidden="true">{lines.map((t) => <span style={`--v:${frac(t, max)}`} data-l={format(t)}></span>)}</div>
+    <div class="bc__cols" aria-hidden="true">
+      {bars.map((b) => (
+        <div class="bc__col" style={`--v:${frac(b.value, max)}`}>
+          <span class:list={['bc__bar', emphasis && (b.accent ? 'bc__bar--accent' : 'bc__bar--context')]} data-grow={flag(animate)} data-el={el && `${el}-bar`}></span>
+          {(values === 'all' || (values === 'accent' && b.accent)) && (
+            <span class="bc__val" data-ghost={flag(animate)} data-el={el && `${el}-val`}>{b.display ?? format(b.value)}</span>
+          )}
+          <span class="bc__lab">{b.label}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+  {note && <p class="chart__note">{note}</p>}
+</figure>

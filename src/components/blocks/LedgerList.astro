@@ -1,0 +1,21 @@
+---
+// Lists with brass knot bullets (DESIGN.md §6.8, §7.5): 'ledger' = hairline rows (.ledger-list, the
+// service columns), 'knot' = the same bullets without rules (.knot-list). Items may hold inline HTML.
+//
+//   <LedgerList items={['Customer Agent for chat, SMS, email and phone', 'Analyst Agent for the books']} />
+interface Props {
+  items: string[];
+  variant?: 'ledger' | 'knot';
+  /** Accessible name for the list. */
+  label?: string;
+  class?: string;
+}
+const { items, variant = 'ledger', label, class: className } = Astro.props;
+---
+<ul class:list={[variant === 'knot' ? 'knot-list' : 'ledger-list', className]} role="list" aria-label={label}>
+  {items.map((it) => <li><span set:html={it} /></li>)}
+</ul>
+
+<style>
+  .knot-list { display: grid; gap: 10px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg); }
+</style>

@@ -1,0 +1,63 @@
+---
+// Result card: the end of every demo (DESIGN.md §6.12, DEMOS.md §0.5, COPY.md §8.9). OWNER: demo engine.
+// Usually rendered by AppWindow through its `result` prop; standalone use is fine anywhere on paper.
+// Inside an AppWindow the engine keeps it hidden until the last step calls ctx.showResult(): the card
+// slides up, its brass rule draws in and every number in each value counts up.
+//
+//   <ResultCard
+//     metrics={[{ value: '34', unit: 'min', label: 'Saved each week', basis: '40 min by hand vs 6 min with review.' }, …]}
+//     label="Illustrative example"            // Consulting: ['Illustrative example', 'Modeled estimate']
+//     note="Assumptions: …" />
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import Button from '@/components/ui/Button.astro';
+import { site } from '@/config/site';
+import { url } from '@/lib/url';
+import type { ResultCardProps } from './types';
+import './demo.css';
+
+type Props = ResultCardProps;
+
+const {
+  metrics,
+  label = 'Illustrative example',
+  note,
+  title,
+  context,
+  heading = 'Result',
+  headingLevel = 3,
+  mathHref = '/results/#examples',
+  replay = true,
+  cta = true,
+  class: className,
+} = Astro.props;
+const labels = Array.isArray(label) ? label : [label];
+const H = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
+---
+<article class:list={['result-card', className]} data-result-card>
+  <div class="result-card__top">
+    <H class="type-h4">{heading}</H>
+    <div class="tag-row">{labels.map((kind) => <IllustrativeLabel kind={kind} />)}</div>
+  </div>
+  {context && <p class="result-card__ctx">{context}</p>}
+  {title && <p class="result-card__title">{title}</p>}
+  <div class="result-tiles">
+    {metrics.map((m) => (
+      <div class="result-tile">
+        <span class="result-tile__v"><span data-result-count={m.count === false ? undefined : ''}>{m.value}</span>{m.unit && <small>{m.unit}</small>}</span>
+        <span class="result-tile__k">{m.label}</span>
+        <span class="result-tile__basis">{m.basis}</span>
+      </div>
+    ))}
+  </div>
+  {note && <p class="math result-card__note">{note}</p>}
+  <div class="result-card__foot">
+    <a class="link result-card__math" href={url(mathHref)}>See the math</a>
+    {replay && <Button variant="secondary" size="sm" icon="rotate-ccw" data-demo-replay>Replay</Button>}
+    {cta && <Button href={site.cta.href} size="sm" icon="arrow-right">{site.cta.label}</Button>}
+  </div>
+</article>
+
+<style>
+  .result-card__note { margin-top: 14px; }
+  .result-card__math { font-size: 0.875rem; }
+</style>

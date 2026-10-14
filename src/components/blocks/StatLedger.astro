@@ -1,0 +1,23 @@
+---
+// A row of editorial stat cells (DESIGN.md §6.7 `.stat-ledger`): wraps StatTile cells and sets --cols.
+// Single column under 1024px (global CSS). Every cell carries its provenance tag (StatTile's `label`).
+//
+//   <StatLedger items={[{ context: 'AI Agents · plumbing and HVAC, 18 staff', value: '22', unit: 'hours a month', … }]} />
+import type { ComponentProps } from 'astro/types';
+import StatTile from '@/components/ui/StatTile.astro';
+
+type Item = ComponentProps<typeof StatTile>;
+interface Props {
+  items: Item[];
+  /** Columns on desktop (default: one per item, max 4). */
+  cols?: number;
+  /** data-reveal on the row (default true). */
+  reveal?: boolean;
+  class?: string;
+}
+const { items, cols, reveal = true, class: className } = Astro.props;
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+---
+<div class:list={['stat-ledger', className]} style={`--cols: ${cols ?? Math.min(items.length, 4)}`} {...revealAttr}>
+  {items.map((it) => <StatTile {...it} />)}
+</div>

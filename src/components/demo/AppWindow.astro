@@ -1,0 +1,240 @@
+---
+// AppWindow: the chrome and player shared by all six demos (DESIGN.md §6.10, DEMOS.md §0.1–§0.8).
+// OWNER: demo engine. Behavior: src/scripts/demo-engine.ts. Guide and template: DEMO_ENGINE.md.
+//
+//   <AppWindow demo="sales" steps={demo.steps} title={`${site.name} Sales Agent · Parkline IT`}
+//     columns="28% 44% 28%" tabs={[{ id: 'list', label: 'Prospects' }, …]}
+//     result={{ metrics, label: 'Illustrative example' }}
+//     microcopy="Simulated demo. Parkline IT … are fictional. Figures are illustrative.">
+//     <Fragment slot="meta"><span class="chip chip-running">…</span></Fragment>   <!-- title-bar status -->
+//     <section class="aw-pane aw-pane--sunk is-active" data-pane="list">…</section>     <!-- FINAL state -->
+//     <section class="aw-pane" data-pane="draft">…</section>
+//   </AppWindow>
+//
+// Slots
+//   default   the scene: panes as DIRECT children (data-pane="id" on each when `tabs` is set). Markup is the
+//             final state; data-hide / data-type / … attributes say how each element starts (DEMO_ENGINE.md).
+//   sidebar   optional left pane (navy-850), first grid column; give it an id with `sidebarPane`.
+//   meta      optional title-bar items left of the "Simulated demo" badge (status chip, clock). Reset with the scene.
+//   result    optional custom result content (otherwise pass `result` props for a ResultCard).
+//   transcript optional extra transcript content (after the captions and their `transcript` lines).
+import Icon from '@/components/ui/Icon.astro';
+import ResultCard from './ResultCard.astro';
+import type { PaneTab, ResultCardProps, StepMeta } from './types';
+import './demo.css';
+
+interface Props {
+  /** Demo id: data-demo on the root, matched by mountDemos(def) (`def.id`). */
+  demo: string;
+  /** The demo's steps (pass the definition's `steps`): chapters, captions, step list, transcript. */
+  steps: StepMeta[];
+  /** Centered window title ("{site.name} Sales Agent · Parkline IT"). */
+  title?: string;
+  /** Breadcrumb style instead of a title: <b>{app}</b> / {view}. */
+  app?: string;
+  view?: string;
+  /** Browser-style address pill ("larkfieldair.example/contact"), hidden on phones. */
+  address?: string;
+  /** Title-bar badge (COPY.md §8.9). */
+  badge?: string;
+  /** dark: navy panes (agent UI). light: the scene is the client's own app or document on paper. */
+  variant?: 'dark' | 'light';
+  /** Grid columns for the panes, e.g. "40% 60%" or "28% 44% 28%". Phones always show one pane. */
+  columns?: string;
+  /** Mobile pane tabs (shown under 768px only). Each id matches a data-pane in the scene. */
+  tabs?: PaneTab[];
+  /** Pane shown first on phones (default: the first tab). Also put class="is-active" on that pane. */
+  activeTab?: string;
+  /** Reserved scene height in px on desktop (fixed so playback never shifts the page). Default 520. */
+  height?: number;
+  /** Reserved scene height in px under 768px. Default: content height. */
+  mobileHeight?: number;
+  /** Optional minimum scene height in px. */
+  minHeight?: number;
+  /** Width of the sidebar column when the `sidebar` slot is used (default 30%). */
+  sidebarWidth?: string;
+  /** data-pane id for the sidebar (so a mobile tab can show it). */
+  sidebarPane?: string;
+  /** Mobile ticker: the final "latest action" line (the engine shows `tickerStart` at the beginning). */
+  ticker?: string;
+  tickerStart?: string;
+  /** Result card props (or use the `result` slot). */
+  result?: ResultCardProps;
+  /** The demo's microcopy line under the player (COPY.md §8.3–8.8). */
+  microcopy?: string;
+  /** Accessible name of the window group (default: title / app). */
+  label?: string;
+  /** false: never autoplay (page code drives it with demo:play). Default true. */
+  autoplay?: boolean;
+  class?: string;
+}
+
+const {
+  demo,
+  steps,
+  title,
+  app,
+  view,
+  address,
+  badge = 'Simulated demo',
+  variant = 'dark',
+  columns,
+  tabs,
+  activeTab,
+  height = 520,
+  mobileHeight,
+  minHeight,
+  sidebarWidth = '30%',
+  sidebarPane,
+  ticker,
+  tickerStart = 'Starting',
+  result,
+  microcopy,
+  label,
+  autoplay = true,
+  class: className,
+} = Astro.props;
+
+const hasSidebar = Astro.slots.has('sidebar');
+const hasMeta = Astro.slots.has('meta');
+const hasResultSlot = Astro.slots.has('result');
+const hasResult = hasResultSlot || !!result;
+const cols = columns ?? (hasSidebar ? `${sidebarWidth} minmax(0, 1fr)` : undefined);
+const total = steps.reduce((t, s) => t + s.duration, 0);
+const fmt = (ms: number) => {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+const first = activeTab ?? tabs?.[0]?.id;
+const sceneStyle = [
+  `--aw-h:${height}px`,
+  mobileHeight ? `--aw-h-m:${mobileHeight}px` : '',
+  minHeight ? `--aw-min-h:${minHeight}px` : '',
+  cols ? `--aw-cols:${cols}` : '',
+].filter(Boolean).join(';');
+const name = label ?? title ?? app ?? demo;
+const lines = (t?: string | string[]) => (t ? (Array.isArray(t) ? t : [t]) : []);
+---
+<div class:list={['aw-demo', className]} data-demo={demo} data-autoplay={autoplay ? undefined : 'off'}>
+  <div class="app-window app-window--demo" role="group" aria-label={`Simulated demo: ${name}`} tabindex="-1" data-demo-window>
+    <div class="aw-bar">
+      <span class="aw-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      {app ? (
+        <span class="aw-crumb"><b>{app}</b>{view && <><span class="aw-crumb__sep" aria-hidden="true">/</span><span>{view}</span></>}</span>
+      ) : title && <span class="aw-title">{title}</span>}
+      {address && <span class="aw-address">{address}</span>}
+      <span class="aw-meta">
+        {hasMeta && <span class="aw-meta__scene" data-demo-scene="meta"><slot name="meta" /></span>}
+        <span class="aw-tag">{badge}</span>
+      </span>
+    </div>
+
+    {tabs && tabs.length > 1 && (
+      <div class="aw-panetabs" role="group" aria-label="Show pane">
+        {tabs.map((t) => (
+          <button type="button" class="aw-panetab" aria-pressed={t.id === first ? 'true' : 'false'} data-demo-pane-tab={t.id}>
+            <span class="dot" aria-hidden="true"></span>{t.label}
+          </button>
+        ))}
+      </div>
+    )}
+
+    <div class="aw-stage" data-demo-stage>
+      <div
+        class:list={['aw-scene', cols && 'aw-scene--grid', variant === 'light' && 'aw-scene--light ctx-light']}
+        style={sceneStyle}
+        data-demo-scene="main"
+        data-panes
+      >
+        {hasSidebar && (
+          <aside class:list={['aw-pane aw-pane--sunk', sidebarPane && sidebarPane === first && 'is-active']} data-pane={sidebarPane}>
+            <slot name="sidebar" />
+          </aside>
+        )}
+        <slot />
+      </div>
+      {hasResult && (
+        <div class="aw-result" data-demo-result>
+          {hasResultSlot ? <slot name="result" /> : result && <ResultCard {...result} />}
+        </div>
+      )}
+    </div>
+
+    {ticker !== undefined && (
+      <div class="aw-ticker" data-demo-scene="ticker">
+        <Icon name="check" />
+        <span data-demo-ticker data-initial-text={tickerStart}>{ticker}</span>
+      </div>
+    )}
+
+    <div class="aw-caption" role="status" aria-live="polite" aria-atomic="true" aria-label="Demo captions" data-demo-caption>
+      <b data-demo-caption-count>Step 1 of {steps.length}</b><span data-demo-caption-text>{steps[0]?.caption}</span>
+    </div>
+
+    <div class="aw-static" data-demo-static>
+      <p class="aw-static__lead">
+        <span class="aw-static__nojs">This demo needs JavaScript. Here's the step-by-step version instead.</span>
+        <span class="aw-static__reduced">Motion is reduced, so every step is shown at once. Press Play to step through them one at a time.</span>
+      </p>
+      <ol class="aw-steplist">{steps.map((s) => <li><span>{s.caption}</span></li>)}</ol>
+    </div>
+
+    <div class="aw-player" data-demo-player>
+      <div class="aw-ctrl">
+        <button type="button" class="aw-btn aw-btn--main" data-demo-play aria-label="Play demo">
+          <Icon name="play" fill class="i-play" /><Icon name="pause" fill class="i-pause" />
+        </button>
+        <button type="button" class="aw-btn" data-demo-prev aria-label="Previous" hidden><Icon name="chevron-left" /></button>
+        <button type="button" class="aw-btn" data-demo-next aria-label="Next" hidden><Icon name="chevron-right" /></button>
+        <button type="button" class="aw-btn" data-demo-replay aria-label="Replay"><Icon name="rotate-ccw" /></button>
+      </div>
+      <div class="aw-chapters" data-demo-chapters>
+        {steps.map((s, i) => (
+          <button
+            type="button"
+            class="aw-chapter"
+            style={`--w:${(s.duration / 1000).toFixed(2)}`}
+            data-demo-chapter={i}
+            aria-label={`Step ${i + 1} of ${steps.length}: ${s.label ?? s.caption}`}
+          >
+            <span class="aw-chapter__bar"><span class="aw-chapter__fill"></span></span>
+            <span class="aw-chapter__label" aria-hidden="true">{s.label ?? `Step ${i + 1}`}</span>
+          </button>
+        ))}
+      </div>
+      <div class="aw-player__end">
+        <span class="aw-paused" data-demo-paused hidden>Paused</span>
+        <span class="aw-time" data-demo-time>0:00 / {fmt(total)}</span>
+        <button type="button" class="aw-skip" data-demo-skip>Skip to result</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-under">
+    <details class="aw-transcript">
+      <summary>
+        <span class="aw-transcript__show">Read the step-by-step</span><span class="aw-transcript__hide">Hide the step-by-step</span>
+        <Icon name="chevron-down" />
+      </summary>
+      <ol class="aw-steplist mt-2">
+        {steps.map((s) => (
+          <li>
+            <div>
+              {s.caption}
+              {lines(s.transcript).length > 0 && <ul class="aw-transcript__lines">{lines(s.transcript).map((l) => <li>{l}</li>)}</ul>}
+            </div>
+          </li>
+        ))}
+      </ol>
+      {result && (
+        <dl class="ledger-rows aw-transcript__result" aria-label={`${result.heading ?? 'Result'}: ${Array.isArray(result.label) ? result.label.join(', ') : (result.label ?? 'Illustrative example')}`}>
+          {result.metrics.map((m) => (
+            <div><dt>{m.label}</dt><dd>{m.value}{m.unit ? ` ${m.unit}` : ''}</dd></div>
+          ))}
+        </dl>
+      )}
+      <slot name="transcript" />
+    </details>
+    {microcopy && <p class="fig-caption">{microcopy}</p>}
+  </div>
+</div>

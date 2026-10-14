@@ -1,0 +1,32 @@
+---
+// Chat message for demo panes (customer chat widgets, agent panels). OWNER: demo engine.
+// Colors follow the surface: navy in agent panes, paper inside .aw-doc / a light scene.
+//
+//   <ChatBubble from="user" el="ask" meta="Dana · 9:47 pm">Can you total this week's orders?</ChatBubble>
+//   <ChatBubble from="agent" el="reply" stream>Sure. Reading the order sheet now…</ChatBubble>
+//   run: ctx.send('@composer', '@ask')   ·   ctx.reply('@reply')
+//
+// Bubbles start hidden (data-hide) because they arrive during the demo; pass hide={false} for history that
+// is already on screen. `stream` makes the text arrive word by word and the bubble grow (ctx.reply / ctx.stream).
+import './demo.css';
+
+interface Props {
+  from?: 'agent' | 'user';
+  /** Small line under the bubble ("AI assistant · 9:47 pm"). */
+  meta?: string;
+  /** data-el handle for ctx targets ('@name'). */
+  el?: string;
+  /** Starts hidden (default true). */
+  hide?: boolean;
+  /** The text streams in and the bubble grows (data-stream="grow"). */
+  stream?: boolean;
+  /** Full width (cards inside the chat: bookings, approvals). */
+  wide?: boolean;
+  class?: string;
+}
+const { from = 'agent', meta, el, hide = true, stream = false, wide = false, class: className } = Astro.props;
+---
+<div class:list={['chat-msg', `chat-msg--${from}`, wide && 'chat-msg--wide', className]} data-el={el} data-hide={hide ? '' : undefined}>
+  <div class="chat-bubble" data-stream={stream ? 'grow' : undefined}><slot /></div>
+  {meta && <span class="chat-meta">{meta}</span>}
+</div>

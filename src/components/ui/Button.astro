@@ -1,0 +1,62 @@
+---
+// .btn + variant + size (DESIGN.md §6.1). Renders <a> when `href` is set (internal paths go
+// through url(); http(s) links open in a new tab with an arrow-up-right icon), else <button>.
+// Arrow icons sit after the label and nudge on hover; other icons (play) sit before it.
+import type { HTMLAttributes } from 'astro/types';
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+import { url, isExternal } from '@/lib/url';
+
+type Variant = 'primary' | 'secondary' | 'ghost' | 'brass' | 'outline-dark';
+interface Props extends Omit<HTMLAttributes<'a'> & HTMLAttributes<'button'>, 'type'> {
+  href?: string;
+  variant?: Variant;
+  size?: 'sm' | 'md' | 'lg';
+  /** Full width (.btn-block): hero CTA on phones, form submit under 640px. */
+  block?: boolean;
+  icon?: IconName;
+  /** Default: 'end' for arrow-* icons, 'start' for everything else. */
+  iconPosition?: 'start' | 'end';
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  /** Force new-tab behavior on or off (default: on for http(s) links). */
+  newTab?: boolean;
+  class?: string;
+}
+
+const {
+  href, variant = 'primary', size = 'md', block = false, icon, iconPosition, type = 'button',
+  disabled = false, newTab, class: className, ...rest
+} = Astro.props;
+
+const isWeb = !!href && /^(https?:)?\/\//i.test(href);
+const openNew = newTab ?? isWeb;
+const finalHref = href ? (isExternal(href) || href.startsWith('#') ? href : url(href)) : undefined;
+const iconName: IconName | undefined = icon ?? (isWeb && openNew ? 'arrow-up-right' : undefined);
+const isArrow = !!iconName && iconName.startsWith('arrow-');
+const position = iconPosition ?? (isArrow ? 'end' : 'start');
+const classes = ['btn', `btn-${variant}`, size !== 'md' && `btn-${size}`, block && 'btn-block', className];
+const iconClass = ['btn__icon', isArrow && 'btn__icon--arrow'];
+const fillIcon = iconName === 'play' || iconName === 'pause';
+---
+{finalHref ? (
+  <a
+    class:list={classes}
+    href={disabled ? undefined : finalHref}
+    target={openNew ? '_blank' : undefined}
+    rel={openNew ? 'noopener' : undefined}
+    aria-disabled={disabled ? 'true' : undefined}
+    {...rest}
+  >
+    {iconName && position === 'start' && <Icon name={iconName} class:list={iconClass} fill={fillIcon} />}
+    <span><slot /></span>
+    {openNew && <span class="sr-only">(opens in a new tab)</span>}
+    {iconName && position === 'end' && <Icon name={iconName} class:list={iconClass} fill={fillIcon} />}
+  </a>
+) : (
+  <button class:list={classes} type={type} disabled={disabled} {...rest}>
+    {iconName && position === 'start' && <Icon name={iconName} class:list={iconClass} fill={fillIcon} />}
+    <span><slot /></span>
+    {iconName && position === 'end' && <Icon name={iconName} class:list={iconClass} fill={fillIcon} />}
+  </button>
+)}

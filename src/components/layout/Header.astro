@@ -1,0 +1,264 @@
+---
+// Sticky site header, Services mega menu and mobile menu (DESIGN.md §6.14). OWNER: foundation (layout).
+// Rendered once by BaseLayout. Nav labels and routes come from site.nav (COPY.md §1.1); the three
+// agent roles come from @/data/services. Active state: aria-current="page" (sections count for
+// Demos / Results / Approach; the Services button gets .is-active anywhere under /services/).
+import Logo from '@/components/ui/Logo.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { site, type NavItem } from '@/config/site';
+import { agentRoles } from '@/data/services';
+import { url, isActive } from '@/lib/url';
+
+type ParentItem = Extract<NavItem, { children: unknown[] }>;
+const path = Astro.url.pathname;
+const servicesNav = site.nav.find((i): i is ParentItem => Array.isArray(i.children));
+const links = site.nav.filter((i) => !i.children);
+const servicesActive = servicesNav ? isActive(servicesNav.href, path, { section: true }) : false;
+const current = (href: string, section = false) => (isActive(href, path, { section }) ? ('page' as const) : undefined);
+---
+<header class="site-header" data-site-header>
+  <div class="wrap site-header__inner">
+    <Logo />
+    <nav class="site-nav" aria-label="Primary">
+      <ul class="nav-links">
+        {servicesNav && (
+          <li class="nav-dropdown" data-dropdown>
+            <button
+              class:list={['nav-link', servicesActive && 'is-active']}
+              type="button"
+              aria-expanded="false"
+              aria-controls="nav-services-panel"
+              data-dropdown-btn
+            >
+              {servicesNav.label}
+              <Icon name="chevron-down" />
+            </button>
+            <div class="nav-panel nav-mega" id="nav-services-panel" data-dropdown-panel>
+              <div class="nav-mega__grid">
+                <div>
+                  <p class="nav-mega__label type-label" id="nav-mega-services">Services</p>
+                  <ul class="nav-mega__list" aria-labelledby="nav-mega-services">
+                    {servicesNav.children.map((s) => (
+                      <li>
+                        <a class="nav-panel__item" href={url(s.href)} aria-current={current(s.href)}>
+                          <span class="icon-tile icon-tile--sm"><Icon name={s.icon as IconName} size={18} /></span>
+                          <span><b>{s.label}</b><span>{s.description}</span></span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div class="nav-mega__roles">
+                  <p class="nav-mega__label type-label" id="nav-mega-roles">AI Agents: three roles</p>
+                  <ul class="nav-mega__list" aria-labelledby="nav-mega-roles">
+                    {agentRoles.map((r) => (
+                      <li>
+                        <a class="nav-panel__item nav-mega__role" href={url(r.href)}>
+                          <span class="nav-mega__glyph"><Icon name={r.icon} size={18} /></span>
+                          <span><b>{r.name}</b><span>{r.headline}</span></span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div class="nav-panel__foot">
+                <a class="link-arrow" href={url(servicesNav.allLink.href)}><span>{servicesNav.allLink.label}</span><Icon name="arrow-right" /></a>
+                <a class="link-arrow" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
+              </div>
+            </div>
+          </li>
+        )}
+        {links.map((l) => (
+          <li><a class="nav-link" href={url(l.href)} aria-current={current(l.href, true)}>{l.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn btn-primary btn-sm" href={url(site.cta.href)}>
+        <span class="max-sm:hidden">{site.cta.labelShort}</span><span class="sm:hidden">{site.cta.labelMobile}</span>
+        <Icon name="arrow-right" class="btn__icon btn__icon--arrow max-sm:hidden" />
+      </a>
+      <button class="nav-menu-btn" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu" data-menu-btn>
+        <span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Outside <header>: the header's backdrop-filter would otherwise become the containing block of this fixed panel. -->
+<nav class="mobile-menu" id="mobile-menu" aria-label="Menu" data-mobile-menu>
+  {servicesNav && (
+    <>
+      <a class="mobile-menu__link" href={url(servicesNav.href)} aria-current={current(servicesNav.href)}>
+        {servicesNav.label}<Icon name="chevron-right" />
+      </a>
+      <div class="mobile-menu__sub">
+        {servicesNav.children.map((s) => (
+          <a href={url(s.href)} aria-current={current(s.href)}><b>{s.label}</b><span>{s.description}</span></a>
+        ))}
+      </div>
+    </>
+  )}
+  {links.map((l) => (
+    <a class="mobile-menu__link" href={url(l.href)} aria-current={current(l.href, true)}>{l.label}<Icon name="chevron-right" /></a>
+  ))}
+  <a class="mobile-menu__link" href={url('/contact/')} aria-current={current('/contact/')}>Contact<Icon name="chevron-right" /></a>
+  <a class="btn btn-primary btn-lg btn-block mt-7" href={url(site.cta.href)}>
+    <span>{site.cta.label}</span><Icon name="arrow-right" class="btn__icon btn__icon--arrow" />
+  </a>
+  <p class="mt-3 text-center text-caption text-fg-3">{site.footer.ctaMicrocopy}</p>
+  <p class="mt-6 text-center text-small text-fg-2">
+    {site.footer.contactLine} <a class="link" href={`mailto:${site.email}`}>{site.email}</a>
+  </p>
+</nav>
+
+<style>
+  /* The mega menu anchors to the header row (centered), so it never runs off narrow desktops. */
+  .site-header__inner { position: relative; }
+  .nav-dropdown { position: static; }
+  .nav-mega { top: calc(100% - 4px); left: 50%; translate: -50% 0; width: min(840px, calc(100vw - 2 * var(--spacing-gutter))); }
+  .nav-mega::before { content: ""; position: absolute; inset: -18px 0 auto; height: 18px; } /* hover bridge from the button */
+  .nav-mega__grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; }
+  .nav-mega__label { padding: 10px 12px 4px; }
+  .nav-mega__list { display: grid; gap: 2px; }
+  .nav-mega__roles { border-radius: var(--radius-tile); background: var(--color-paper-sunken); }
+  /* global .nav-panel__item span (the item's text) must not restyle the icon holders */
+  .nav-panel__item .icon-tile { display: grid; margin-top: 0; color: var(--color-on); }
+  .nav-mega__glyph { display: grid; flex: none; place-items: center; width: 24px; height: 24px; margin-top: 0; color: var(--accent-display); }
+  .nav-panel__item[aria-current="page"] { box-shadow: inset 0 0 0 1px var(--color-rule-strong); }
+  /* Become visible at once when opening (the fade still runs), so focus can move in on the same keypress. */
+  .nav-dropdown.is-open .nav-panel { transition-duration: 0.2s, 0.2s, 0s; }
+  .mobile-menu.is-open { transition-duration: 0.25s, 0.25s, 0s; }
+  .nav-link.is-active { color: var(--color-ink); }
+  .nav-link.is-active::after { transform: scaleX(1); }
+
+  .mobile-menu__link[aria-current="page"],
+  .mobile-menu__sub a[aria-current="page"] b { text-decoration: underline 1px var(--color-brass-500); text-underline-offset: 6px; }
+
+  /* Open mobile menu: lock page scroll and give the header a solid edge. */
+  :global(html.menu-open), :global(html.menu-open body) { overflow: hidden; }
+  :global(html.menu-open) .site-header { background: var(--color-paper); border-bottom-color: var(--color-rule); }
+</style>
+
+<script>
+  const DESKTOP = window.matchMedia('(min-width: 64rem)');
+
+  function initHeader(header: HTMLElement) {
+    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    header.querySelectorAll<HTMLElement>('[data-dropdown]').forEach(initDropdown);
+  }
+
+  // Disclosure-style menu: Enter/Space toggle, ArrowDown/ArrowUp open and move, Home/End,
+  // Escape closes and returns focus, outside click or focus leaving closes, hover intent on desktop.
+  function initDropdown(dd: HTMLElement) {
+    const btn = dd.querySelector<HTMLButtonElement>('[data-dropdown-btn]');
+    const panel = dd.querySelector<HTMLElement>('[data-dropdown-panel]');
+    if (!btn || !panel) return;
+    const items = () => Array.from(panel.querySelectorAll<HTMLAnchorElement>('a[href]'));
+    const isOpen = () => btn.getAttribute('aria-expanded') === 'true';
+    let hoverOpened = false;
+    let timer = 0;
+
+    const set = (open: boolean, focusButton = false) => {
+      window.clearTimeout(timer);
+      dd.classList.toggle('is-open', open);
+      btn.setAttribute('aria-expanded', String(open));
+      if (!open) {
+        hoverOpened = false;
+        if (focusButton) btn.focus();
+      }
+    };
+
+    btn.addEventListener('click', () => {
+      if (isOpen() && hoverOpened) { hoverOpened = false; return; } // a click pins a hover-opened menu
+      set(!isOpen());
+    });
+    btn.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      e.preventDefault();
+      set(true);
+      const list = items();
+      const target = e.key === 'ArrowDown' ? list[0] : list[list.length - 1];
+      target?.focus();
+      if (target && document.activeElement !== target) requestAnimationFrame(() => target.focus());
+    });
+    panel.addEventListener('keydown', (e) => {
+      const list = items();
+      const i = list.indexOf(document.activeElement as HTMLAnchorElement);
+      let next = -1;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = (i + 1) % list.length;
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = (i - 1 + list.length) % list.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = list.length - 1;
+      if (next < 0) return;
+      e.preventDefault();
+      list[next].focus();
+    });
+    dd.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen()) { e.preventDefault(); set(false, true); }
+    });
+    dd.addEventListener('focusout', (e) => {
+      const to = e.relatedTarget as Node | null;
+      if (isOpen() && to && !dd.contains(to)) set(false);
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (isOpen() && !dd.contains(e.target as Node)) set(false);
+    });
+    dd.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse' || !DESKTOP.matches) return;
+      window.clearTimeout(timer);
+      if (!isOpen()) timer = window.setTimeout(() => { set(true); hoverOpened = true; }, 120);
+    });
+    dd.addEventListener('pointerleave', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      window.clearTimeout(timer);
+      if (isOpen() && hoverOpened) timer = window.setTimeout(() => set(false), 220);
+    });
+  }
+
+  // Full-height mobile menu: focus moves in and is trapped (menu button + menu links),
+  // Escape closes and returns focus, page scroll is locked while open.
+  function initMenu(btn: HTMLButtonElement, menu: HTMLElement) {
+    const focusables = () => Array.from(menu.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
+    const isOpen = () => btn.getAttribute('aria-expanded') === 'true';
+    const set = (open: boolean, restoreFocus = true) => {
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+      menu.classList.toggle('is-open', open);
+      document.documentElement.classList.toggle('menu-open', open);
+      if (open) {
+        const first = focusables()[0];
+        first?.focus({ preventScroll: true });
+        if (first && document.activeElement !== first) requestAnimationFrame(() => first.focus({ preventScroll: true }));
+      } else if (restoreFocus) btn.focus();
+    };
+
+    btn.addEventListener('click', () => set(!isOpen()));
+    menu.addEventListener('click', (e) => {
+      if ((e.target as Element).closest('a')) set(false, false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!isOpen()) return;
+      if (e.key === 'Escape') { e.preventDefault(); set(false); return; }
+      if (e.key !== 'Tab') return;
+      const list = [btn, ...focusables()];
+      const first = list[0];
+      const last = list[list.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (!active || !list.includes(active)) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+      else if (e.shiftKey && active === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+    });
+    DESKTOP.addEventListener('change', (e) => { if (e.matches && isOpen()) set(false, false); });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-site-header]').forEach(initHeader);
+  document.querySelectorAll<HTMLButtonElement>('[data-menu-btn]').forEach((btn) => {
+    const menu = document.getElementById(btn.getAttribute('aria-controls') ?? '');
+    if (menu) initMenu(btn, menu);
+  });
+</script>

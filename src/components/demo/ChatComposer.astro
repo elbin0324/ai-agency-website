@@ -1,0 +1,19 @@
+---
+// Chat composer row: the field a person types into before a message sends. OWNER: demo engine.
+// The field is empty in the final state; ctx.send('@composer', '@bubble') types the bubble's text into it
+// (18 ms per character after a 300 ms pause, DEMOS.md `type`) and then moves it into the bubble.
+import Icon from '@/components/ui/Icon.astro';
+import './demo.css';
+
+interface Props {
+  placeholder?: string;
+  /** data-el of the field (default "composer"). */
+  el?: string;
+  class?: string;
+}
+const { placeholder = 'Type a message…', el = 'composer', class: className } = Astro.props;
+---
+<div class:list={['chat-composer', className]}>
+  <span class="chat-composer__field" data-el={el} data-placeholder={placeholder} data-autoscroll></span>
+  <span class="chat-composer__send"><Icon name="send" /></span>
+</div>

@@ -1,0 +1,57 @@
+---
+// Skeleton for a section or component another engineer still has to build. OWNER: foundation (layout).
+// The real component replaces its placeholder file; nothing else needs to change.
+//   <Placeholder name="Integrations" owner="home-hero" id="integrations" description="…" />  a <section id> on the page rhythm
+//   <Placeholder name="ScenarioCard" owner="results" block description="…" />               the dashed block only
+// Uses role utilities only, so it reads on paper, sunken and navy bands.
+import Section from '@/components/ui/Section.astro';
+
+interface Props {
+  /** Component name shown in the block ("Hero", "RoiCalculator"). */
+  name: string;
+  /** One line: what the finished component shows. */
+  description: string;
+  /** Owner id from the build plan ("home-hero"). */
+  owner?: string;
+  /** Section id (anchor) when rendered as a section. */
+  id?: string;
+  tone?: 'paper' | 'sunken' | 'navy';
+  size?: 'default' | 'tight';
+  /** Render just the dashed block, without a <section> wrapper. */
+  block?: boolean;
+  /** Heading tag for the visible title (default h2, h3 for blocks; h1 for page heroes). */
+  heading?: 'h1' | 'h2' | 'h3';
+  /** Visible title; defaults to `name`. */
+  title?: string;
+  /** Minimum block height in px. */
+  minHeight?: number;
+  class?: string;
+}
+
+const {
+  name, description, owner, id, tone = 'paper', size = 'default', block = false, heading = block ? 'h3' : 'h2', title,
+  minHeight = 200, class: className,
+} = Astro.props;
+const H = heading;
+const isHero = heading === 'h1';
+const Wrap = block ? Fragment : Section;
+const wrapProps = block ? {} : { id, name: id ?? name, tone, size, class: className };
+---
+<Wrap {...wrapProps}>
+  <div
+    class:list={['flex flex-col justify-center gap-4 rounded-card border border-dashed border-line-strong p-6 sm:p-8', block && className]}
+    style={`min-height:${minHeight}px`}
+    data-placeholder={name}
+  >
+    <p class="type-label flex flex-wrap justify-between gap-x-6 gap-y-1 text-fg-3">
+      <span>{name}{!block && id && <> · #{id}</>}</span>{owner && <span>Owner: {owner}</span>}
+    </p>
+    <H class:list={[isHero ? 'type-h1' : 'type-h3', 'text-fg']}>{title ?? name}</H>
+    <p class:list={[isHero ? 'type-lead' : 'text-body', 'max-w-[60ch] text-fg-2']}>{description}</p>
+    <div class="mt-1 grid gap-2" aria-hidden="true">
+      <span class="block h-2 w-2/3 rounded-data bg-line"></span>
+      <span class="block h-2 w-1/2 rounded-data bg-line"></span>
+    </div>
+    <slot />
+  </div>
+</Wrap>

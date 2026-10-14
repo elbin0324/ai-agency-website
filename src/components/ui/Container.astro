@@ -1,0 +1,15 @@
+---
+// The page column: .wrap = 1240px + gutters, 16px minimum side padding (DESIGN.md §5).
+// width="longform" (680px) or "measure" (576px) narrows the column, still centered.
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'div'> {
+  as?: 'div' | 'section' | 'header' | 'footer' | 'nav' | 'article' | 'main';
+  width?: 'page' | 'longform' | 'measure';
+  class?: string;
+}
+const { as: Tag = 'div', width = 'page', class: className, style, ...rest } = Astro.props;
+const widthStyle = width === 'page' ? '' : `max-width: calc(var(--container-${width}) + 2 * var(--spacing-gutter));`;
+const styleAttr = [widthStyle, typeof style === 'string' ? style : ''].join('') || undefined;
+---
+<Tag class:list={['wrap', className]} style={styleAttr} {...rest}><slot /></Tag>

@@ -1,0 +1,83 @@
+---
+// Two figure tiles (DESIGN.md §6.7):
+//
+// variant 'stat' (default): one editorial cell of a .stat-ledger (Results, Home examples), on paper or navy.
+//   Wrap cells in <div class="stat-ledger" style="--cols: 3">…</div> (single column under 1024px).
+//   value in Fraunces with a brass Geist unit; label = provenance tag (every outcome figure needs one);
+//   bars = math bars drawn to scale (pct 0-100; accent marks "With the agent");
+//   math = formula lines (HTML allowed for <b>key numbers</b>); link = "See the math".
+//
+// variant 'kpi': the product KPI inside an app window (navy only, Geist numbers, never serif).
+//   delta.direction picks the glyph (▲/▼), delta.good picks the color (sage/clay).
+import Icon from './Icon.astro';
+import IllustrativeLabel from './IllustrativeLabel.astro';
+import { url } from '@/lib/url';
+
+type Bar = { label: string; value: string; pct: number; accent?: boolean };
+interface Props {
+  variant?: 'stat' | 'kpi';
+  value: string;
+  unit?: string;
+  /** stat: business type line ("Home services · 18 staff"). kpi: the KPI label. */
+  context?: string;
+  description?: string;
+  label?: 'Illustrative example' | 'Modeled estimate' | false;
+  bars?: Bar[];
+  math?: string | string[];
+  link?: { label: string; href: string };
+  delta?: { value: string; direction?: 'up' | 'down'; good?: boolean; note?: string };
+  as?: 'article' | 'div' | 'li';
+  class?: string;
+}
+
+const {
+  variant = 'stat', value, unit, context, description, label = 'Illustrative example', bars = [], math, link,
+  delta, as: Tag = variant === 'kpi' ? 'div' : 'article', class: className,
+} = Astro.props;
+const mathLines = math ? (Array.isArray(math) ? math : [math]) : [];
+const clamp = (n: number) => Math.max(0, Math.min(100, n));
+---
+{variant === 'kpi' ? (
+  <Tag class:list={['kpi', className]}>
+    {context && <span class="kpi__label">{context}</span>}
+    <span class="kpi__value">{value}{unit && <small>{unit}</small>}</span>
+    {delta && (
+      <span class="kpi__delta">
+        <b class={delta.good === false ? 'is-bad' : 'is-good'}>{delta.direction === 'down' ? '▼' : '▲'} {delta.value}</b>
+        {delta.note}
+      </span>
+    )}
+    <slot />
+  </Tag>
+) : (
+  <Tag class:list={['stat', className]}>
+    {(label || context) && (
+      <div class="stat__top">
+        {label && <IllustrativeLabel kind={label} />}
+        {context && <span class="stat__svc">{context}</span>}
+      </div>
+    )}
+    <p class="stat__fig">{value}{unit && <small>{unit}</small>}</p>
+    {description && <p class="stat__desc">{description}</p>}
+    {bars.length > 0 && (
+      <div class="stat__bars">
+        {bars.map((b) => (
+          <div class="mbar">
+            <span class="mbar__label">{b.label}</span>
+            <span class="mbar__track"><span class:list={['mbar__fill', b.accent && 'mbar__fill--accent']} style={`width:${clamp(b.pct)}%`}></span></span>
+            <span class="mbar__val">{b.value}</span>
+          </div>
+        ))}
+      </div>
+    )}
+    <slot />
+    {(mathLines.length > 0 || link) && (
+      <div class="stat__math">
+        {mathLines.map((m) => <p class="math" set:html={m} />)}
+        {link && (
+          <p><a class="link-arrow" href={url(link.href)}><span>{link.label}</span><Icon name="arrow-right" /></a></p>
+        )}
+      </div>
+    )}
+  </Tag>
+)}

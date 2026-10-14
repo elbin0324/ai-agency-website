@@ -1,0 +1,84 @@
+---
+// The step-by-step math as a compact hairline ledger (DESIGN.md §4.3 math, §6.4, §6.8): line item in fg-2,
+// the formula in Geist Mono, the result in Geist 600 tabular, right-aligned. Totals ("Monthly value",
+// "Annual value") get a strong rule and ink weight; "For context" rows are muted. Detected from the
+// label unless a row sets `kind`. Rows match MathRow in @/data/worth and @/data/scenarios.
+// Under 640px each row folds to two lines: the label, then formula and value.
+//
+// With a caption and heads, desktop shows the caption in the first column head (one label row, so it
+// lines up with neighboring ledger titles); phones show it above the rows.
+//
+//   <MathLedger caption="The math" rows={example.math} />
+type Row = { label: string; formula?: string; value: string; kind?: 'step' | 'total' | 'context' };
+
+interface Props {
+  rows: Row[];
+  /** Visible caption above the ledger (mono label). Omit for none; the table keeps an sr-only name. */
+  caption?: string;
+  /** Column heads: line item, formula, value. */
+  columns?: [string, string, string];
+  /** Show the column heads on desktop (default true). */
+  heads?: boolean;
+  class?: string;
+}
+
+const { rows, caption, columns = ['Line item', 'Formula', 'Value'], heads = true, class: className } = Astro.props;
+const merged = !!caption && heads;
+const kindOf = (r: Row) =>
+  r.kind ?? (/^(monthly|annual|total)\b.*\bvalue\b/i.test(r.label) || /^total\b/i.test(r.label) ? 'total' : /^for context\b/i.test(r.label) ? 'context' : 'step');
+---
+<table class:list={['mledger', !heads && 'mledger--no-heads', merged && 'mledger--merged', className]} role="table">
+  <caption class:list={[caption ? 'type-label mledger__caption' : 'sr-only']}>{caption ?? 'The math'}</caption>
+  <thead role="rowgroup">
+    <tr role="row">
+      <th role="columnheader" scope="col">
+        {merged ? <Fragment><span class="mledger__lead" aria-hidden="true">{caption}</span><span class="sr-only">{columns[0]}</span></Fragment> : columns[0]}
+      </th>
+      <th role="columnheader" scope="col">{columns[1]}</th>
+      <th role="columnheader" scope="col" class="mledger__v">{columns[2]}</th>
+    </tr>
+  </thead>
+  <tbody role="rowgroup">
+    {rows.map((r) => {
+      const kind = kindOf(r);
+      return (
+        <tr role="row" class:list={[kind === 'total' && 'is-total', kind === 'context' && 'is-context']}>
+          <th role="rowheader" scope="row">{r.label}</th>
+          <td role="cell" class="mledger__f">{r.formula ?? ''}</td>
+          <td role="cell" class="mledger__v">{r.value}</td>
+        </tr>
+      );
+    })}
+  </tbody>
+</table>
+
+<style>
+  .mledger { width: 100%; border-collapse: collapse; font-size: 0.875rem; line-height: 1.45; }
+  .mledger__caption { caption-side: top; padding-bottom: 12px; text-align: left; }
+  .mledger th, .mledger td { padding: 9px 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--line); }
+  .mledger thead th { padding: 0 0 8px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.2; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); border-bottom-color: var(--line-strong); }
+  .mledger--no-heads thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .mledger__lead { color: var(--fg-2); letter-spacing: 0.14em; }
+  @media (width >= 40rem) {
+    .mledger--merged caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  }
+  .mledger tbody th { padding-right: 20px; font-weight: 400; color: var(--fg-2); }
+  .mledger__f { padding-right: 20px; font-family: var(--font-mono); font-size: 0.8125rem; letter-spacing: 0.01em; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+  .mledger .mledger__v { text-align: right; white-space: nowrap; }
+  .mledger tbody .mledger__v { font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .mledger tbody tr:last-child > * { border-bottom: 0; }
+  .mledger tbody tr:has(+ .is-total) > * { border-bottom-color: var(--line-strong); }
+  .mledger .is-total th { font-weight: 600; color: var(--fg); }
+  .mledger .is-total .mledger__f { color: var(--fg-2); }
+  .mledger .is-context th, .mledger .is-context .mledger__v { font-weight: 400; color: var(--fg-3); }
+
+  @media (width < 40rem) {
+    .mledger, .mledger tbody, .mledger caption { display: block; }
+    .mledger thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .mledger tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .mledger tbody tr:last-child { border-bottom: 0; }
+    .mledger th, .mledger td { padding: 0; border: 0; }
+    .mledger tbody th { grid-column: 1 / -1; padding: 0 0 2px; }
+    .mledger tbody tr:has(+ .is-total) { border-bottom-color: var(--line-strong); }
+  }
+</style>

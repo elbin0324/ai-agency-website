@@ -1,0 +1,164 @@
+---
+// Inner-page hero (DESIGN.md §6.23, §7.2). Renders its own <section class="page-hero">:
+//   breadcrumbs (.crumbs, aria-current on the last item, BreadcrumbList JSON-LD) · eyebrow ·
+//   .type-h1 with the page's ONE brass italic phrase (wrap it in *asterisks*) · .type-lead ·
+//   check chips (.page-hero__chips, optional anchors) · CTA row · microcopy · optional visual.
+// Pass a visual in the "art" slot to get .page-hero--split (copy 6 cols, art 5 cols).
+// The hero sits in the first viewport, so nothing here uses data-reveal.
+//
+//   <PageHero crumbs={[{ label: 'Services', href: '/services/' }, { label: 'AI Agents' }]}
+//     eyebrow="AI Agents" title="An AI staff for your front desk, *your numbers* and your inbox."
+//     subtitle="…" chips={[{ label: 'Customer Agent', href: '#customer-agent' }]}
+//     secondary={{ label: 'Watch the three demos', href: '#demos', icon: 'play' }} micro="…">
+//     <figure slot="art">…AppWindow…</figure>
+//   </PageHero>
+import Button from '@/components/ui/Button.astro';
+import Container from '@/components/ui/Container.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { site } from '@/config/site';
+import { url, isExternal } from '@/lib/url';
+
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'brass' | 'outline-dark';
+type Cta = { label: string; href: string; icon?: IconName; variant?: ButtonVariant };
+type Crumb = { label: string; href?: string };
+type Chip = string | { label: string; href?: string; icon?: IconName };
+
+interface Props {
+  /** Section id (default "hero") and data-section hook. */
+  id?: string;
+  /** Trail after Home; the last item is the current page. Home is added unless the first crumb points to "/". [] hides the trail. */
+  crumbs?: Crumb[];
+  eyebrow?: string;
+  /** H1 text. Wrap one phrase in *asterisks* for the brass italic (one per page). */
+  title: string;
+  subtitle?: string;
+  chips?: Chip[];
+  /** Accessible name of the chip list. */
+  chipsLabel?: string;
+  /** Primary CTA (default: site.cta with an arrow). false hides it. */
+  primary?: Cta | false;
+  /** Secondary CTA. Default variant: ghost when it has a play icon, else secondary (outline-dark on navy). */
+  secondary?: Cta;
+  /** One line under the buttons. */
+  micro?: string;
+  /** Background: paper (default, with the hero light), sunken, or navy (dark context; buttons switch to brass / outline). */
+  tone?: 'paper' | 'sunken' | 'navy';
+  titleId?: string;
+  /** Emit BreadcrumbList structured data for the trail (default true). */
+  jsonLd?: boolean;
+  /** Heading tag (default 1). Only the /dev/ kitchen sink shows a second hero, as an h2. */
+  level?: 1 | 2;
+  class?: string;
+}
+
+const {
+  id = 'hero', crumbs, eyebrow, title, subtitle, chips = [], chipsLabel = 'At a glance', primary, secondary, micro,
+  tone = 'paper', titleId = `${id}-title`, jsonLd = true, level = 1, class: className,
+} = Astro.props;
+const H = `h${level}` as 'h1' | 'h2';
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const titleHtml = esc(title).replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+const dark = tone === 'navy';
+const trail: Crumb[] = !crumbs || crumbs.length === 0
+  ? []
+  : crumbs[0].href === '/' ? crumbs : [{ label: 'Home', href: '/' }, ...crumbs];
+
+const primaryCta: Cta | null = primary === false ? null : primary ?? { label: site.cta.label, href: site.cta.href, icon: 'arrow-right' };
+const primaryVariant: ButtonVariant = primaryCta?.variant ?? (dark ? 'brass' : 'primary');
+const secondaryVariant: ButtonVariant = secondary?.variant
+  ?? (secondary?.icon === 'play' ? 'ghost' : dark ? 'outline-dark' : 'secondary');
+
+const hasArt = Astro.slots.has('art');
+const hasExtra = Astro.slots.has('default');
+const chipItems = chips.map((c) => (typeof c === 'string' ? { label: c } : c));
+const chipHref = (h: string) => (h.startsWith('#') || isExternal(h) ? h : url(h));
+
+const siteBase = Astro.site ?? new URL(site.siteUrl);
+const ld = jsonLd && trail.length > 1
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: trail.map((c, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: c.label,
+        item: new URL(c.href ? url(c.href) : Astro.url.pathname, siteBase).href,
+      })),
+    }
+  : null;
+---
+<section
+  id={id}
+  data-section={id}
+  aria-labelledby={titleId}
+  class:list={['page-hero', hasArt && 'page-hero--split', tone === 'sunken' && 'band-sunken', dark && 'band-navy', className]}
+>
+  <Container>
+    {trail.length > 0 && (
+      <nav class="crumbs" aria-label="Breadcrumb">
+        {trail.map((c, i) => {
+          const last = i === trail.length - 1;
+          return (
+            <Fragment>
+              {i > 0 && <span aria-hidden="true">/</span>}
+              {last || !c.href ? <span aria-current={last ? 'page' : undefined}>{c.label}</span> : <a href={url(c.href)}>{c.label}</a>}
+            </Fragment>
+          );
+        })}
+      </nav>
+    )}
+    <div class="page-hero__grid">
+      <div class="page-hero__copy">
+        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+        <H id={titleId} class:list={['type-h1', eyebrow && 'mt-5']} set:html={titleHtml} />
+        {subtitle && <p class="type-lead mt-5">{subtitle}</p>}
+        {hasExtra && <div class="mt-5"><slot /></div>}
+        {chipItems.length > 0 && (
+          <ul class="page-hero__chips" role="list" aria-label={chipsLabel}>
+            {chipItems.map((c) => (
+              <li>
+                {c.href ? (
+                  <a class="page-hero__chip-link link" href={chipHref(c.href)}><Icon name={c.icon ?? 'check'} />{c.label}</a>
+                ) : (
+                  <Fragment><Icon name={c.icon ?? 'check'} />{c.label}</Fragment>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        {(primaryCta || secondary) && (
+          <div class="page-hero__ctas mt-8">
+            {primaryCta && (
+              <Button href={primaryCta.href} variant={primaryVariant} size="lg" icon={primaryCta.icon} class="page-hero__primary">{primaryCta.label}</Button>
+            )}
+            {secondary && (
+              <Button href={secondary.href} variant={secondaryVariant} size={secondaryVariant === 'ghost' ? 'md' : 'lg'} icon={secondary.icon}>{secondary.label}</Button>
+            )}
+          </div>
+        )}
+        {micro && <p class="mt-3 text-caption text-fg-3">{micro}</p>}
+      </div>
+      {hasArt && <div class="page-hero__art"><slot name="art" /></div>}
+    </div>
+  </Container>
+  {ld && <script type="application/ld+json" is:inline set:html={JSON.stringify(ld)} />}
+</section>
+
+<style>
+  /* Hero light (DESIGN.md §7.2): white light on paper, page heroes and the Home hero only. */
+  .page-hero { position: relative; isolation: isolate; }
+  .page-hero:not(.band-navy)::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(900px 520px at 80% 6%, rgb(255 255 255 / 0.62), transparent 70%),
+                radial-gradient(760px 460px at 8% 0%, rgb(255 255 255 / 0.4), transparent 70%);
+  }
+  .page-hero__ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+  .page-hero__chip-link { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+  @media (width < 40rem) {
+    .page-hero__ctas :global(.page-hero__primary) { width: 100%; }
+  }
+</style>

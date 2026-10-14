@@ -1,0 +1,129 @@
+---
+// "What it's worth" worked example (DESIGN.md §6.4, §6.7, §6.8), fed by @/data/worth (or any object
+// of the same shape, e.g. a scenario). A card object with:
+//   provenance tags + service · the fictional business and a one-line profile · the annual-value figure
+//   (Fraunces, brass unit) with the monthly value · "Today" vs "With the agent" ledgers · the math as a
+//   compact ledger (MathLedger) · the "Not a quote…" footnote · methodology link (+ optional second link).
+// Numbers are never retyped: they come from the example object.
+//
+//   <WorthExample example={getWorth('customer')} link={{ label: 'See the full example', href: '/results/#examples' }} />
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import LedgerRows from './LedgerRows.astro';
+import MathLedger from './MathLedger.astro';
+import type { WorthExample as Example } from '@/data/worth';
+import { currency, number } from '@/lib/format';
+import { url } from '@/lib/url';
+
+type Kind = 'Illustrative example' | 'Modeled estimate';
+interface Props {
+  example: Example;
+  /** One line under the business name. Default: derived from example.profile ("Fictional … · 18 employees"). */
+  profileLine?: string;
+  /** Provenance tags (default: the example's label plus the other kind, as both apply to a worked example). */
+  labels?: Kind[];
+  baselineLabel?: string;
+  /** Default "With the agent" ("With the plan" for consulting). */
+  afterLabel?: string;
+  /** Show the one-sentence summary (default true). */
+  summary?: boolean;
+  /** Methodology link (default /results/#methodology). */
+  methodologyHref?: string;
+  /** Optional second link, e.g. { label: 'See the full example', href: '/results/#examples' }. */
+  link?: { label: string; href: string };
+  /** Heading tag for the business name (default 3). */
+  level?: 3 | 4;
+  id?: string;
+  /** data-reveal (default true). */
+  reveal?: boolean;
+  class?: string;
+}
+
+const {
+  example: ex, profileLine, labels, baselineLabel = 'Today', afterLabel, summary = true,
+  methodologyHref = '/results/#methodology', link, level = 3, id, reveal = true, class: className,
+} = Astro.props;
+
+const H = `h${level}` as 'h3' | 'h4';
+const otherKind: Kind = ex.label === 'Modeled estimate' ? 'Illustrative example' : 'Modeled estimate';
+const tags: Kind[] = labels ?? [ex.label, otherKind];
+const after = afterLabel ?? (ex.id === 'consulting' ? 'With the plan' : 'With the agent');
+
+// "Fictional residential plumbing… company: 18 employees (owner, …), $3M-$4M revenue, …"
+//   -> "Fictional residential plumbing… company · 18 employees"
+const derivedProfile = (() => {
+  const [kind, rest = ''] = ex.profile.split(/:\s*/, 2);
+  const size = rest.split(/\s*[(,;]/)[0]?.trim();
+  return size ? `${kind} · ${size}` : kind;
+})();
+const profile = profileLine ?? derivedProfile;
+const monthly = currency(ex.monthlyValue);
+const annualRow = ex.math.find((r) => /^annual value/i.test(r.label));
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+---
+<article class:list={['card', 'worth', className]} id={id} {...revealAttr}>
+  <div class="worth__top">
+    <div class="tag-row">{tags.map((k) => <IllustrativeLabel kind={k} href={methodologyHref} />)}</div>
+    <span class="worth__svc">{ex.service}</span>
+  </div>
+
+  <header class="worth__head">
+    <div class="worth__id">
+      <H class="type-h3 worth__name">{ex.business}</H>
+      <p class="worth__profile">{profile}</p>
+      {summary && <p class="worth__summary">{ex.summary}</p>}
+    </div>
+    <div class="worth__fig">
+      <p class="stat__fig worth__value">{currency(ex.annualValue)}<small>a year</small></p>
+      <p class="worth__value-note">
+        {monthly} a month{ex.hoursPerMonth ? <Fragment> · {number(ex.hoursPerMonth)} hours back a month</Fragment> : null}
+      </p>
+      {annualRow?.formula && <p class="math">{annualRow.formula} = <b>{annualRow.value}</b></p>}
+    </div>
+  </header>
+
+  <div class="worth__body">
+    <div class="worth__compare">
+      <LedgerRows title={baselineLabel} rows={ex.baseline} layout="stacked" />
+      <LedgerRows title={after} rows={ex.after} layout="stacked" />
+    </div>
+    <div class="worth__math">
+      <MathLedger caption="The math" rows={ex.math} />
+    </div>
+  </div>
+
+  <footer class="worth__foot">
+    <p class="worth__note">Gross value before any fees. Not a quote or a guarantee. Estimates exclude the cost of the engagement.</p>
+    <div class="worth__links">
+      <a class="link-arrow" href={url(methodologyHref)}><span>How we estimate</span><Icon name="arrow-right" /></a>
+      {link && <a class="link-arrow" href={url(link.href)}><span>{link.label}</span><Icon name="arrow-right" /></a>}
+    </div>
+  </footer>
+</article>
+
+<style>
+  .worth { display: grid; gap: 24px; padding: clamp(20px, 3vw, 36px); }
+  .worth__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .worth__svc { font-size: 0.8125rem; color: var(--fg-3); }
+  .worth__head { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px 48px; align-items: end; }
+  .worth__profile { margin-top: 6px; font-size: 0.875rem; line-height: 1.5; color: var(--fg-3); }
+  .worth__summary { margin-top: 14px; max-width: 60ch; font-size: 1rem; line-height: 1.6; color: var(--fg-2); }
+  .worth__fig { padding-left: 28px; border-left: 1px solid var(--line-accent); }
+  .worth__fig .worth__value { margin-top: 0; }
+  .worth__value-note { margin-top: 12px; font-size: 0.9375rem; line-height: 1.45; color: var(--fg); }
+  .worth__fig .math { margin-top: 6px; }
+  /* The worksheet: inputs (today / after) on the left, the calculation on the right. */
+  .worth__body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px 48px; align-items: start; padding-top: 28px; border-top: 1px solid var(--line); }
+  .worth__compare { display: grid; gap: 28px; }
+  .worth__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .worth__note { flex: 1 1 36ch; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .worth__links { display: flex; flex-wrap: wrap; gap: 0 24px; }
+  @media (width < 64rem) {
+    .worth__head, .worth__body { grid-template-columns: minmax(0, 1fr); }
+    .worth__fig { padding-left: 0; padding-top: 20px; border-left: 0; border-top: 1px solid var(--line-accent); }
+    .worth__compare { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 40px; }
+  }
+  @media (width < 48rem) {
+    .worth__compare { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

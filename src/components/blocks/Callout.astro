@@ -1,0 +1,55 @@
+---
+// Callouts (DESIGN.md §6.20 `.callout`): an 18px icon, a bold lead-in and 15px text. Light surface, so it
+// reads the same on paper and inside a navy band (it sets the light context for anything inside).
+//   note        brass rule on paper-sunken, info icon            ("Our rule: nothing sends until…")
+//   tip         brass rule on paper-sunken, lightbulb icon       (practical advice)
+//   disclaimer  raised and ringed (--method), info icon          ("Figures are illustrative…")
+//   method      raised and ringed (--method), list icon          ("How we estimate.")
+//   attention   sky family, user-check icon                      ("Needs your OK")
+//   warning     forms and system notices only, triangle-alert
+//   danger      errors only, x icon
+//
+//   <Callout variant="disclaimer" title="Illustrative example.">Fictional business, modeled numbers.</Callout>
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+
+type Variant = 'note' | 'tip' | 'disclaimer' | 'method' | 'attention' | 'warning' | 'danger';
+interface Props {
+  variant?: Variant;
+  /** Bold lead-in, set before the text ("How we estimate."). */
+  title?: string;
+  /** Override the variant's icon, or false for none. */
+  icon?: IconName | false;
+  as?: 'div' | 'aside';
+  /** ARIA role, e.g. "status" for a form success message or "alert" for an error. */
+  role?: 'note' | 'status' | 'alert';
+  /** data-reveal (default false: callouts usually sit inside a revealed block). */
+  reveal?: boolean;
+  class?: string;
+}
+
+const { variant = 'note', title, icon, as: Tag = 'div', role, reveal = false, class: className } = Astro.props;
+const look: Record<Variant, { mod?: string; icon: IconName }> = {
+  note: { icon: 'info' },
+  tip: { icon: 'lightbulb' },
+  disclaimer: { mod: 'callout--method', icon: 'info' },
+  method: { mod: 'callout--method', icon: 'list' },
+  attention: { mod: 'callout--attention', icon: 'user-check' },
+  warning: { mod: 'callout--warning', icon: 'triangle-alert' },
+  danger: { mod: 'callout--danger', icon: 'x' },
+};
+const v = look[variant];
+const iconName = icon === false ? undefined : (icon ?? v.icon);
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+---
+<Tag class:list={['callout', v.mod, 'ctx-light', className]} role={role} {...revealAttr}>
+  {iconName && <Icon name={iconName} />}
+  <div class="callout__body">{title && <b>{title} </b>}<slot /></div>
+</Tag>
+
+<style>
+  .callout__body { min-width: 0; }
+  .callout__body > :global(p + p) { margin-top: 0.5em; }
+  .callout__body :global(a) { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-brass-500); text-underline-offset: 3px; }
+  .callout__body :global(a:hover) { text-decoration-color: currentColor; }
+</style>

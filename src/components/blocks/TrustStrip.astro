@@ -1,0 +1,30 @@
+---
+// Three practices with 18px brass icons (DESIGN.md §6.17 `.trust-strip`): directly under the Home hero
+// FIG caption and at the top of /approach/. Defaults are DESIGN.md's exact three lines. One column under 768px.
+//
+//   <TrustStrip />
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+
+interface Props {
+  items?: { icon: IconName; text: string }[];
+  label?: string;
+  /** data-reveal (default false: it usually sits in the first viewport). */
+  reveal?: boolean;
+  class?: string;
+}
+const {
+  items = [
+    { icon: 'user-check', text: 'Human approval on anything sensitive' },
+    { icon: 'key-round', text: 'Least-privilege access, every action logged' },
+    { icon: 'database', text: 'AI providers whose terms exclude training on your data' },
+  ],
+  label = 'How we keep you in control',
+  reveal = false,
+  class: className,
+} = Astro.props;
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+---
+<ul class:list={['trust-strip', className]} role="list" aria-label={label} {...revealAttr}>
+  {items.map((it) => <li><Icon name={it.icon} />{it.text}</li>)}
+</ul>

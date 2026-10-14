@@ -1,0 +1,71 @@
+---
+// Site footer (DESIGN.md §6.15; markup and .foot-* rules ported from design-lab/reference/index.html).
+// OWNER: foundation (layout). Words come from site.footer (COPY.md §1.2); the brand name, email,
+// phone and founder name come from site config and render only when set.
+import Logo from '@/components/ui/Logo.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+import { url } from '@/lib/url';
+
+const { footer } = site;
+const year = new Date().getFullYear();
+const brandStory = site.brandStoryLine.replace(/"([^"]+)"/g, '“$1”'); // typographic quotes
+---
+<footer class="site-footer" id="site-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <Logo variant="dark" />
+        <p>{site.brandLine}</p>
+        <p class="tagline">{site.tagline}</p>
+        <div class="foot-cta">
+          <a class="btn btn-brass btn-sm" href={url(site.cta.href)}>
+            <span>{site.cta.label}</span><Icon name="arrow-right" class="btn__icon btn__icon--arrow" />
+          </a>
+          <span>{footer.ctaMicrocopy}</span>
+        </div>
+        <p class="foot-contact">
+          {footer.contactLine} <a class="foot-link" href={`mailto:${site.email}`}>{site.email}</a>
+          {site.phone && <><br /><a class="foot-link" href={`tel:${site.phone.replace(/[^\d+]/g, '')}`}>{site.phone}</a></>}
+          {site.founderName && <><br />You'll work with {site.founderName}.</>}
+        </p>
+      </div>
+      <nav class="foot-cols" aria-label="Footer">
+        {footer.columns.map((col) => (
+          <div class="footer-col">
+            <h2 class="footer-col__title">{col.title}</h2>
+            <ul>
+              {col.links.map((l) => <li><a href={url(l.href)}>{l.label}</a></li>)}
+            </ul>
+          </div>
+        ))}
+      </nav>
+    </div>
+    {site.brandStory && <p class="foot-story" data-brand-story>{brandStory}</p>}
+    <div class="footer-legal">
+      <p>© {year} {site.name}. {footer.legal.rights}</p>
+      <p class="foot-legal__note">
+        {footer.legal.figures}{' '}
+        <a class="foot-link" href={url(footer.legal.figuresLink.href)}>{footer.legal.figuresLink.label}</a>.{' '}
+        {footer.legal.trademarks}
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .foot-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; }
+  .foot-brand { grid-column: 1 / span 5; }
+  .foot-brand p { margin-top: 14px; max-width: 34ch; font-size: .9375rem; line-height: 1.6; color: var(--color-on-3); }
+  .foot-brand .tagline { margin-top: 18px; font-family: var(--font-serif); font-size: 1.375rem; font-weight: 380; letter-spacing: -.01em; color: var(--color-on); }
+  .foot-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 22px; }
+  .foot-cta > span { font-size: .8125rem; color: var(--color-on-3); }
+  .foot-cols { grid-column: 7 / span 6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .foot-brand .foot-contact { margin-top: 18px; max-width: none; font-size: .9375rem; color: var(--color-on-2); }
+  .foot-story { margin-top: 20px; max-width: 46ch; font-family: var(--font-serif); font-size: 1rem; line-height: 1.5; color: var(--color-on-2); }
+  .foot-legal__note { max-width: 70ch; }
+  .site-footer .foot-link { text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  .site-footer .foot-link:hover { text-decoration-color: currentColor; }
+  @media (width < 64rem) { .foot-brand, .foot-cols { grid-column: 1 / -1; } }
+  @media (width < 40rem) { .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 32px; } }
+</style>

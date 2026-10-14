@@ -1,0 +1,26 @@
+---
+// Provenance tag for outcome figures (DESIGN.md §6.4, COPY.md §1.3). Exact texts only:
+//   'Illustrative example' (scenario, vignette or demo result)
+//   'Modeled estimate' (computed from a formula: pair it with a .math line)
+// Links to /results/#methodology by default. Use link={false} inside another link or inside an
+// aria-hidden window. Put it in a .tag-row, at most one block away from the figure it labels.
+import { url } from '@/lib/url';
+
+type Kind = 'Illustrative example' | 'Modeled estimate';
+interface Props {
+  kind?: Kind;
+  href?: string;
+  link?: boolean;
+  class?: string;
+}
+const { kind = 'Illustrative example', href = '/results/#methodology', link = true, class: className } = Astro.props;
+const notes: Record<Kind, string> = {
+  'Illustrative example': 'Fictional business. Numbers are modeled to show how the math works.',
+  'Modeled estimate': 'Calculated from the assumptions shown. Not a quote, a guarantee or a client result.',
+};
+---
+{link ? (
+  <a class:list={['tag', className]} href={url(href)} title={notes[kind]}>{kind}</a>
+) : (
+  <span class:list={['tag', className]} title={notes[kind]}>{kind}</span>
+)}

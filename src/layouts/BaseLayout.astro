@@ -1,0 +1,117 @@
+---
+// The HTML shell for every page (ARCHITECTURE.md, DESIGN.md §4.1, §5, §6.14, §6.15).
+// OWNER: foundation (layout).
+//
+//   <BaseLayout title="How we work" description="…">…sections…</BaseLayout>
+//
+// Props
+//   title        page name; renders "{title} | {site.name}". Omit on Home (uses site.homeTitle).
+//   description  meta description (default site.description).
+//   ogImage      root path ('/og-sales.png') or absolute URL; default '/og.png' (1200 × 630).
+//   noindex      robots noindex, no canonical (404, internal pages).
+//   bodyClass    extra classes on <body>.
+// Slots
+//   default      page content. It is wrapped in <main id="main"> unless it already contains a <main>.
+//   head         extra tags for <head> (FAQPage JSON-LD and the like).
+import '@fontsource-variable/fraunces/opsz.css';
+import '@fontsource-variable/fraunces/opsz-italic.css';
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
+import frauncesLatin from '@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2?url';
+import '@/styles/global.css';
+import Header from '@/components/layout/Header.astro';
+import Footer from '@/components/layout/Footer.astro';
+import { site, pageTitle } from '@/config/site';
+import { services } from '@/data/services';
+import { url, isExternal } from '@/lib/url';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  noindex?: boolean;
+  bodyClass?: string;
+}
+
+const { title, description = site.description, ogImage = '/og.png', noindex = false, bodyClass } = Astro.props;
+
+const origin = Astro.site ?? new URL(site.siteUrl);
+const abs = (path: string) => (isExternal(path) ? path : new URL(url(path), origin).href);
+const fullTitle = pageTitle(title);
+const canonical = new URL(Astro.url.pathname, origin).href;
+const ogImageUrl = abs(ogImage);
+const homeUrl = abs('/');
+
+// Organization structured data. Practices and services only: no ratings, reviews or awards (BRIEF.md honesty rules).
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfessionalService',
+  '@id': `${homeUrl}#organization`,
+  name: site.name,
+  url: homeUrl,
+  description: site.description,
+  slogan: site.tagline,
+  logo: abs('/favicon.svg'),
+  image: abs('/og.png'),
+  areaServed: { '@type': 'Country', name: 'United States' },
+  serviceType: services.map((s) => s.name),
+  ...(site.email && !/@example\.(com|org|net)$/i.test(site.email) ? { email: site.email } : {}),
+  ...(site.phone ? { telephone: site.phone } : {}),
+};
+const jsonLdHtml = JSON.stringify(jsonLd).replace(/</g, '\\u003c');
+
+// Pages written before the layout owned <main> wrap themselves in one; don't nest a second.
+const content = await Astro.slots.render('default');
+const hasMain = /<main[\s>]/i.test(content);
+---
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>document.documentElement.classList.replace('no-js', 'js');</script>
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <meta name="theme-color" content="#F5F0E6" />
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <link rel="apple-touch-icon" href={url('/apple-touch-icon.png')} />
+    <link rel="sitemap" href={url('/sitemap-index.xml')} />
+    <link rel="preload" href={frauncesLatin} as="font" type="font/woff2" crossorigin />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content={site.locale} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${site.name}: ${site.tagline}`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <script type="application/ld+json" is:inline set:html={jsonLdHtml} />
+    <meta name="generator" content={Astro.generator} />
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <Header />
+    {hasMain ? (
+      <Fragment set:html={content} />
+    ) : (
+      <main id="main" tabindex="-1" class="focus:outline-none">
+        <Fragment set:html={content} />
+      </main>
+    )}
+    <Footer />
+    <script>
+      import { initReveal } from '@/scripts/reveal';
+      initReveal();
+    </script>
+  </body>
+</html>

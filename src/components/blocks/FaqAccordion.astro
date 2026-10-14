@@ -1,0 +1,107 @@
+---
+// FAQ on native <details>/<summary> (DESIGN.md §6.16): H4-size questions, a 28px plus/minus ring,
+// answers in fg-2 at max 68ch. Several items can be open at once. Works without JS (native toggle);
+// with JS the height animates open and closed (skipped under prefers-reduced-motion).
+// Answers may contain inline HTML (links): a string is one paragraph, an array is several.
+// jsonLd emits FAQPage structured data (use it once per page, on the page's main FAQ).
+//
+//   <FaqAccordion jsonLd items={[{ q: 'Is our data safe?', a: 'Least-privilege access…' }]} />
+interface Item {
+  q: string;
+  /** One paragraph, or several. Inline HTML allowed (trusted content only). */
+  a: string | string[];
+  /** Start open. */
+  open?: boolean;
+}
+
+interface Props {
+  items: Item[];
+  /** Emit FAQPage JSON-LD (default false). */
+  jsonLd?: boolean;
+  id?: string;
+  /** data-reveal on the list (default true). */
+  reveal?: boolean;
+  class?: string;
+}
+
+const { items, jsonLd = false, id, reveal = true, class: className } = Astro.props;
+const paras = (a: string | string[]) => (Array.isArray(a) ? a : [a]);
+const plain = (s: string) => s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+const ld = jsonLd
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: items.map((it) => ({
+        '@type': 'Question',
+        name: plain(it.q),
+        acceptedAnswer: { '@type': 'Answer', text: paras(it.a).map(plain).join(' ') },
+      })),
+    }
+  : null;
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+---
+<div class:list={['faq', className]} id={id} data-faq {...revealAttr}>
+  {items.map((it) => (
+    <details class="faq__item" open={it.open}>
+      <summary class="faq__q">{it.q}</summary>
+      <div class="faq__a">{paras(it.a).map((p) => <p set:html={p} />)}</div>
+    </details>
+  ))}
+</div>
+{ld && <script type="application/ld+json" is:inline set:html={JSON.stringify(ld)} />}
+
+<style>
+  /* While closing, show the plus at once instead of waiting for the height animation to end. */
+  .faq__item.is-closing > :global(.faq__q)::after { transform: none; background-size: 10px 1.5px, 1.5px 10px; }
+  .faq__a :global(a) { color: var(--fg); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  .faq__a :global(a:hover) { text-decoration-color: currentColor; }
+</style>
+
+<script>
+  // Height animation for every [data-faq] on the page (ARCHITECTURE.md: init every instance).
+  const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)'; // --ease-in-out-soft
+  const DURATION = 280;
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function bind(details: HTMLDetailsElement) {
+    const summary = details.querySelector<HTMLElement>(':scope > summary');
+    if (!summary || details.dataset.faqBound) return;
+    details.dataset.faqBound = '1';
+    let anim: Animation | null = null;
+
+    const finish = (open: boolean) => {
+      details.open = open;
+      details.classList.remove('is-closing');
+      details.style.height = '';
+      details.style.overflow = '';
+      anim = null;
+    };
+
+    summary.addEventListener('click', (e) => {
+      if (reduced() || typeof details.animate !== 'function') return; // native toggle
+      e.preventDefault();
+      const start = details.getBoundingClientRect().height;
+      const closing = details.open && !details.classList.contains('is-closing');
+      anim?.cancel();
+      details.style.overflow = 'hidden';
+      let end: number;
+      if (closing) {
+        details.classList.add('is-closing');
+        const borders = details.offsetHeight - details.clientHeight;
+        end = summary.offsetHeight + borders;
+      } else {
+        details.classList.remove('is-closing');
+        details.open = true;
+        details.style.height = 'auto';
+        end = details.getBoundingClientRect().height;
+      }
+      details.style.height = `${start}px`;
+      anim = details.animate({ height: [`${start}px`, `${end}px`] }, { duration: DURATION, easing: EASE });
+      anim.onfinish = () => finish(!closing);
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-faq]').forEach((faq) => {
+    faq.querySelectorAll<HTMLDetailsElement>(':scope > details').forEach(bind);
+  });
+</script>

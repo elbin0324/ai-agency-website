@@ -1,0 +1,97 @@
+---
+// Accessible tabs (WAI-ARIA pattern; behavior in ./tabs.ts). Looks:
+//   pills      .demo-tabs / .demo-tab (DESIGN.md §6.12): 40px pill tabs on paper; the strip scrolls on phones.
+//   segmented  .aw-seg (DESIGN.md §6.10): the in-window segmented control (navy, inside an app window).
+// Panels come from named slots, one per tab id: <Fragment slot="customer">…</Fragment>. Non-selected
+// panels carry the hidden attribute (so without JS the first panel still shows). panels={false} renders
+// only the tablist; give each tab a panelId that points at panels elsewhere (DemoTheater).
+// Each change dispatches 'tabs:change' ({ id, index, previousId, tab, panel }) on the [data-tabs] root;
+// dispatch 'tabs:select' ({ id }) on it to switch from other scripts.
+//
+//   <Tabs label="Worked examples" tabs={[{ id: 'customer', label: 'Customer Agent', icon: 'message-square' }, …]}>
+//     <Fragment slot="customer"><WorthExample example={…} /></Fragment>
+//   </Tabs>
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+
+type Tab = {
+  id: string;
+  label: string;
+  icon?: IconName;
+  /** Only with panels={false}: id of the element this tab controls. */
+  panelId?: string;
+};
+
+interface Props {
+  tabs: Tab[];
+  /** Accessible name of the tablist (required by the pattern). */
+  label: string;
+  /** Initially selected tab id (default: the first). */
+  selected?: string;
+  variant?: 'pills' | 'segmented';
+  /** Render panels from slots (default true). */
+  panels?: boolean;
+  /** 'auto' (default) selects on arrow keys; 'manual' moves focus and Enter/Space selects. */
+  activation?: 'auto' | 'manual';
+  /** Prefix for generated ids; must be unique on the page (default from the label). */
+  idPrefix?: string;
+  /** Extra classes on the tablist. */
+  listClass?: string;
+  class?: string;
+}
+
+const {
+  tabs, label, selected, variant = 'pills', panels = true, activation = 'auto', idPrefix, listClass, class: className,
+} = Astro.props;
+
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const prefix = idPrefix ?? `tabs-${slug(label)}`;
+const current = tabs.some((t) => t.id === selected) ? selected : tabs[0]?.id;
+const tabId = (t: Tab) => `${prefix}-tab-${slug(t.id)}`;
+const panelId = (t: Tab) => (panels ? `${prefix}-panel-${slug(t.id)}` : t.panelId);
+const rendered = panels
+  ? await Promise.all(tabs.map((t) => (Astro.slots.has(t.id) ? Astro.slots.render(t.id) : Promise.resolve(''))))
+  : [];
+const pills = variant === 'pills';
+---
+<div class:list={['tabs', className]} data-tabs data-activation={activation === 'manual' ? 'manual' : undefined}>
+  <div class:list={[pills ? 'demo-tabs' : 'aw-seg', listClass]} role="tablist" aria-label={label}>
+    {tabs.map((t) => {
+      const on = t.id === current;
+      return (
+        <button
+          type="button"
+          role="tab"
+          id={tabId(t)}
+          aria-controls={panelId(t)}
+          aria-selected={on ? 'true' : 'false'}
+          tabindex={on ? 0 : -1}
+          class:list={[pills && 'demo-tab', on && 'is-on']}
+          data-tab={t.id}
+        >
+          {t.icon && <Icon name={t.icon} />}
+          <span>{t.label}</span>
+        </button>
+      );
+    })}
+  </div>
+  {panels && tabs.map((t, i) => (
+    <div role="tabpanel" id={panelId(t)} aria-labelledby={tabId(t)} tabindex="0" hidden={t.id !== current} class="tabs__panel" data-tab-panel={t.id}>
+      <Fragment set:html={rendered[i]} />
+    </div>
+  ))}
+</div>
+
+<style>
+  .tabs__panel { border-radius: var(--radius-card); }
+  .tabs__panel:focus-visible { outline-offset: 6px; }
+  /* Pills sit in a strip that scrolls on phones: keep the focus ring inside the scroller, and
+     contain its width so a long strip scrolls instead of widening its column. */
+  .demo-tabs { padding: 4px; margin-left: -4px; margin-right: -4px; contain: inline-size; }
+  .demo-tab:focus-visible { outline-offset: 1px; }
+</style>
+
+<script>
+  import { initTabs } from './tabs';
+  initTabs();
+</script>

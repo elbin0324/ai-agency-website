@@ -1,0 +1,62 @@
+---
+// Section rule + section head (DESIGN.md §6.3):
+//   <div class="sec-rule">02 · SEE IT WORK ──────── o</div>
+//   <div class="sec-head"><h2 class="type-h2">Title</h2><p class="sec-head__aside">Subtitle</p></div>
+// `eyebrow` is the rule's name (COPY.md "Eyebrow"), `num` its number ("01", "02" in page order).
+// Emphasis device: wrap ONE phrase in *asterisks* to get the brass italic <em>. The brass law
+// (DESIGN.md §2.3) allows one per page, in the hero or page-hero heading only, so section titles
+// normally have none. For custom title markup use the "title" slot instead of the prop.
+// align: 'split' (title on 7 cols, subtitle aside on 9/span 4; default) · 'left' (stacked) · 'center'.
+// size: visual size of the title ('h2' default, 'h3' for sub-sections, 'h1' rarely); level: heading tag.
+interface Props {
+  title?: string;
+  eyebrow?: string;
+  num?: string;
+  subtitle?: string;
+  align?: 'split' | 'left' | 'center';
+  size?: 'h1' | 'h2' | 'h3';
+  level?: 2 | 3 | 4;
+  /** id on the heading, for aria-labelledby on the section. */
+  titleId?: string;
+  /** data-reveal on the rule and the head (default true). Turn off in the first viewport. */
+  reveal?: boolean;
+  class?: string;
+}
+
+const {
+  title, eyebrow, num, subtitle, align = 'split', size = 'h2', level = 2, titleId, reveal = true, class: className,
+} = Astro.props;
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const titleHtml = title ? esc(title).replace(/\*([^*]+)\*/g, '<em>$1</em>') : '';
+const H = `h${level}` as 'h2' | 'h3' | 'h4';
+const hasTitleSlot = Astro.slots.has('title');
+const hasAside = !!subtitle || Astro.slots.has('default');
+const stacked = align !== 'split';
+const hasRule = !!(eyebrow || num);
+const revealAttr = reveal ? { 'data-reveal': '' } : {};
+---
+{hasRule && (
+  <div class="sec-rule" {...revealAttr}>
+    {num && <span class="sec-rule__num">{num}</span>}
+    {eyebrow && <span class="sec-rule__name">{eyebrow}</span>}
+    <span class="sec-rule__line"></span><span class="sec-rule__knot"></span>
+  </div>
+)}
+{(title || hasTitleSlot) && (
+  <div
+    class:list={['sec-head', align === 'center' && 'text-center', className]}
+    {...revealAttr}
+    data-reveal-delay={reveal && hasRule ? '80' : undefined}
+  >
+    <H id={titleId} class:list={['sec-head__title', `type-${size}`, stacked && 'col-span-full', align === 'center' && 'mx-auto max-w-[24ch]']}>
+      {hasTitleSlot ? <slot name="title" /> : <Fragment set:html={titleHtml} />}
+    </H>
+    {hasAside && (
+      <div class:list={['sec-head__aside', stacked && 'col-span-full max-w-[60ch]', align === 'center' && 'mx-auto']}>
+        {subtitle && <p>{subtitle}</p>}
+        <slot />
+      </div>
+    )}
+  </div>
+)}

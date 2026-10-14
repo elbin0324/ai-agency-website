@@ -1,0 +1,101 @@
+---
+// Line chart for demo windows (DESIGN.md §3.5): a uniform-scaled SVG for the lines, HTML for every label,
+// dot and tick, so text never shrinks below 12px. OWNER: demo engine.
+//
+//   <LineChart el="cpa" label="Cost per lead fell from $71 to $46" labels={['Jul', 'Aug', 'Sep', 'Oct']}
+//     series={[{ name: 'Before', values: [71, 72, 70, 71], tone: 'context', end: false },
+//              { name: 'With the agent', values: [71, 64, 52, 46], tone: 'accent', end: '$46' }]}
+//     format={(n) => currency(n)} />
+//   run: ctx.draw('@cpa-line', { stagger: 200 }) then ctx.show('@cpa-end')
+//
+// tone: 1–6 (categorical slot), 'accent' (the story), 'context' (before / everything else). Legend for 2+ series.
+import { areaPath, frac, linePath, niceMax, niceTicks, scaleLinear } from './chart';
+import './demo.css';
+
+type Tone = 'accent' | 'context' | 1 | 2 | 3 | 4 | 5 | 6;
+interface Series {
+  name: string;
+  values: number[];
+  tone?: Tone;
+  /** End label text (default format(last value)); false for none. */
+  end?: string | false;
+}
+interface Props {
+  labels: string[];
+  series: Series[];
+  min?: number;
+  max?: number;
+  ticks?: number;
+  format?: (n: number) => string;
+  /** Fill the area under the first series (single-series charts). */
+  area?: boolean;
+  /** The finding, for role="img". */
+  label: string;
+  title?: string;
+  sub?: string;
+  note?: string;
+  /** viewBox size; sets the aspect ratio (default 520 x 200). */
+  width?: number;
+  height?: number;
+  /** Show every nth x label (default: about 6 labels). */
+  xEvery?: number;
+  /** Start state for the engine: lines data-draw, area/dots/end labels data-ghost (default true). */
+  animate?: boolean;
+  /** Handle prefix: lines "{el}-line", area "{el}-area", end dots and labels "{el}-end". */
+  el?: string;
+  class?: string;
+}
+
+const {
+  labels, series, ticks = 4, format = (n: number) => n.toLocaleString('en-US'), area = false, label, title, sub, note,
+  width = 520, height = 200, animate = true, el, class: className,
+} = Astro.props;
+const all = series.flatMap((s) => s.values);
+const min = Astro.props.min ?? 0;
+const max = Astro.props.max ?? niceMax(Math.max(...all), ticks);
+const lines = niceTicks(max, ticks, min);
+const x = scaleLinear([0, Math.max(1, labels.length - 1)], [0, width]);
+const y = scaleLinear([min, max], [height, 0]);
+const every = Astro.props.xEvery ?? Math.max(1, Math.ceil(labels.length / 6));
+const color = (s: Series, i: number) =>
+  s.tone === 'accent' ? 'var(--viz-accent)' : s.tone === 'context' ? 'var(--viz-context)' : `var(--viz-${s.tone ?? Math.min(6, i + 1)})`;
+const pts = (s: Series) => s.values.map((v, i) => [x(i), y(v)] as [number, number]);
+const flag = (on: boolean) => (on ? '' : undefined);
+const hasEnd = series.some((s) => s.end !== false);
+---
+<figure class:list={['chart', className]} data-el={el}>
+  {(title || sub) && (
+    <figcaption class="chart__head"><div>{title && <p class="chart__title">{title}</p>}{sub && <p class="chart__sub">{sub}</p>}</div></figcaption>
+  )}
+  {series.length > 1 && (
+    <ul class="chart__legend" aria-hidden="true">
+      {series.map((s, i) => <li><span class="chart__key chart__key--line" style={`--k:${color(s, i)}`}></span>{s.name}</li>)}
+    </ul>
+  )}
+  <div class="lc" style={hasEnd ? 'padding-right:3.25rem' : undefined} role="img" aria-label={label}>
+    <div class="lc__plot" style={`--ratio:${width} / ${height}`}>
+      <div class="lc__grid" aria-hidden="true">{lines.map((t) => <span style={`--v:${frac(t, max, min)}`} data-l={format(t)}></span>)}</div>
+      <svg class="lc__svg" viewBox={`0 0 ${width} ${height}`} aria-hidden="true" focusable="false">
+        {area && series[0] && <path class="viz-area" d={areaPath(pts(series[0]), height)} fill={color(series[0], 0)} data-ghost={flag(animate)} data-el={el && `${el}-area`} />}
+        {series.map((s, i) => (
+          <path class:list={['viz-line', s.tone === 'context' && 'viz-line--context']} d={linePath(pts(s))} stroke={color(s, i)} data-draw={flag(animate)} data-el={el && `${el}-line`} />
+        ))}
+      </svg>
+      {series.map((s, i) => {
+        if (s.end === false) return null;
+        const [lx, ly] = pts(s)[s.values.length - 1];
+        const pos = `left:${((lx / width) * 100).toFixed(2)}%;top:${((ly / height) * 100).toFixed(2)}%`;
+        return (
+          <>
+            <span class="lc__dot" style={`${pos};--k:${color(s, i)}`} data-ghost={flag(animate)} data-el={el && `${el}-end`}></span>
+            <span class="lc__end" style={pos} data-ghost={flag(animate)} data-el={el && `${el}-end`}>{s.end ?? format(s.values[s.values.length - 1])}</span>
+          </>
+        );
+      })}
+      <div aria-hidden="true">
+        {labels.map((l, i) => (i % every === 0 || i === labels.length - 1) && <span class="lc__x" style={`left:${((x(i) / width) * 100).toFixed(2)}%`}>{l}</span>)}
+      </div>
+    </div>
+  </div>
+  {note && <p class="chart__note">{note}</p>}
+</figure>

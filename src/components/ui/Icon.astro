@@ -1,0 +1,28 @@
+---
+// Inline Lucide icon by name (DESIGN.md §8.1). Decorative by default (aria-hidden);
+// pass `label` for a meaningful icon (role="img" + aria-label).
+// Size comes from CSS (.icon = 16px, .btn__icon, .chip > .icon) unless `size` is set.
+import { icons, type IconName } from './icons';
+
+interface Props {
+  name: IconName;
+  /** Pixel size (width = height). Omit to let CSS decide. */
+  size?: number;
+  /** Accessible name. Without it the icon is aria-hidden. */
+  label?: string;
+  /** Solid fill instead of stroke (the play glyph in buttons). */
+  fill?: boolean;
+  class?: string;
+  style?: string;
+  /** Any other attribute (data-*, id, …) is passed to the <svg>. */
+  [attr: string]: unknown;
+}
+
+const { name, size, label, fill = false, class: className, style, ...rest } = Astro.props;
+const body = icons[name];
+if (!body) console.warn(`[Icon] unknown icon name "${name}"`);
+const sizeStyle = size ? `width:${size}px;height:${size}px;` : '';
+const styleAttr = [sizeStyle, typeof style === 'string' ? style : ''].join('') || undefined;
+const a11y = label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': 'true' as const };
+---
+<svg class:list={['icon', fill && 'icon--fill', className]} viewBox="0 0 24 24" focusable="false" style={styleAttr} {...a11y} {...rest}><Fragment set:html={body ?? ''} /></svg>

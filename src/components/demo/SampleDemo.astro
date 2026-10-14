@@ -1,0 +1,165 @@
+---
+// Reference demo for the engine: copy this file + sample-demo.ts to start a real demo (DEMO_ENGINE.md).
+// OWNER: demo engine. Fictional business; figures are illustrative and live only on /dev/demo-engine/.
+//
+// The markup below is the FINAL state (no JS and reduced motion show exactly this). Attributes say how each
+// piece starts: data-hide / data-ghost (hidden), data-placeholder (shown only at the start), data-initial-text,
+// data-count, data-grow, data-draw, data-check. data-el="name" is the handle steps use as '@name'.
+import AppWindow from './AppWindow.astro';
+import ChatBubble from './ChatBubble.astro';
+import ChatComposer from './ChatComposer.astro';
+import SheetGrid from './SheetGrid.astro';
+import BarChart from './BarChart.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+import { currency } from '@/lib/format';
+import { linePath } from './chart';
+import demo from './sample-demo';
+
+interface Props {
+  variant?: 'dark' | 'light';
+  autoplay?: boolean;
+  class?: string;
+}
+const { variant = 'dark', autoplay = true, class: className } = Astro.props;
+
+const days = [
+  { label: 'Mon', value: 612 },
+  { label: 'Tue', value: 498 },
+  { label: 'Wed', value: 735 },
+  { label: 'Thu', value: 1092, accent: true },
+  { label: 'Fri', value: 780 },
+];
+// Minutes spent on the weekly summary over the last 8 weeks (sparkline in the KPI tile).
+const minutes = [40, 41, 38, 40, 22, 12, 8, 6];
+const spark = linePath(minutes.map((m, i) => [4 + i * (112 / 7), 4 + (1 - m / 44) * 28] as [number, number]));
+---
+<AppWindow
+  demo={demo.id}
+  steps={demo.steps}
+  title={`${site.name} Ops Agent · Tallow Creek Bakery`}
+  variant={variant}
+  columns="38% 62%"
+  tabs={[{ id: 'chat', label: 'Chat' }, { id: 'work', label: 'Workspace' }]}
+  height={540}
+  mobileHeight={470}
+  ticker="Sent to 4 cafés · logged"
+  autoplay={autoplay}
+  class={className}
+  result={{
+    metrics: [
+      { value: '34', unit: 'min', label: 'Saved on the weekly summary', basis: '40 min by hand vs 6 min with the owner’s review.' },
+      { value: '1', unit: 'duplicate', label: 'Caught before totaling', basis: 'Order #1043 appeared twice and was counted once.' },
+      { value: '0', label: 'Summaries sent without approval', basis: 'Rosa approved the send in one click.' },
+    ],
+    label: 'Illustrative example',
+  }}
+  microcopy="Simulated demo. Tallow Creek Bakery and the people named are fictional. Figures are illustrative."
+>
+  <Fragment slot="meta">
+    <span class="demo-stack demo-hide-m">
+      <span class="chip chip-running" data-el="st-work" hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>Working</span>
+      <span class="chip chip-attention" data-el="st-wait" hidden><Icon name="user-check" />Waiting on you</span>
+      <span class="chip chip-done" data-el="st-done" data-hide><Icon name="check" />Sent</span>
+    </span>
+    <span class="aw-status demo-hide-m" data-el="clock" data-initial-text="Fri 4:12 pm">Fri 4:14 pm</span>
+  </Fragment>
+
+  <!-- Left pane: the agent chat (navy agent UI) -->
+  <section class="aw-pane sd-chat is-active" data-pane="chat">
+    <div class="sd-head"><span class="aw-label">{site.name} Ops Agent</span><small>Tallow Creek Bakery · internal</small></div>
+    <div class="chat">
+      <div class="chat-list" data-el="chat-list" data-autoscroll>
+        <ChatBubble from="user" el="ask" meta="Rosa · 4:12 pm">Can you total this week’s wholesale orders and send each café its summary?</ChatBubble>
+        <ChatBubble el="ack" stream meta="Ops Agent · 4:12 pm">On it. I opened <b data-cue="sheet">orders-week-41.xlsx</b>: 6 rows from 4 cafés. I’ll check for duplicates before I total anything.</ChatBubble>
+        <div class="chat-msg chat-msg--agent chat-msg--wide sd-approval" data-el="approval" data-hide>
+          <div class="chat-bubble">
+            <p><b>Summary ready:</b> $3,717 across 4 cafés.</p>
+            <ul class="sd-checks">
+              <li><span class="demo-check" data-check data-el="chk"><Icon name="check" /></span>Totals match the sheet</li>
+              <li><span class="demo-check" data-check data-el="chk"><Icon name="check" /></span>Order #1043 counted once</li>
+            </ul>
+            <div class="sd-actions" data-el="approval-btns" data-placeholder hidden>
+              <span class="chip chip-attention"><Icon name="user-check" />Needs your OK</span>
+              <span class="sd-btns"><span class="app-btn">Edit</span><span class="app-btn app-btn--primary" data-el="approve">Approve &amp; send</span></span>
+            </div>
+            <div class="sd-actions" data-el="approval-sent" data-hide>
+              <span class="chip chip-done"><Icon name="check" />Approved by Rosa · sent 4:14 pm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ChatComposer placeholder="Message the Ops Agent…" />
+    </div>
+  </section>
+
+  <!-- Right pane: the workspace (the client's sheet on paper, the agent's chart and KPI on navy) -->
+  <section class="aw-pane sd-work" data-pane="work" data-el="work">
+    <div class="sd-head"><span class="aw-label">Workspace</span><small>orders-week-41.xlsx</small></div>
+    <div class="demo-stack sd-sheet">
+      <div class="aw-doc sd-skel" data-el="sheet-skel" data-placeholder hidden>
+        <div class="skel"><span class="skel__label">Waiting for the file</span><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div data-el="sheet" data-ghost>
+        <SheetGrid
+          el="orders"
+          cell="F8"
+          formula="=SUM(F2:F7) − duplicates"
+          columns={[{ label: 'Order', width: 'minmax(0, 0.8fr)' }, { label: 'Café', width: 'minmax(0, 1.8fr)' }, { label: 'Day', hideMobile: true }, { label: 'Items', num: true, hideMobile: true }, { label: 'Total', num: true }]}
+          rows={[
+            ['#1041', 'Harbor Café', 'Mon', 120, '$612'],
+            ['#1042', 'Mill St. Coffee', 'Tue', 96, '$498'],
+            ['#1043', 'Pine & Pour', 'Wed', 140, '$735'],
+            ['#1043', { v: 'Pine & Pour', html: ' <span class="hl-tag" data-hide>Duplicate</span>' }, 'Wed', 140, '$735'],
+            ['#1044', 'Harbor Café', 'Thu', 210, '$1,092'],
+            ['#1045', 'Larch Lane Deli', 'Fri', 150, '$780'],
+          ]}
+          rowAttrs={[{}, {}, {}, { 'data-el': 'dup', hidden: '', 'data-final-class': 'hl hl-amber hl--tint' }]}
+          total={['', 'Week total', '', 716, { v: '$3,717', attrs: { 'data-el': 'total-sum', 'data-count': '' } }]}
+          totalAttrs={{ 'data-hide': '' }}
+        />
+      </div>
+    </div>
+    <div class="sd-bottom">
+      <div class="sd-chart" data-el="daily" data-ghost>
+        <BarChart el="daily" title="Orders by day · week 41" label="Thursday was the busiest day at $1,092" bars={days} format={(n) => currency(n)} plot={96} />
+      </div>
+      <div class="kpi sd-kpi demo-hide-m" data-el="kpi" data-ghost>
+        <span class="kpi__label">Time on the weekly summary</span>
+        <span class="kpi__value"><span data-el="kpi-value" data-count>6</span><small>min</small></span>
+        <svg class="sd-spark" viewBox="0 0 120 36" aria-hidden="true"><path class="viz-line" d={spark} stroke="var(--viz-accent)" data-el="kpi-spark" data-draw /></svg>
+        <span class="kpi__delta" data-el="kpi-delta" data-ghost><b class="is-good">↓ 34 min</b> vs 40 by hand</span>
+      </div>
+    </div>
+  </section>
+</AppWindow>
+
+<script>
+  import { mountDemos } from '@/scripts/demo-engine';
+  import demo from './sample-demo';
+  mountDemos(demo);
+</script>
+
+<style>
+  .sd-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .sd-head small { overflow: hidden; font-size: 0.75rem; color: var(--fg-3); white-space: nowrap; text-overflow: ellipsis; }
+  .sd-chat { display: flex; flex-direction: column; }
+  .sd-chat .chat { flex: 1; min-height: 0; height: auto; }
+  .sd-work { display: flex; flex-direction: column; gap: 14px; }
+  .sd-work .sd-head { margin-bottom: -4px; }
+  .sd-sheet :global(.sheet) { min-height: 273px; }
+  .sd-skel { padding: 16px; }
+  .sd-bottom { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+  .sd-chart :global(.bc) { padding-bottom: 26px; }
+  .sd-kpi { display: flex; flex-direction: column; }
+  .sd-spark { display: block; width: 100%; height: 40px; margin-top: auto; padding-top: 10px; overflow: visible; }
+  .sd-approval .chat-bubble { width: 100%; }
+  .sd-checks { display: grid; gap: 6px; margin-top: 8px; }
+  .sd-checks li { display: flex; align-items: center; gap: 8px; color: var(--fg-2); }
+  .sd-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .sd-btns { display: flex; gap: 6px; margin-left: auto; }
+  @media (width < 48rem) {
+    .sd-bottom { grid-template-columns: minmax(0, 1fr); }
+    .sd-sheet :global(.sheet) { min-height: 0; }
+  }
+</style>
