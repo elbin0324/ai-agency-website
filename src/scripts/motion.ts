@@ -583,9 +583,11 @@ export function initMotion(root: ParentNode = document): Cleanup {
   booted = true;
   const mm = gsap.matchMedia();
 
-  const run = <T extends Target>(effect: MotionEffect, fn: (el: T) => Cleanup | void, sink: Cleanup[]) => {
-    collect(root, effect).forEach((el) => {
-      if (!claim(el, effect)) return;
+  // Each element is set up lazily, once it comes within about a viewport of entering, so the
+  // load-time work (word splitting, trigger measurement) covers only what is near the screen.
+  // Setup runs inside the matchMedia context, so a revert still undoes everything it created.
+  const run = <T extends Target>(effect: MotionEffect, fn: (el: T) => Cleanup | void, sink: Cleanup[], ctx: gsap.Context) => {
+    const setup = (el: Target) => {
       let undo: Cleanup | void;
       try {
         undo = fn(el as T);
@@ -599,17 +601,42 @@ export function initMotion(root: ParentNode = document): Cleanup {
         release(el, effect);
         unmarkReady(el);
       });
+    };
+    const targets = collect(root, effect).filter((el) => claim(el, effect));
+    if (!targets.length) return;
+    if (typeof IntersectionObserver !== 'function') {
+      targets.forEach(setup);
+      return;
+    }
+    // Lift the pre-JS gate now: elements far below are offscreen anyway, and leaving them gated
+    // would make the CSS failsafe reveal dozens of them at once mid-load.
+    targets.forEach(markReady);
+    const pending = new Set<Element>(targets);
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting || !pending.delete(entry.target)) continue;
+          io.unobserve(entry.target);
+          ctx.add(() => setup(entry.target as Target));
+        }
+      },
+      { rootMargin: '100% 0px 100% 0px' },
+    );
+    targets.forEach((el) => io.observe(el));
+    sink.push(() => {
+      io.disconnect();
+      pending.forEach((el) => release(el, effect)); // never set up: free them for a later init
     });
   };
 
   mm.add(MOTION_OK, (ctx) => {
     const undo: Cleanup[] = [];
-    run<HTMLElement>('split', (el) => split(el, ctx, late), undo);
-    run<HTMLElement>('count', (el) => count(el, ctx, late), undo);
-    run<HTMLElement>('stagger', (el) => stagger(el, ctx, late), undo);
-    run<HTMLElement>('tilt-in', tiltIn, undo);
-    run<Target>('parallax', parallax, undo);
-    run<Target>('draw', draw, undo);
+    run<HTMLElement>('split', (el) => split(el, ctx, late), undo, ctx);
+    run<HTMLElement>('count', (el) => count(el, ctx, late), undo, ctx);
+    run<HTMLElement>('stagger', (el) => stagger(el, ctx, late), undo, ctx);
+    run<HTMLElement>('tilt-in', tiltIn, undo, ctx);
+    run<Target>('parallax', parallax, undo, ctx);
+    run<Target>('draw', draw, undo, ctx);
     if (isDocument) {
       const off = progressHairline();
       if (off) undo.push(off);
@@ -617,10 +644,10 @@ export function initMotion(root: ParentNode = document): Cleanup {
     return () => undo.reverse().forEach((fn) => fn());
   });
 
-  mm.add(FINE_POINTER, () => {
+  mm.add(FINE_POINTER, (ctx) => {
     const undo: Cleanup[] = [];
-    run<HTMLElement>('spotlight', spotlight, undo);
-    run<HTMLElement>('magnetic', magnetic, undo);
+    run<HTMLElement>('spotlight', spotlight, undo, ctx);
+    run<HTMLElement>('magnetic', magnetic, undo, ctx);
     return () => undo.reverse().forEach((fn) => fn());
   });
 
