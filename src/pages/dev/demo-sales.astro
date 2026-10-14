@@ -1,0 +1,19 @@
+---
+// Internal preview of the Sales Agent demo (noindex; /dev/ is excluded from the sitemap). OWNER: demo-sales.
+// Just the demo on a plain sunken band, framed with its COPY.md §8.7 eyebrow, headline and subhead, the way
+// /demos/ and /services/sales/ present it.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import SalesDemo from '@/components/demos/SalesDemo.astro';
+---
+<BaseLayout title="Sales Agent demo (preview)" noindex>
+  <Section id="demo-sales-intro" size="tight">
+    <Eyebrow>Demo preview · AI Sales Agent</Eyebrow>
+    <h1 class="type-h1 mt-4">One prospect, researched and written to properly.</h1>
+    <p class="type-lead mt-4 max-w-measure">Parkline IT wants more law and accounting firms as clients. The agent finds one, does its homework and writes to the managing partner.</p>
+  </Section>
+  <Section id="sales-agent" tone="sunken" size="tight" aria-label="Sales Agent demo">
+    <SalesDemo />
+  </Section>
+</BaseLayout>

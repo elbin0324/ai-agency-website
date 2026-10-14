@@ -1,0 +1,106 @@
+---
+// Center pane: the message list (step 1), the "Needs you · 6" list (step 2) and, in step 3, Laura's email opened
+// with the draft reply, its sources and the Draft ready / Decision chips on the other rows. OWNER: demo-assistant.
+// The markup is the FINAL state; data-* attributes give each piece its start state (DEMO_ENGINE.md §4).
+import Icon from '@/components/ui/Icon.astro';
+import { categories, draft, drafted, inbox, laura, moreUnread, needsOrder, needsYou, sources, unread } from './data';
+
+const byId = new Map(inbox.map((m) => [m.id, m]));
+const [first, ...others] = needsOrder.map((id) => byId.get(id)!);
+---
+<section class="aw-pane ea-mail is-active" data-pane="inbox">
+  <div class="ea-mail__head" data-el="open" data-ghost>
+    <div class="demo-stack">
+      <p class="ea-listhead" data-el="head-inbox" data-placeholder hidden><b>Inbox</b><span>{unread} unread</span></p>
+      <p class="ea-listhead" data-el="head-needs" data-hide><b>Needs you · {needsYou}</b><span>Priority order</span></p>
+    </div>
+    <ul class="ea-chips">
+      {categories.map((c) => (
+        <li class:list={['ea-chip', c.you && 'is-on']} data-el="chip" data-hide>
+          <Icon name={c.icon} />{c.label}<span class="ea-chip__n" data-el="cat-count" data-count>{c.count}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div class="ea-scroll" data-el="list-scroll">
+    <!-- Step 1: the inbox as it arrived (gone once it is sorted) -->
+    <div class="ea-list" data-el="list-inbox" data-placeholder hidden>
+      {inbox.map((m) => (
+        <div class="ea-row" data-el="in-row" data-hide>
+          <span class="ea-av" aria-hidden="true">{m.initials}</span>
+          <div class="ea-row__main">
+            <p class="ea-row__l1"><b class="ea-row__from">{m.from}</b><span class="ea-row__subj">{m.subject}</span><span class="ea-row__time">{m.time}</span></p>
+            <p class="ea-row__l2">{m.preview}</p>
+          </div>
+        </div>
+      ))}
+      <p class="ea-more" data-el="in-more" data-hide>+ {moreUnread} more unread</p>
+    </div>
+
+    <!-- Steps 2–3: Needs you, in priority order -->
+    <div class="ea-list" data-el="list-needs" data-hide>
+      <div class="ea-open" data-el="need-row" data-hide>
+        <div class="ea-row is-selected" data-el="laura-row" data-final-class="is-selected">
+          <span class="ea-av" aria-hidden="true">{first.initials}</span>
+          <div class="ea-row__main">
+            <p class="ea-row__l1"><b class="ea-row__from">{first.from}</b><span class="ea-row__subj">{first.subject}</span><span class="ea-row__time">{first.time}</span></p>
+            <p class="ea-row__l2" data-el="laura-pre" data-placeholder hidden>{first.preview}</p>
+          </div>
+        </div>
+        <div class="ea-read" data-el="reading" data-hide>
+          <div class="aw-doc ea-orig">
+            <p class="aw-doc__row"><span>From</span><span>{laura.from}</span></p>
+            <p class="aw-doc__row"><span>Subject</span><span>{laura.subject}</span></p>
+            <div class="aw-doc__body"><p>{laura.body}</p></div>
+          </div>
+          <div class="ea-draft" data-el="draft" data-hide>
+            <div class="ea-draft__main">
+              <p class="aw-label ea-draft__label">Draft reply</p>
+              <div class="aw-doc">
+                <!-- data-cue: the list follows the stream paragraph by paragraph (narrow panes) -->
+                <div class="aw-doc__body ea-draft__body" data-el="draft-body" data-stream>
+                  {draft.map((lines, p) => <p data-cue={`p${p + 1}`}>{lines.map((line, i) => <>{i > 0 && <br />}{line}</>)}</p>)}
+                </div>
+              </div>
+              <div class="ea-draft__foot" data-el="draft-foot" data-ghost>
+                <span class="chip chip-attention"><Icon name="user-check" />Draft · not sent</span>
+                <span class="ea-btns"><span class="app-btn">Edit</span><span class="app-btn app-btn--primary">Approve &amp; send</span></span>
+              </div>
+            </div>
+            <div class="ea-srcs">
+              <p class="aw-label" data-el="src" data-ghost>Sources</p>
+              {sources.map((s) => (
+                <p class="ea-src" data-el="src" data-ghost><Icon name={s.icon} /><span><b>{s.key}:</b> {s.text}</span></p>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {others.map((m) => {
+        const d = drafted[m.id]!;
+        const reply = d.thread !== m.subject;
+        return (
+          <div class="ea-row" data-el="need-row" data-hide>
+            <span class="ea-av" aria-hidden="true">{m.initials}</span>
+            <div class="ea-row__main">
+              <p class="ea-row__l1">
+                <b class="ea-row__from">{m.from}</b>
+                {reply
+                  ? <span class="ea-row__subj" data-el="row-subj" data-initial-text={m.subject}>{d.thread}</span>
+                  : <span class="ea-row__subj">{m.subject}</span>}
+                <span class:list={['chip ea-row__chip', d.chip === 'Decision' ? 'chip-attention' : 'chip-handoff']} data-el="row-chip" data-hide><Icon name="user-check" />{d.chip}</span>
+                <span class="ea-row__time">{m.time}</span>
+              </p>
+              <div class="demo-stack ea-row__l2s">
+                <p class="ea-row__l2" data-el="row-pre" data-placeholder hidden>{m.preview}</p>
+                <p class="ea-row__l2 ea-row__sub" data-el="row-did" data-hide>{d.sub}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>

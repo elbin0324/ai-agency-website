@@ -43,9 +43,9 @@ export const providers: Provider[] = [
     rate:
       "$96 to $520/hr by title (GSA schedule hourly ceiling rates for federal contracts, and New York State not-to-exceed rates, 2025-2026). Modeled blended team rate: $250 to $350/hr.",
     cost:
-      "Modeled estimate: $30,000 to $63,000 (blended $250 to $350/hr x 120 to 180 hours), if they take work this small. Their public-sector projects run about $290,000 to $1.5M+.",
-    costLow: 30000,
-    costHigh: 63000,
+      "Modeled estimate: $45,000 to $105,000 (blended $250 to $350/hr x 180 to 300 hours, the same team hours as a boutique review), if they take work this small. Their public-sector projects run about $290,000 to $1.5M+.",
+    costLow: 45000,
+    costHigh: 105000,
     time: "8 to 17 weeks (modeled)",
     includes:
       "Multi-level team (partner, manager, staff), diagnostic, benchmarks and a report with recommendations.",

@@ -1,0 +1,56 @@
+---
+// Slide thumbnail art for the Executive Assistant deck: shapes only, no text, so nothing in a thumbnail falls under
+// the 12px floor (DESIGN.md §4.4). Chart shapes use the real data proportions. OWNER: demo-assistant.
+// Geometry is in % of the 16:9 box (--x, --y, --w, --h); colors come from tokens (assistant.css .ea-art).
+import { fieldHours, fieldHoursAxis, segments, type SlideKind } from './data';
+
+interface Props {
+  kind: SlideKind;
+}
+const { kind } = Astro.props;
+
+type Shape = [tone: string, x: number, y: number, w: number, h: number];
+const r = (n: number) => +n.toFixed(2);
+const shapes: Shape[] = [];
+
+if (kind === 'title') {
+  shapes.push(['copper', 9, 36, 9, 3.2], ['on', 9, 44, 58, 9], ['on3', 9, 59, 44, 3.6], ['copper', 9, 81, 3.2, 5.7], ['on3', 13.8, 82.4, 18, 3]);
+} else {
+  shapes.push(['copper', 7, 10, 7, 3], ['ink', 7, 17, 42, 6.5], ['faint', 7, 89, 16, 2.6], ['faint', 89, 89, 4, 2.6]);
+  if (kind === 'kpis') {
+    for (const [x, y] of [[7, 32], [51, 32], [7, 59], [51, 59]]) shapes.push(['tile', x, y, 42, 23], ['muted', x + 3, y + 5, 14, 3], ['ink', x + 3, y + 11, 18, 6.5]);
+  } else if (kind === 'hbars') {
+    const max = Math.max(...segments.map((s) => s.value));
+    segments.forEach((s, i) => {
+      const y = 33 + i * 12;
+      const w = r((s.value / max) * 46);
+      shapes.push(['muted', 7, y + 1.4, 19, 3.4], ['viz1', 30, y, w, 6.2], ['ink', r(30 + w + 2), y + 1.4, 6, 3.4]);
+    });
+    shapes.push(['faint', 7, 80, 14, 2.6]);
+  } else if (kind === 'columns') {
+    const base = 80;
+    const plot = 44;
+    fieldHours.forEach((m, i) => {
+      const x = 11 + i * 14;
+      const a = r((m.actual / fieldHoursAxis.max) * plot);
+      const b = r((m.budget / fieldHoursAxis.max) * plot);
+      shapes.push(['viz1', x, r(base - a), 4.6, a], ['ctx', r(x + 5.4), r(base - b), 4.6, b]);
+    });
+    shapes.push(['axis', 7, base, 44, 0.7], ['viz1', 7, 28, 2.2, 3.9], ['muted', 10.4, 28.6, 7, 2.6], ['ctx', 19.4, 28, 2.2, 3.9], ['muted', 22.8, 28.6, 7, 2.6]);
+    shapes.push(['axis', 57, 37, 0.5, 26], ['ink', 59.5, 38, 30, 3.6], ['muted', 59.5, 45, 33, 3.2], ['muted', 59.5, 51, 27, 3.2], ['muted', 59.5, 57, 31, 3.2]);
+  } else if (kind === 'table') {
+    [35, 49, 63].forEach((y) => shapes.push(['muted', 7, y, 22, 4], ['ink', 46, y, 32, 4], ['faint', 7, y + 8.5, 86, 0.6]));
+    shapes.push(['line', 7, 31, 86, 0.6]);
+  } else if (kind === 'bullets') {
+    [46, 38, 42, 34].forEach((w, i) => {
+      const y = 34 + i * 12;
+      shapes.push(['copper dot', 7, y, 2.2, 3.9], ['ink', 12, y + 0.4, w, 3.4]);
+    });
+  }
+}
+---
+<span class:list={['ea-art', kind !== 'title' && 'ctx-light', `ea-art--${kind}`]} aria-hidden="true">
+  {shapes.map(([tone, x, y, w, h]) => (
+    <i class:list={['ea-art__s', ...tone.split(' ').map((t) => `is-${t}`)]} style={`--x:${x}%;--y:${y}%;--w:${w}%;--h:${h}%`}></i>
+  ))}
+</span>

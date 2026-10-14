@@ -1,0 +1,18 @@
+---
+// Internal preview of the Customer Agent demo (noindex; /dev/ is excluded from the sitemap). OWNER: demo-customer.
+// Just the demo on a plain sunken band, as it sits on /demos/ and /services/ai-agents/.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import CustomerAgentDemo from '@/components/demos/CustomerAgentDemo.astro';
+---
+<BaseLayout title="Customer Agent demo (preview)" noindex>
+  <Section id="demo-customer-intro" size="tight">
+    <Eyebrow>Demo preview · internal</Eyebrow>
+    <h1 class="type-h1 mt-4">Customer Agent</h1>
+    <p class="type-lead mt-4 max-w-measure">A late-night website chat becomes a booked job, with a safety check, a price-book quote and a clean handoff.</p>
+  </Section>
+  <Section id="customer-agent" tone="sunken" size="tight" aria-label="Customer Agent demo">
+    <CustomerAgentDemo />
+  </Section>
+</BaseLayout>

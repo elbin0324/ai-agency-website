@@ -1,0 +1,48 @@
+---
+// OWNER: pages-misc
+// 404 (content/COPY.md §12, id "not-found"): short and on-brand. noindex; every link is base-aware, so
+// it works from any path GitHub Pages serves it on.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import Section from '@/components/ui/Section.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import type { IconName } from '@/components/ui/icons';
+import { site, emailReady } from '@/config/site';
+
+const links: { icon: IconName; title: string; body: string; href: string; linkLabel: string }[] = [
+  { icon: 'calculator', title: 'Results', body: 'The savings calculator and worked examples.', href: '/results/', linkLabel: 'Check the math' },
+  { icon: 'briefcase', title: 'Services', body: 'What we build and run for you.', href: '/services/', linkLabel: 'See the services' },
+  { icon: 'play', title: 'Demos', body: 'Watch agents do real work.', href: '/demos/', linkLabel: 'Watch the demos' },
+  { icon: 'calendar-check', title: 'Free assessment', body: 'A 30-minute call, no cost.', href: site.cta.href, linkLabel: 'Book a free assessment' },
+];
+---
+<BaseLayout title="Page not found" noindex>
+  <PageHero
+    id="not-found"
+    crumbs={[]}
+    jsonLd={false}
+    eyebrow="Error 404"
+    title="We couldn’t find *that page.*"
+    subtitle="The link may be old, or the page may have moved. Here are some good places to pick up."
+    primary={{ label: 'Back to home', href: '/', icon: 'arrow-right' }}
+    class="nf-hero"
+  />
+  <Section name="not-found-links" size="none" class="nf-links" aria-label="Places to go from here">
+    <FeatureGrid items={links} cols={4} reveal={false} label="Places to go from here" />
+    {emailReady && <p class="nf-micro">
+      Followed a link on our site? Tell us at <a class="link" href={`mailto:${site.email}?subject=${encodeURIComponent('Broken link')}`}>{site.email}</a> and we’ll fix it.
+    </p>}
+  </Section>
+</BaseLayout>
+
+<style>
+  :global(.nf-hero) { padding-bottom: clamp(32px, 4vw, 48px); }
+  :global(.nf-links) { padding-bottom: var(--spacing-section); }
+  .nf-micro { margin-top: 24px; font-size: 0.875rem; color: var(--fg-3); }
+  /* Phones: each card is already a whole-card link, so icon plus title works as a compact 2-up tile
+     (ul.fgrid outranks FeatureGrid's own scoped 1-column rule). */
+  @media (width < 40rem) {
+    :global(.nf-links ul.fgrid) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    :global(.nf-links .fgrid__body), :global(.nf-links .fgrid__more) { display: none; }
+  }
+</style>

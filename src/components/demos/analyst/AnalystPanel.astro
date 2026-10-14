@@ -1,0 +1,188 @@
+---
+// The Analyst Agent panel (right pane, navy agent UI): Priya's request, the data check that turns into the
+// cleaning log, the Built list and the plain-English report (content/DEMOS.md §2). OWNER: demo-analyst.
+//
+// Markup is the FINAL state (DEMOS.md §2 reduced-motion state): the cleaning checklist folded into one line,
+// the full Built list plus the SUMIFS formula as a code line (static view only), the chart line, the report and
+// the footer. Blocks that live only during playback (the data check card) are hidden in the markup and data-hide.
+import Icon from '@/components/ui/Icon.astro';
+import ChatComposer from '@/components/demo/ChatComposer.astro';
+import { site } from '@/config/site';
+import { fileName } from './data';
+import { F_GM_PCT, F_MARGIN, F_SUMIFS } from './formulas';
+
+// Step 2 issue -> step 3 fix (the same six lines, DEMOS.md §2 steps 2–3). `n` is the part that counts up.
+const lines = [
+  { tone: 'hl-amber', pre: 'Dates in 5 formats: ', n: '1,204', post: ' cells', fix: '1,204 dates converted to YYYY-MM-DD' },
+  { tone: 'hl-red', pre: 'Duplicate rows: ', n: '87', post: '', fix: '87 duplicate rows removed' },
+  { tone: 'hl-blue', pre: 'Merged cells: ', n: '14 ranges, 312', post: ' blank cells', fix: '14 merged ranges split, 312 cells filled down' },
+  { tone: 'hl-red', pre: 'Subtotal and total rows: ', n: '9', post: '', fix: '9 subtotal rows removed' },
+  { tone: 'hl-purple', pre: 'Numbers stored as text: ', n: '236', post: ' cells', fix: '236 text values converted to numbers' },
+  { tone: 'hl-gray', pre: 'Inconsistent product-line labels: ', n: '58', post: ' cells', fix: '58 labels standardized to 4 product lines' },
+];
+---
+<section class="aw-pane ax-agent" data-pane="agent">
+  <div class="ax-agent__head">
+    <span class="aw-label">{site.name} Analyst</span>
+    <span class="ax-agent__conn"><Icon name="key-round" />QuickBooks · read-only</span>
+  </div>
+
+  <div class="chat ax-agent__chat">
+    <div class="chat-list ax-feed" data-el="feed" data-autoscroll>
+      <!-- Step 1: Priya's request and the file -->
+      <div class="chat-msg chat-msg--user ax-ask" data-el="ask" data-hide>
+        <div class="chat-bubble">Here’s Q3 sales. Clean it up, show me margin by product line by month, and tell me what’s going on. Margin feels off.</div>
+        <div class="ax-file">
+          <span class="ax-file__ico"><Icon name="file-spreadsheet" /></span>
+          <span class="ax-file__txt"><b>{fileName}</b><small>4,318 rows · 412 KB</small></span>
+        </div>
+        <span class="chat-meta">Priya Shah · Controller</span>
+      </div>
+
+      <!-- Steps 2–3: the data check, which becomes the cleaning log (folds away in step 4) -->
+      <div class="ax-card" data-el="check" data-hide hidden>
+        <div class="demo-stack ax-card__head">
+          <div data-el="h-scan" data-placeholder hidden>
+            <p class="ax-card__title"><span class="demo-check" data-el="scan-chk" data-check><Icon name="check" /></span>Scanning 4,318 rows × 10 columns…</p>
+            <p class="ax-card__found" data-el="found" data-ghost>Found 6 kinds of problems:</p>
+          </div>
+          <div data-el="h-clean" data-ghost>
+            <p class="ax-card__title"><Icon name="list-checks" class="ax-card__ico" />Cleaned · every change logged</p>
+          </div>
+        </div>
+        <ul class="ax-list">
+          {lines.map((l) => (
+            <li data-el="item" data-hide>
+              <span class="demo-stack ax-list__ico">
+                <span class:list={['ax-swatch', l.tone]} data-el="i-dot" data-placeholder hidden></span>
+                <span class="demo-check" data-el="i-chk" data-check data-ghost><Icon name="check" /></span>
+              </span>
+              <span class="demo-stack">
+                <span data-el="i-issue" data-placeholder hidden>{l.pre}<b data-count>{l.n}</b>{l.post}</span>
+                <span data-el="i-fix" data-ghost>{l.fix}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div class="ax-card__sums">
+          <p data-el="sum" data-hide>4,318 rows in → 4,222 rows out · 1,906 changes in the Log sheet</p>
+          <p data-el="sum" data-hide>Revenue $5,379,900 · matches QuickBooks Q3 sales <span class="ax-nowrap">($0 difference) <Icon name="check" class="ax-ok" /></span></p>
+        </div>
+      </div>
+
+      <!-- Step 4 on: the cleaning log as one line -->
+      <div class="ax-card ax-card--line" data-el="cleaned" data-hide>
+        <span class="demo-check"><Icon name="check" /></span>
+        <p>Cleaned: 4,318 → 4,222 rows · 1,906 changes logged · ties to <span class="ax-nowrap">QuickBooks <Icon name="check" class="ax-ok" /></span></p>
+      </div>
+
+      <!-- Steps 4–5: what it built -->
+      <div class="ax-card" data-el="built" data-hide>
+        <p class="ax-card__title"><Icon name="calculator" class="ax-card__ico" />Built</p>
+        <ul class="ax-list">
+          <li data-el="b-k" data-hide><span class="demo-check" data-check><Icon name="check" /></span><span>Gross margin, column K: <code class="ax-code">{F_MARGIN}</code></span></li>
+          <li data-el="b-l" data-hide><span class="demo-check" data-check><Icon name="check" /></span><span>GM %, column L: <code class="ax-code">{F_GM_PCT}</code></span></li>
+          <li data-el="b-p" data-hide><span class="demo-check" data-check><Icon name="check" /></span><span>Pivot: gross margin by product line and month (SUMIFS, updates as rows are added)</span></li>
+          <li class="ax-list__code" data-final-only><code class="ax-code ax-code--block">{F_SUMIFS}</code></li>
+          <li data-el="b-c" data-hide><span class="demo-check" data-check><Icon name="check" /></span><span>Chart: gross margin % by product line, Jul–Sep</span></li>
+        </ul>
+      </div>
+
+      <!-- Step 6: the report -->
+      <div class="ax-report" data-el="report" data-hide>
+        <p class="ax-report__title">What’s going on</p>
+        <p class="ax-report__lead" data-el="lead" data-stream>Sales grew <b>5.6%</b> from July to September, but gross margin dollars barely moved (<b>+0.3%</b>). The margin rate fell from <b>25.8%</b> to <b>24.5%</b>. Two things explain the drop, and a third has been leaking all quarter.</p>
+
+        <article class="ax-find" data-el="find-1" data-hide>
+          <p class="ax-find__t"><span class="ax-find__n">1</span>Freight is eating Paper goods margin</p>
+          <p>Paper goods margin fell from 22.4% to 18.6% as freight rose from 7.6% to 11.4% of sales. Your carrier added fuel and small-shipment surcharges on Aug 4, and 46% of Paper goods deliveries are under 10 cases.</p>
+          <p class="ax-find__cost">Cost vs. July’s freight rate: <b>$23,056</b> in Aug–Sep</p>
+          <p class="ax-find__fix"><b>Fix:</b> add a $45 delivery fee on Paper goods orders under 10 cases (148 in September) and rebid the route with two carriers.</p>
+        </article>
+
+        <article class="ax-find" data-el="find-2" data-hide>
+          <p class="ax-find__t"><span class="ax-find__n">2</span>A supplier increase never reached your prices</p>
+          <p>Nitrile glove costs rose 9% on Aug 18, but sell prices didn’t change. Safety &amp; PPE margin slid from 29.0% to 25.6%.</p>
+          <p class="ax-find__cost">Cost: <b>$9,724</b> in Aug–Sep</p>
+          <p class="ax-find__fix"><b>Fix:</b> raise prices on the 14 affected glove SKUs by 9% this week.</p>
+        </article>
+
+        <article class="ax-find" data-el="find-3" data-hide>
+          <p class="ax-find__t"><span class="ax-find__n">3</span>An expired promo is still discounting Janitorial</p>
+          <p>Six accounts still get 12% off list from a promo that ended in 2025. Their contract tier is 5%.</p>
+          <p class="ax-find__cost">Cost: <b>$14,000</b> in Q3, on $176,000 of sales</p>
+          <p class="ax-find__fix"><b>Fix:</b> move the six accounts to the 5% tier at renewal.</p>
+        </article>
+
+        <p class="aw-note ax-total" data-el="total" data-hide>Together: <b>$46,780</b> of Q3 margin, about <b>$28,000 a month</b> at September’s pace.</p>
+        <p class="ax-done" data-el="done" data-hide><Icon name="clock" />Completed in 3 min 48 s</p>
+      </div>
+    </div>
+    <ChatComposer placeholder="Ask about the numbers…" />
+  </div>
+</section>
+
+<style>
+  /* Navy agent UI (DESIGN.md §6.10); tokens only. */
+  .ax-agent { display: flex; flex-direction: column; padding: 16px 18px 16px; background: var(--color-navy-850); }
+  /* Narrow windows (the 36% pane at ~800px): the connection chip wraps under the label instead of breaking it */
+  .ax-agent__head { display: flex; flex: none; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; margin-bottom: 12px; }
+  .ax-agent__head .aw-label { white-space: nowrap; }
+  .ax-agent__conn { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--fg-3); white-space: nowrap; }
+  .ax-agent__conn :global(.icon) { width: 13px; height: 13px; }
+  .ax-agent__chat { flex: 1; min-height: 0; height: auto; }
+  .ax-feed { gap: 12px; padding-bottom: 14px; }
+
+  /* Priya's message and the file she attached */
+  .ax-ask { max-width: 92%; }
+  .ax-file { display: flex; align-items: center; gap: 10px; margin-top: 6px; padding: 8px 12px 8px 8px; border-radius: var(--radius-tile); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .ax-file__ico { display: grid; flex: none; place-items: center; width: 30px; height: 30px; border-radius: var(--radius-control); color: var(--color-sage); background: var(--chip-done-bg); box-shadow: inset 0 0 0 1px var(--chip-done-ring); }
+  .ax-file__ico :global(.icon) { width: 16px; height: 16px; }
+  .ax-file__txt { display: grid; gap: 1px; min-width: 0; }
+  .ax-file__txt b { font-size: 0.8125rem; font-weight: 550; color: var(--fg); }
+  .ax-file__txt small { font-size: 0.75rem; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+
+  /* Agent work cards */
+  .ax-card { flex: none; padding: 12px 14px; border-radius: var(--radius-tile); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); font-size: 0.8125rem; line-height: 1.5; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+  .ax-card__title { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--fg); }
+  .ax-card__title :global(.ax-card__ico) { width: 15px; height: 15px; color: var(--fg-3); }
+  .ax-card__found { margin-top: 6px; overflow: hidden; color: var(--fg-2); }
+  .ax-list { display: grid; gap: 6px; margin-top: 8px; }
+  .ax-list > li { display: flex; align-items: flex-start; gap: 9px; }
+  .ax-list > li > :last-child { min-width: 0; }
+  .ax-list__ico { flex: none; place-items: center; width: 18px; height: 20px; }
+  .ax-list > li > .demo-check { margin-top: 1px; }
+  .ax-list b { font-weight: 600; color: var(--fg); }
+  .ax-swatch { width: 10px; height: 10px; border-radius: 2px; background: var(--hl); }
+  .ax-card__sums { display: grid; gap: 4px; margin-top: 10px; }
+  .ax-card__sums > p:first-child { padding-top: 10px; border-top: 1px solid var(--line); }
+  .ax-card__sums > p { color: var(--fg); }
+  .ax-card :global(.ax-ok) { display: inline-block; width: 14px; height: 14px; margin-left: 2px; vertical-align: -2px; color: var(--color-sage); }
+  .ax-nowrap { white-space: nowrap; }
+  .ax-card--line { display: flex; align-items: flex-start; gap: 9px; color: var(--fg); }
+  .ax-card--line > .demo-check { margin-top: 1px; }
+  .ax-code { padding: 1px 5px; border-radius: var(--radius-data); font-family: var(--font-mono); font-size: 0.75rem; color: var(--fg); background: var(--color-navy-800); box-shadow: inset 0 0 0 1px var(--color-rule-dark); white-space: nowrap; }
+  .ax-list__code { padding-left: 27px; }
+  .ax-code--block { display: block; padding: 6px 8px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+
+  /* The report */
+  .ax-report { display: grid; flex: none; gap: 10px; }
+  .ax-report__title { font-size: 0.9375rem; font-weight: 600; color: var(--fg); }
+  .ax-report__lead { font-size: 0.8125rem; line-height: 1.55; color: var(--fg-2); }
+  .ax-report__lead b { font-weight: 600; color: var(--fg); }
+  .ax-find { display: grid; gap: 6px; padding: 12px 14px; border-radius: var(--radius-tile); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); font-size: 0.8125rem; line-height: 1.5; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+  .ax-find__t { display: flex; align-items: baseline; gap: 8px; font-weight: 600; color: var(--fg); }
+  .ax-find__n { flex: none; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; color: var(--accent); }
+  .ax-find__cost { padding-top: 6px; border-top: 1px solid var(--line); color: var(--fg-2); }
+  .ax-find__cost b { font-weight: 600; color: var(--fg); }
+  .ax-find__fix b { font-weight: 600; color: var(--fg); }
+  .ax-total { font-size: 0.8125rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+  .ax-total b { font-weight: 600; }
+  .ax-done { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--fg-3); }
+  .ax-done :global(.icon) { width: 13px; height: 13px; }
+
+  @media (width < 48rem) {
+    .ax-agent { padding: 12px 12px 12px; }
+    .ax-agent__conn { display: none; }
+  }
+</style>

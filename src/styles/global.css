@@ -540,6 +540,11 @@
   .aw-steplist { display: grid; gap: 10px; counter-reset: s; }
   .aw-steplist > li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; counter-increment: s; font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2); }
   .aw-steplist > li::before { content: counter(s, decimal-leading-zero); font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.9; color: var(--accent); }
+  .aw-steplist > li > div { min-width: 0; } /* a long unbreakable transcript line wraps instead of widening the page */
+  /* Tablet: the centered title joins the flex row and truncates instead of sliding under the status chips. */
+  @media (48rem <= width < 64rem) {
+    .aw-title { position: static; flex: 1 1 auto; min-width: 0; max-width: none; transform: none; text-align: center; }
+  }
   @media (width < 48rem) {
     .aw-bar { gap: 10px; padding: 0 12px; }
     .aw-title { position: static; flex: 1; max-width: none; transform: none; }
@@ -723,6 +728,20 @@
   .step__time .icon { width: 14px; height: 14px; color: var(--accent-display); }
   .step__get { max-width: 32ch; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 0.875rem; font-weight: 500; line-height: 1.45; color: var(--fg); }
   .step__get > span { display: block; margin-bottom: 3px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  /* Desktop row: every column's title, body, clock line and "You get" block start at the same height
+     (subgrid rows; engines without subgrid push the .step__foot to the bottom instead). */
+  @media (width >= 64rem) {
+    .step { display: flex; flex-direction: column; }
+    .step__foot { margin-top: auto; }
+    @supports (grid-template-rows: subgrid) {
+      .steps { row-gap: 0; }
+      .step { display: grid; grid-row: span 4; grid-template-rows: subgrid; }
+      .step__n { grid-row: 1; }
+      .step__title { grid-row: 2; }
+      .step__body { grid-row: 3; }
+      .step__foot { grid-row: 4; margin-top: 0; }
+    }
+  }
   @media (width < 64rem) {
     .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 44px; }
     .steps__rope { display: none; }
@@ -859,8 +878,11 @@
     .cost-ledger td { margin-top: 14px; }
     .cost-ledger td::before { content: attr(data-label); display: block; margin-bottom: 3px; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); }
     .cost-ledger tr.is-us { margin-top: 16px; padding: 20px 18px; border: 0; border-radius: var(--radius-card); background: var(--color-navy-800); box-shadow: inset 0 2px 0 var(--color-brass-400); }
-    .cost-ledger tr.is-us > * { border: 0; background: none; box-shadow: none; border-radius: 0; padding-left: 0; }
+    /* th and td named: the desktop `tr.is-us > th { padding-left: 20px }` (0,2,2) beats a `> *` reset */
+    .cost-ledger tr.is-us > th, .cost-ledger tr.is-us > td { border: 0; background: none; box-shadow: none; border-radius: 0; padding-left: 0; }
     .cost-ledger tr.is-us td::before { color: var(--color-brass-300); }
+    /* the axis lives in the visually hidden thead, so the bars would float with no scale; the figures state the range */
+    .cost-ledger .range-bar { display: none; }
   }
 
   /* Range bar: a min-max span on a shared axis (cost ranges, time ranges). Floats, so both ends round.

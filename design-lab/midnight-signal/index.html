@@ -1,0 +1,1593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halyard · AI agents, integration and consulting</title>
+<meta name="description" content="Halyard designs, builds and runs AI agents inside the tools your business already uses, so every employee gets more done and more of every dollar stays as margin.">
+<meta name="theme-color" content="#08090c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap">
+<style>
+/* ==========================================================================
+   MIDNIGHT SIGNAL · Halyard design-lab prototype
+   Tokens first. Everything below reads from them.
+   ========================================================================== */
+:root{
+  /* ink surfaces */
+  --bg:#08090c; --bg-1:#0c0e12; --bg-2:#11141a; --bg-3:#171b22; --bg-4:#1f242c;
+  /* hairlines */
+  --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.11); --line-3:rgba(255,255,255,.2);
+  /* text */
+  --text-1:#f1f3f5; --text-2:#a9b1bb; --text-3:#808892;
+  /* the one signal */
+  --signal:#c8f25f; --signal-hi:#d6f784; --signal-ink:#0b0e06;
+  --signal-a06:rgba(200,242,95,.06); --signal-a12:rgba(200,242,95,.12); --signal-a24:rgba(200,242,95,.24);
+  /* cool secondary + reserved states */
+  --ice:#8ab8ff; --ice-hi:#b4d0ff; --ice-a12:rgba(138,184,255,.12); --ice-a24:rgba(138,184,255,.24);
+  --amber:#f2b55c; --amber-hi:#f7cd8a; --amber-a12:rgba(242,181,92,.12);
+  --rose:#f28b82; --rose-a12:rgba(242,139,130,.12);
+  /* shape */
+  --r-xs:6px; --r-s:8px; --r-m:10px; --r-l:14px; --r-xl:22px;
+  /* type */
+  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  /* layout */
+  --wrap:1200px; --gutter:32px; --band-y:112px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+
+/* ---------- base ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg);color-scheme:dark;-webkit-text-size-adjust:100%;scroll-padding-top:88px}
+body{margin:0;font-family:var(--sans);font-size:16px;line-height:1.6;letter-spacing:-.006em;color:var(--text-1);background:var(--bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:clip}
+body::before{content:"";position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.045;mix-blend-mode:soft-light;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+img,svg{display:block}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,h4,p,ul,ol,dl,dd,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:6px}
+::selection{background:var(--signal);color:var(--signal-ink)}
+.wrap{width:min(var(--wrap),100% - var(--gutter)*2);margin-inline:auto;position:relative}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:16px;top:-48px;z-index:100;background:var(--signal);color:var(--signal-ink);padding:10px 14px;border-radius:8px;font-weight:600;transition:top .2s}
+.skip:focus{top:12px}
+.ico{width:16px;height:16px;flex:none}
+.mono{font-family:var(--mono)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- buttons ---------- */
+.btn{--h:48px;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:var(--h);padding:0 20px;border-radius:var(--r-m);font-size:15px;font-weight:550;letter-spacing:-.01em;white-space:nowrap;transition:background-color .2s,box-shadow .2s,color .2s,transform .2s}
+.btn .ico{width:16px;height:16px}
+.btn--primary{background:var(--signal);color:var(--signal-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -1px 0 rgba(0,0,0,.14),0 0 0 1px rgba(200,242,95,.5),0 8px 22px -12px rgba(200,242,95,.42)}
+.btn--primary:hover{background:var(--signal-hi);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(0,0,0,.14),0 0 0 1px rgba(214,247,132,.65),0 12px 30px -12px rgba(200,242,95,.55)}
+/* in-product primary: neutral, so lime stays reserved for the marketing CTA and live signals */
+.btn--ui{background:#eef1f4;color:#0b0d10;box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(255,255,255,.2)}
+.btn--ghost{background:rgba(255,255,255,.035);color:var(--text-1);box-shadow:inset 0 0 0 1px var(--line-2),inset 0 1px 0 rgba(255,255,255,.05)}
+.btn--ghost:hover{background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px var(--line-3)}
+.btn--sm{--h:36px;padding:0 14px;font-size:14px;border-radius:var(--r-s)}
+.btn--xs{--h:30px;padding:0 11px;font-size:12.5px;border-radius:7px;gap:6px}
+.btn--xs .ico{width:13px;height:13px}
+.btn .arr{transition:transform .25s var(--ease)}
+.btn:hover .arr{transform:translateX(3px)}
+.play-dot{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--line-2)}
+.play-dot .ico{width:10px;height:10px;margin-left:1px}
+
+/* ---------- tags & chips ---------- */
+.tag{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;font:500 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--text-2);background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line-2);white-space:nowrap}
+.tag::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--text-3)}
+.tag--est::before,.tag--ex::before{background:var(--ice)}
+.tag--plain::before{display:none}
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:6px;font-size:11.5px;font-weight:500;white-space:nowrap;color:var(--text-2);background:rgba(255,255,255,.045);box-shadow:inset 0 0 0 1px var(--line)}
+.chip .ico{width:12px;height:12px}
+.chip--ok{color:var(--signal-hi);background:var(--signal-a06);box-shadow:inset 0 0 0 1px rgba(200,242,95,.2)}
+.chip--wait{color:var(--ice-hi);background:var(--ice-a12);box-shadow:inset 0 0 0 1px rgba(138,184,255,.22)}
+.chip--warn{color:var(--amber-hi);background:var(--amber-a12);box-shadow:inset 0 0 0 1px rgba(242,181,92,.22)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--text-3);flex:none}
+.dot--live{background:var(--signal);box-shadow:0 0 0 3px rgba(200,242,95,.14),0 0 12px rgba(200,242,95,.6);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(200,242,95,.14),0 0 10px rgba(200,242,95,.5)}50%{box-shadow:0 0 0 5px rgba(200,242,95,.06),0 0 16px rgba(200,242,95,.75)}}
+
+/* ---------- nav ---------- */
+.nav{position:sticky;top:0;z-index:60;height:64px;border-bottom:1px solid transparent;transition:background-color .3s,border-color .3s}
+.nav.is-stuck{background:rgba(8,9,12,.74);-webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);border-bottom-color:var(--line)}
+.nav__in{height:100%;display:flex;align-items:center;gap:28px}
+.brand{display:inline-flex;align-items:center;gap:10px;font-size:17px;font-weight:600;letter-spacing:-.025em}
+.brand svg{width:28px;height:28px}
+.nav__links{display:flex;gap:2px;margin-left:12px}
+.nav__links a{padding:8px 12px;border-radius:8px;font-size:14px;color:var(--text-2);transition:color .2s,background-color .2s}
+.nav__links a:hover{color:var(--text-1);background:rgba(255,255,255,.045)}
+.nav__right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.nav__login{font-size:14px;color:var(--text-2);padding:8px 12px;border-radius:8px}
+.nav__login:hover{color:var(--text-1)}
+.nav__cta-short{display:none}
+.nav__menu{display:none;width:40px;height:40px;border-radius:9px;place-items:center;box-shadow:inset 0 0 0 1px var(--line-2)}
+.nav__menu .ico{width:18px;height:18px}
+.mnav{display:none}
+
+/* ---------- section scaffolding: rails, crosses, headers ---------- */
+.band{position:relative;border-top:1px solid var(--line)}
+.band>.wrap{padding-block:var(--band-y)}
+/* rails sit 32px outside the content column, with a cross where each section rule meets them */
+@media (min-width:1340px){
+  .band{background:linear-gradient(var(--line),var(--line)) calc(50% - 632px) 0/1px 100% no-repeat,linear-gradient(var(--line),var(--line)) calc(50% + 632px) 0/1px 100% no-repeat}
+  .band::before,.band::after{content:"";position:absolute;top:-5px;width:9px;height:9px;pointer-events:none;
+    background:linear-gradient(var(--line-3),var(--line-3)) center/9px 1px no-repeat,linear-gradient(var(--line-3),var(--line-3)) center/1px 9px no-repeat}
+  .band::before{left:calc(50% - 636px)}.band::after{left:calc(50% + 628px)}
+}
+.sec-head{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px;align-items:end;margin-bottom:56px}
+.eyebrow{display:flex;align-items:center;gap:12px;font:500 12px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--text-2);margin-bottom:22px}
+.eyebrow b{font-weight:500;color:var(--signal)}
+.eyebrow i{width:24px;height:1px;background:var(--line-3)}
+.h2{font-size:clamp(32px,3.55vw,52px);line-height:1.06;letter-spacing:-.036em;font-weight:540;text-wrap:balance}
+.h2 .muted{color:var(--text-3)}
+.lead{font-size:17px;line-height:1.65;color:var(--text-2);text-wrap:pretty}
+.lead b{color:var(--text-1);font-weight:500}
+.sec-link{display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-size:14.5px;font-weight:500;color:var(--text-1)}
+.sec-link .ico{width:14px;height:14px;transition:transform .25s var(--ease)}
+.sec-link:hover .ico{transform:translateX(3px)}
+
+/* ---------- hero ---------- */
+.hero{position:relative;margin-top:-64px;padding-top:64px;overflow:clip}
+.hero__bg{position:absolute;inset:0;pointer-events:none;z-index:0}
+.hero__bg::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 42% at 50% -6%,rgba(255,255,255,.075),transparent 70%)}
+.hero__grid{position:absolute;inset:0;
+  background-image:linear-gradient(to right,rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:60px 60px;background-position:calc(50% - 600px) -1px;
+  -webkit-mask-image:radial-gradient(ellipse 62% 46% at 50% 18%,#000 20%,transparent 78%);mask-image:radial-gradient(ellipse 62% 46% at 50% 18%,#000 20%,transparent 78%)}
+.hero__glow{position:absolute;border-radius:50%;filter:blur(90px)}
+.hero__glow--a{width:720px;height:380px;left:calc(50% - 560px);top:560px;background:rgba(200,242,95,.10)}
+.hero__glow--b{width:640px;height:360px;left:calc(50% + 40px);top:620px;background:rgba(138,184,255,.10)}
+.hero__in{position:relative;z-index:1;padding-top:72px;padding-bottom:88px}
+.pill{display:inline-flex;align-items:center;gap:10px;height:32px;padding:0 14px 0 12px;border-radius:999px;font-size:13.5px;color:var(--text-2);background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px var(--line-2),inset 0 1px 0 rgba(255,255,255,.05)}
+.pill .dot{width:6px;height:6px}
+.hero__title{margin-top:28px;font-size:clamp(42px,5.3vw,78px);line-height:1.01;letter-spacing:-.045em;font-weight:560}
+.hero__title span{display:block}
+.hero__title .muted{color:#7c848f}
+.hero__row{display:flex;align-items:flex-end;justify-content:space-between;gap:48px;margin-top:30px}
+.hero__sub{max-width:640px;font-size:clamp(17px,1.3vw,19px);line-height:1.6;color:var(--text-2);text-wrap:pretty}
+.hero__sub b{color:var(--text-1);font-weight:500}
+.hero__ctas{display:flex;gap:10px;flex:none}
+.hero__trust{display:flex;justify-content:center;gap:0;margin-top:148px}
+.hero__trust li{display:flex;align-items:center;gap:10px;padding:0 26px;font-size:13.5px;color:var(--text-2)}
+.hero__trust li+li{border-left:1px solid var(--line-2)}
+.hero__trust .ico{color:var(--signal);width:16px;height:16px}
+
+/* ---------- console (hero product UI) ---------- */
+.stage{position:relative;margin-top:64px}
+.stage::before{content:"";position:absolute;left:6%;right:6%;top:-56px;height:180px;background:radial-gradient(closest-side,rgba(200,242,95,.16),transparent);filter:blur(34px);pointer-events:none}
+.stage::after{content:"";position:absolute;left:30%;right:-4%;top:-30px;height:200px;background:radial-gradient(closest-side,rgba(138,184,255,.10),transparent);filter:blur(40px);pointer-events:none;z-index:-1}
+.console{position:relative;display:grid;grid-template-columns:220px minmax(0,1fr) 304px;grid-template-rows:46px minmax(0,1fr);height:640px;border-radius:16px;overflow:hidden;
+  background:linear-gradient(180deg,#0f1217 0%,#0b0d11 100%);
+  box-shadow:0 0 0 1px rgba(255,255,255,.085),inset 0 1px 0 rgba(255,255,255,.06),0 60px 120px -40px rgba(0,0,0,.9),0 30px 60px -30px rgba(0,0,0,.7);
+  font-size:13px;line-height:1.45;letter-spacing:-.003em}
+.console::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;z-index:3;background:linear-gradient(90deg,transparent 4%,rgba(200,242,95,.55) 32%,rgba(138,184,255,.45) 68%,transparent 96%)}
+.c-top{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 14px 0 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.012)}
+.c-top__l{display:flex;align-items:center;gap:10px;min-width:0}
+.c-top__l svg.m{width:20px;height:20px;flex:none}
+.c-live__s{display:none}
+.c-ws{display:inline-flex;align-items:center;gap:6px;font-weight:550;color:var(--text-1);white-space:nowrap}
+.c-ws .ico{width:12px;height:12px;color:var(--text-3)}
+.c-slash{color:var(--line-3);font-size:16px;font-weight:300}
+.c-tabs{display:flex;gap:2px;margin-left:18px}
+.c-tabs span{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:7px;color:var(--text-3);font-size:12.5px;font-weight:500}
+.c-tabs span.on{color:var(--text-1);background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line)}
+.c-tabs i{font-style:normal;display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:5px;background:var(--ice-a12);color:var(--ice-hi);font:500 10.5px/1 var(--mono)}
+.c-top__r{margin-left:auto;display:flex;align-items:center;gap:14px}
+.c-live{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2)}
+.c-time{font:500 11.5px/1 var(--mono);color:var(--text-3)}
+.c-avatar{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#2a3039,#1a1e25);box-shadow:inset 0 0 0 1px var(--line-2);font-size:10.5px;font-weight:600;color:var(--text-2)}
+.c-label{font:500 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text-3)}
+
+.c-side{border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column;gap:6px;min-height:0;background:rgba(0,0,0,.12)}
+.c-side .c-label{padding:4px 8px 6px}
+.c-agents{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.c-agent{display:grid;grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 8px;border-radius:9px}
+.c-agent.on{background:rgba(255,255,255,.045);box-shadow:inset 0 0 0 1px var(--line)}
+.c-agent b{display:block;font-weight:500;color:var(--text-1);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-agent small{display:block;font-size:11.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-agent .dot{width:6px;height:6px}
+.c-prog{display:block;height:3px;margin-top:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+.c-prog i{display:block;height:100%;border-radius:3px;background:var(--signal);transition:width .8s var(--ease)}
+.typing{display:inline-flex;gap:2px;margin-left:3px;vertical-align:middle}
+.typing i{width:3px;height:3px;border-radius:50%;background:var(--text-3);animation:typing 1.2s ease-in-out infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes typing{0%,60%,100%{opacity:.35;transform:none}30%{opacity:1;transform:translateY(-2px)}}
+.glyph{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:linear-gradient(180deg,#1b2027,#14181e);box-shadow:inset 0 0 0 1px var(--line-2),inset 0 1px 0 rgba(255,255,255,.05);color:var(--text-2)}
+.glyph .ico{width:14px;height:14px}
+.c-rules{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.c-rules li{display:flex;align-items:flex-start;gap:9px;padding:5px 8px;font-size:11.5px;line-height:1.4;color:var(--text-2)}
+.c-rules .ico{width:13px;height:13px;margin-top:1px;color:var(--text-3)}
+.c-conn{display:flex;flex-wrap:wrap;gap:5px;padding:2px 8px}
+.c-conn span{font-size:11px;color:var(--text-3);padding:3px 7px;border-radius:5px;box-shadow:inset 0 0 0 1px var(--line)}
+
+.c-main{display:flex;flex-direction:column;min-height:0;padding:18px 20px 0}
+.c-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+.c-hello{font-size:15.5px;font-weight:550;letter-spacing:-.015em}
+.c-sub{font-size:12.5px;color:var(--text-3);margin-top:2px}
+.c-seg{display:flex;padding:2px;border-radius:8px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px var(--line)}
+.c-seg span{height:24px;display:inline-flex;align-items:center;padding:0 9px;border-radius:6px;font-size:11.5px;color:var(--text-3)}
+.c-seg span.on{background:rgba(255,255,255,.07);color:var(--text-1);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.c-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.c-metric{position:relative;padding:12px 12px 11px;border-radius:11px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));box-shadow:inset 0 0 0 1px var(--line),inset 0 1px 0 rgba(255,255,255,.04)}
+.c-metric__l{font-size:11.5px;color:var(--text-2);white-space:nowrap}
+.c-metric__row{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:6px}
+.c-metric__v{font-size:24px;line-height:1.05;font-weight:550;letter-spacing:-.035em;color:var(--text-1);white-space:nowrap}
+.c-metric__v small{font-size:13px;font-weight:500;color:var(--text-3);margin-left:3px;letter-spacing:0}
+.c-metric__d{display:flex;align-items:center;gap:4px;margin-top:7px;font-size:11px;color:var(--text-3);white-space:nowrap}
+.c-metric__d .up{color:var(--signal-hi);font-weight:500}
+.c-metric__d .ico{width:11px;height:11px}
+.c-metric svg.spark{flex:none;width:46px;height:20px;margin-bottom:3px;overflow:visible}
+.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{color:var(--signal-hi)}100%{color:var(--text-1)}}
+
+.c-feed{flex:1;min-height:0;display:flex;flex-direction:column}
+.c-feed__head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 9px;border-bottom:1px solid var(--line)}
+.c-stream{display:inline-flex;align-items:center;gap:7px;font:500 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.c-stream .dot{width:6px;height:6px}
+.c-feed__list{flex:1;min-height:0;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 72%,transparent);mask-image:linear-gradient(180deg,#000 72%,transparent)}
+.row{overflow:hidden;max-height:64px;transition:max-height .55s var(--ease),opacity .55s var(--ease)}
+.row.enter{max-height:0;opacity:0}
+.row__in{display:grid;grid-template-columns:40px 26px minmax(0,1fr) auto;align-items:center;gap:11px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.row.fresh .row__in{animation:rowflash 2.6s ease-out}
+@keyframes rowflash{0%{background:rgba(200,242,95,.07)}100%{background:transparent}}
+.row__t{font:500 11px/1 var(--mono);color:var(--text-3)}
+.row__x{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row__x b{font-weight:500;color:var(--text-1)}
+.row__x em{font-style:normal;color:var(--text-1)}
+
+.c-aside{border-left:1px solid var(--line);padding:16px 14px;display:flex;flex-direction:column;gap:14px;min-height:0;background:rgba(0,0,0,.12)}
+.c-aside__head{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 0}
+.c-count{font:500 10.5px/1 var(--mono);color:var(--ice-hi);background:var(--ice-a12);padding:4px 6px;border-radius:5px}
+.appr{border-radius:12px;padding:12px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));box-shadow:inset 0 0 0 1px var(--line-2),inset 0 1px 0 rgba(255,255,255,.05)}
+.appr__top{display:flex;align-items:center;gap:8px}
+.appr__top .glyph{width:22px;height:22px;border-radius:6px}
+.appr__top .glyph .ico{width:12px;height:12px}
+.appr__who{font-size:11.5px;color:var(--text-3)}
+.appr__t{margin-top:9px;font-size:13px;font-weight:500;color:var(--text-1);line-height:1.35}
+.appr__q{margin-top:6px;font-size:12px;line-height:1.5;color:var(--text-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.appr__meta{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:11px;color:var(--text-3)}
+.appr__meta .ico{width:12px;height:12px;color:var(--signal)}
+.appr__btns{display:flex;gap:6px;margin-top:11px}
+.appr--min{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.appr--min .appr__t{margin:0;font-size:12.5px}
+.appr--min .appr__who{margin-top:1px}
+.appr--min .btn{margin-left:auto}
+.cpl{margin-top:auto;border-radius:12px;padding:12px 12px 10px;background:rgba(255,255,255,.02);box-shadow:inset 0 0 0 1px var(--line);position:relative}
+.cpl__top{display:flex;align-items:baseline;justify-content:space-between}
+.cpl__l{font-size:11.5px;color:var(--text-2)}
+.cpl__l small{display:block;font-size:10.5px;color:var(--text-3);margin-top:1px}
+.cpl__v{font-size:22px;font-weight:550;letter-spacing:-.035em;text-align:right;line-height:1}
+.cpl__d{display:block;margin-top:4px;font-size:11px;font-weight:500;color:var(--signal-hi);letter-spacing:0}
+.cpl svg{width:100%;height:auto;margin-top:8px;overflow:visible}
+.cpl__tip{position:absolute;pointer-events:none;padding:5px 7px;border-radius:6px;background:#1d2229;box-shadow:0 0 0 1px var(--line-2),0 8px 20px rgba(0,0,0,.5);font:500 10.5px/1.2 var(--mono);color:var(--text-1);white-space:nowrap;opacity:0;transform:translate(-50%,-100%);transition:opacity .15s}
+.cpl__tip.on{opacity:1}
+
+/* floating insight card (layered glass) */
+.float{position:absolute;z-index:4;width:292px;left:-72px;bottom:-100px;border-radius:14px;padding:14px 14px 12px;
+  background:linear-gradient(180deg,rgba(30,35,43,.72),rgba(18,21,27,.78));-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.08),0 30px 60px -20px rgba(0,0,0,.8),0 0 50px -20px rgba(200,242,95,.25)}
+.float__top{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-3)}
+.float__top .glyph{width:22px;height:22px;border-radius:6px}
+.float__top .glyph .ico{width:12px;height:12px}
+.float__top b{color:var(--text-1);font-weight:500}
+.float__top time{margin-left:auto;font:500 10.5px/1 var(--mono)}
+.float h4{margin-top:10px;font-size:13.5px;font-weight:550;letter-spacing:-.01em}
+.float p{margin-top:5px;font-size:12px;line-height:1.5;color:var(--text-2)}
+.float p em{font-style:normal;color:var(--text-1)}
+.float__chart{display:flex;align-items:flex-end;gap:14px;margin-top:10px;padding:9px 10px 8px;border-radius:9px;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px var(--line)}
+.float__chart svg{width:110px;height:34px;overflow:visible}
+.float__chart dl{display:flex;gap:12px;font-size:10.5px}
+.float__chart dt{font-family:var(--mono);color:var(--text-3)}
+.float__chart dd{font-weight:550;color:var(--text-1);font-size:12px}
+.float__btns{display:flex;gap:6px;margin-top:10px}
+
+/* ---------- integrations strip ---------- */
+.integr .wrap{padding-block:64px 72px}
+.integr__head{display:flex;align-items:baseline;justify-content:space-between;gap:24px;margin-bottom:22px}
+.integr__head p{font-size:14px;color:var(--text-3)}
+.integr__head p:first-child{font:500 12px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--text-2)}
+.integr__list{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));border-radius:14px;box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;background:rgba(255,255,255,.012)}
+.integr__list li{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:84px;text-align:center;transition:background-color .25s}
+.integr__list li+li{box-shadow:-1px 0 0 var(--line)}
+.integr__list li:hover{background:rgba(255,255,255,.03)}
+.integr__list b{font-size:15.5px;font-weight:550;letter-spacing:-.015em;color:#d9dde2}
+.integr__list small{font:500 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+
+/* ---------- services (2x2 bento, each card opens on a product glimpse) ---------- */
+.svc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.svc{position:relative;display:flex;flex-direction:column;border-radius:18px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01) 70%);box-shadow:inset 0 0 0 1px var(--line),inset 0 1px 0 rgba(255,255,255,.05);transition:box-shadow .3s}
+.svc::before{content:"";position:absolute;inset:-1px -1px auto;height:220px;background:radial-gradient(ellipse 55% 90% at 50% 0%,rgba(200,242,95,.08),transparent 70%);opacity:0;transition:opacity .4s;pointer-events:none}
+.svc:hover{box-shadow:inset 0 0 0 1px var(--line-3),inset 0 1px 0 rgba(255,255,255,.07)}
+.svc:hover::before{opacity:1}
+.svc__body{display:flex;flex-direction:column;flex:1;padding:26px 30px 28px}
+.svc__head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:16px;align-items:start}
+.svc__icon{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;color:#e3e7eb;background:linear-gradient(180deg,#1c2128,#13161c);box-shadow:inset 0 0 0 1px var(--line-2),inset 0 1px 0 rgba(255,255,255,.07),0 8px 20px -8px rgba(0,0,0,.6)}
+.svc__icon svg{width:22px;height:22px}
+.svc__n{font:500 11.5px/1 var(--mono);color:var(--text-3);letter-spacing:.04em;margin-top:4px}
+.svc h3{font-size:21px;line-height:1.2;font-weight:560;letter-spacing:-.022em}
+.svc__v{margin-top:6px;font-size:15.5px;line-height:1.5;color:var(--text-2);text-wrap:pretty}
+.svc__list{margin-top:22px;padding-top:20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.svc__list li{display:grid;grid-template-columns:14px minmax(0,1fr);gap:12px;font-size:14px;line-height:1.5;color:var(--text-2)}
+.svc__list .ico{width:14px;height:14px;margin-top:3px;color:var(--signal)}
+.svc__link{margin-top:auto;padding-top:24px;display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--text-1)}
+.svc__link .ico{width:14px;height:14px;transition:transform .25s var(--ease)}
+.svc:hover .svc__link .ico{transform:translateX(3px)}
+/* vignette: a small, quiet screen inside each card */
+.vg{position:relative;margin:10px 10px 0;height:214px;border-radius:12px;overflow:hidden;padding:16px 20px 18px;font-size:12px;line-height:1.4;
+  background:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px) 0 0/14px 14px,linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.16));box-shadow:inset 0 0 0 1px var(--line)}
+.vg__h{display:flex;align-items:center;gap:8px;margin-bottom:12px;font:500 10px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+.vg__tag{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font:500 9.5px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+.vg__tag::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--ice)}
+.vg-rows li{display:grid;grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:11px;padding:7px 10px;border-radius:10px;background:rgba(17,20,26,.85);box-shadow:inset 0 0 0 1px var(--line)}
+.vg-rows li+li{margin-top:6px}
+.vg-rows b{display:block;font-weight:500;font-size:12.5px;color:var(--text-1)}
+.vg-rows small{display:block;font-size:11.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vg-bars li{display:grid;grid-template-columns:62px minmax(0,1fr) 70px;align-items:center;gap:12px;height:30px}
+.vg-bars .v small{font:500 9.5px/1 var(--mono);letter-spacing:.06em;color:var(--text-3);margin-left:5px}
+.vg-bars .n{font-size:12px;color:var(--text-2)}
+.vg-bars .b{display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.06)}
+.vg-bars .b i{display:block;height:100%;border-radius:4px;background:#5b636e}
+.vg-bars .b i.a{background:var(--signal)}
+.vg-bars .v{font-size:12px;font-weight:500;color:var(--text-1);text-align:right}
+.vg-bars .off .n,.vg-bars .off .v{color:var(--text-3)}
+.vg-bars .off .v{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.vg-k{display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--text-3)}
+.vg-k span{display:inline-flex;align-items:center;gap:6px}
+.vg-k i{width:8px;height:8px;border-radius:2px}
+.vg-mail{padding:12px 14px;border-radius:10px;background:rgba(17,20,26,.85);box-shadow:inset 0 0 0 1px var(--line)}
+.vg-mail__to{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--text-3);padding-bottom:8px;border-bottom:1px solid var(--line)}
+.vg-mail__to b{color:var(--text-1);font-weight:500}
+.vg-mail p{margin-top:8px;font-size:12.5px;line-height:1.55;color:var(--text-1)}
+.vg-mail mark{background:linear-gradient(180deg,transparent 60%,rgba(200,242,95,.22) 60%);color:inherit}
+.vg-mail sup{font:600 8.5px/1 var(--mono);color:var(--signal-hi);margin-left:1px}
+.vg-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.wf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;height:136px}
+.wf__c{display:flex;flex-direction:column;min-width:0}
+.wf__plot{position:relative;flex:1;border-bottom:1px solid var(--line-2)}
+.wf__bar{position:absolute;left:50%;width:30px;margin-left:-15px;border-radius:4px;background:#4a525d}
+.wf__bar.d{background:var(--ice)}
+.wf__bar.t{background:var(--signal);border-radius:4px 4px 0 0}
+.wf__bar:not(.d):not(.t){border-radius:4px 4px 0 0}
+.wf__v{position:absolute;left:0;right:0;text-align:center;font-size:12px;font-weight:550;letter-spacing:-.01em;color:var(--text-1)}
+.wf__ln{position:absolute;left:calc(-50% + 3px);width:calc(100% - 18px);height:1px;background:rgba(255,255,255,.22)}
+.wf__l{margin-top:8px;text-align:center;font:500 9.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- demo showcase ---------- */
+.demo{position:relative}
+.demo::before{content:"";position:absolute;left:10%;right:10%;top:12%;height:60%;background:radial-gradient(closest-side,rgba(138,184,255,.09),transparent);filter:blur(40px);pointer-events:none}
+.win{position:relative;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#0f1217,#0b0d11);
+  box-shadow:0 0 0 1px rgba(255,255,255,.085),inset 0 1px 0 rgba(255,255,255,.06),0 50px 100px -40px rgba(0,0,0,.9);display:flex;flex-direction:column;font-size:13px;line-height:1.5}
+.win__bar{display:flex;align-items:center;gap:14px;height:44px;padding:0 14px 0 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.012)}
+.win__dots{display:flex;gap:6px}
+.win__dots i{width:9px;height:9px;border-radius:50%;background:#262b33}
+.win__title{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-2);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.win__title b{font-weight:550;color:var(--text-1)}
+.win__title .glyph{width:20px;height:20px;border-radius:6px}
+.win__title .glyph .ico{width:11px;height:11px}
+.win__meta{margin-left:auto;display:flex;align-items:center;gap:8px}
+.demo-tabs{display:none}
+.panes{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr) minmax(0,300px);min-height:560px}
+.pane{position:relative;padding:18px 20px 20px;min-width:0}
+.pane+.pane{border-left:1px solid var(--line)}
+.pane__h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.pane__h .c-label{display:flex;align-items:center;gap:8px}
+.pane__h small{font:500 11px/1 var(--mono);color:var(--text-3)}
+
+/* dossier */
+.co{display:flex;gap:12px;align-items:center}
+.co__logo{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#243041,#151b24);box-shadow:inset 0 0 0 1px var(--line-2);font-weight:600;font-size:13px;color:var(--ice-hi);letter-spacing:-.02em}
+.co b{display:block;font-size:14.5px;font-weight:550;letter-spacing:-.01em}
+.co small{display:block;font-size:12px;color:var(--text-3)}
+.person{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px;border-radius:10px;background:rgba(255,255,255,.025);box-shadow:inset 0 0 0 1px var(--line)}
+.person__av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#1f252d;font-size:11px;font-weight:600;color:var(--text-2)}
+.person b{display:block;font-size:13px;font-weight:500}
+.person small{display:block;font-size:11.5px;color:var(--text-3)}
+.person .chip{margin-left:auto}
+.fit{margin-top:14px}
+.fit__row{display:flex;align-items:baseline;justify-content:space-between}
+.fit__row span{font-size:12px;color:var(--text-2)}
+.fit__row b{font-size:13px;font-weight:550}
+.fit__row b small{color:var(--text-3);font-weight:500}
+.meter{height:6px;margin-top:7px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}
+.meter i{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,#9fd03b,var(--signal));transition:width 1.1s var(--ease)}
+.meter.on i{width:92%}
+.fit__why{margin-top:7px;font:500 10.5px/1.4 var(--mono);color:var(--text-3)}
+.facts-h{margin:18px 0 8px;display:flex;align-items:center;justify-content:space-between}
+.facts{display:flex;flex-direction:column}
+.fact{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.fact__n{display:grid;place-items:center;width:18px;height:18px;margin-top:1px;border-radius:5px;font:600 10px/1 var(--mono);color:var(--signal-hi);background:var(--signal-a06);box-shadow:inset 0 0 0 1px rgba(200,242,95,.22)}
+.fact p{font-size:12.5px;line-height:1.45;color:var(--text-1)}
+.fact__src{display:flex;align-items:center;gap:6px;margin-top:3px;font:500 10.5px/1.3 var(--mono);color:var(--text-3)!important}
+.fact__src .ico{width:11px;height:11px}
+.prio{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.prio-h{margin-top:12px;font-size:11.5px;color:var(--text-3)}
+
+/* draft */
+.seg{display:inline-flex;padding:2px;border-radius:8px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px var(--line)}
+.seg button{height:26px;padding:0 10px;border-radius:6px;font-size:12px;color:var(--text-3);transition:color .2s,background-color .2s}
+.seg button[aria-pressed="true"]{background:rgba(255,255,255,.08);color:var(--text-1);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.mail{border-radius:12px;background:rgba(255,255,255,.02);box-shadow:inset 0 0 0 1px var(--line)}
+.mail__f{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:12.5px}
+.mail__f span{color:var(--text-3)}
+.mail__f b{font-weight:500;color:var(--text-1)}
+.caret{display:inline-block;width:1.5px;height:1.05em;margin-left:1px;vertical-align:-2px;background:var(--signal);animation:blink 1s steps(1) infinite}
+.caret[hidden]{display:none}
+@keyframes blink{50%{opacity:0}}
+.mail__body{padding:14px 16px 16px;font-size:13.5px;line-height:1.62;color:var(--text-1)}
+.mail__body p+p{margin-top:10px}
+.mail__body mark{background:linear-gradient(180deg,transparent 62%,rgba(200,242,95,.2) 62%);color:inherit;padding:0 1px;border-radius:2px}
+.mail__body sup{font:600 9px/1 var(--mono);color:var(--signal-hi);margin-left:2px;vertical-align:4px}
+.mail__sig{color:var(--text-2)!important}
+.mail__sig span{color:var(--text-3)}
+.mail__foot{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 14px;border-top:1px solid var(--line);font:500 10.5px/1.3 var(--mono);color:var(--text-3)}
+.mail__foot span{display:inline-flex;align-items:center;gap:6px}
+.mail__foot .ico{width:11px;height:11px;color:var(--signal)}
+.mail--generic{display:none}
+.seq{margin-top:14px}
+.seq__h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.seq__h small{font:500 10.5px/1 var(--mono);color:var(--text-3)}
+.seq li{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 2px;border-top:1px solid var(--line);font-size:12.5px;color:var(--text-2)}
+.seq li b{font-weight:500;color:var(--text-1)}
+.seq li time{display:block;font:500 10.5px/1.3 var(--mono);color:var(--text-3)}
+.seq__n{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;font:600 10px/1 var(--mono);color:var(--text-2);box-shadow:inset 0 0 0 1px var(--line-2)}
+.seq li:first-child .seq__n{color:var(--signal-ink);background:var(--signal);box-shadow:none}
+[data-variant="generic"] .seq,[data-variant="generic"] .log{display:none}
+.log{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.log ol{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.log li{display:grid;grid-template-columns:58px minmax(0,1fr);gap:8px;font-size:11.5px;line-height:1.4;color:var(--text-2)}
+.log time{font:500 10.5px/1.45 var(--mono);color:var(--text-3)}
+.demo .log li[data-t]:not(.on){display:none}
+.bad{background:linear-gradient(180deg,transparent 62%,rgba(242,139,130,.22) 62%)!important}
+.flag{display:inline-flex;align-items:center;height:17px;padding:0 6px;margin-left:4px;border-radius:4px;font:500 9.5px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--rose);background:var(--rose-a12);vertical-align:2px;white-space:nowrap}
+[data-variant="generic"] .mail--ours{display:none}
+[data-variant="generic"] .mail--generic{display:block}
+.skel{display:flex;flex-direction:column;gap:9px;padding:6px 0}
+.skel i{display:block;height:9px;border-radius:5px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,255,255,.09),rgba(255,255,255,.05));background-size:200% 100%;animation:shimmer 1.6s linear infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* checks */
+.checks{display:flex;flex-direction:column;gap:2px}
+.chk{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.chk__i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--text-3)}
+.chk__i .ico{width:12px;height:12px;display:none}
+.chk.done .chk__i{background:var(--signal);box-shadow:none;color:var(--signal-ink)}
+.chk.done .chk__i .i-ok{display:block}
+.chk.fail .chk__i{background:var(--rose-a12);box-shadow:inset 0 0 0 1px rgba(242,139,130,.35);color:var(--rose)}
+.chk.fail .chk__i .i-x{display:block}
+.chk.fail .chk__i .i-ok{display:none}
+.chk b{display:block;font-size:12.5px;font-weight:500;color:var(--text-1)}
+.chk small{display:block;font-size:11.5px;color:var(--text-3);margin-top:1px}
+.chk:not(.done):not(.fail) b{color:var(--text-3)}
+.rules{margin-top:14px;padding:11px 12px;border-radius:10px;background:rgba(255,255,255,.02);box-shadow:inset 0 0 0 1px var(--line)}
+.rules li{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:11.5px;color:var(--text-3)}
+.rules li b{font-weight:500;color:var(--text-2);text-align:right}
+.decide{margin-top:14px}
+.decide__wait{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ice-hi)}
+.decide__btns{display:flex;gap:8px;margin-top:10px}
+.decide__btns .btn{flex:1}
+.decide__btns .btn.press{transform:scale(.96);background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.12)}
+.sent{display:none;align-items:flex-start;gap:10px;padding:11px 12px;border-radius:10px;background:var(--signal-a06);box-shadow:inset 0 0 0 1px rgba(200,242,95,.22)}
+.sent .ico{width:16px;height:16px;color:var(--signal);margin-top:1px}
+.sent b{display:block;font-size:12.5px;font-weight:550;color:var(--text-1)}
+.sent small{display:block;font-size:11.5px;color:var(--text-2)}
+.demo.is-sent .sent{display:flex}
+.demo.is-sent .decide{display:none}
+.blocked{display:none;align-items:flex-start;gap:10px;padding:11px 12px;border-radius:10px;background:var(--rose-a12);box-shadow:inset 0 0 0 1px rgba(242,139,130,.3)}
+.blocked .ico{width:16px;height:16px;color:var(--rose);margin-top:1px}
+.blocked b{display:block;font-size:12.5px;font-weight:550}
+.blocked small{display:block;font-size:11.5px;color:var(--text-2)}
+[data-variant="generic"] .blocked{display:flex}
+[data-variant="generic"] .decide,[data-variant="generic"] .sent{display:none!important}
+
+/* timed reveal */
+[data-t]{transition:opacity .45s var(--ease),transform .45s var(--ease)}
+.demo [data-t]:not(.on){opacity:0;transform:translateY(5px)}
+
+/* player */
+.player{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;padding:14px 18px 16px;border-top:1px solid var(--line);background:rgba(0,0,0,.18)}
+.player__btn{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--text-1);color:var(--bg);box-shadow:0 0 0 4px rgba(255,255,255,.06);transition:transform .2s,background-color .2s}
+.player__btn:hover{transform:scale(1.05);background:#fff}
+.player__btn .ico{width:15px;height:15px}
+.player__btn .i-pause,.player__btn .i-replay{display:none}
+.demo.is-playing .player__btn .i-play{display:none}
+.demo.is-playing .player__btn .i-pause{display:block}
+.demo.is-ended .player__btn .i-play{display:none}
+.demo.is-ended .player__btn .i-replay{display:block}
+.player__cap{font-size:13.5px;color:var(--text-1);min-height:21px}
+.player__cap span{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--signal);margin-right:10px}
+.player__steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:10px}
+.player__steps li{min-width:0}
+.player__steps .bar{display:block;height:3px;border-radius:3px;background:rgba(255,255,255,.09);overflow:hidden}
+.player__steps .bar i{display:block;height:100%;width:calc(var(--p,0)*100%);background:var(--text-1);border-radius:3px}
+.player__steps li.cur .bar i{background:var(--signal)}
+.player__steps .lbl{display:block;margin-top:7px;font-size:11.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player__steps li.cur .lbl{color:var(--text-1)}
+.player__steps li.past .lbl{color:var(--text-2)}
+.player__time{font:500 11.5px/1 var(--mono);color:var(--text-3)}
+
+/* result card */
+.result{position:relative;margin-top:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.4fr);gap:32px;align-items:center;padding:24px 26px;border-radius:16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));box-shadow:inset 0 0 0 1px var(--line-2),inset 0 1px 0 rgba(255,255,255,.05);transition:box-shadow .6s}
+.result.lit{box-shadow:inset 0 0 0 1px rgba(200,242,95,.35),inset 0 1px 0 rgba(255,255,255,.05),0 0 60px -20px rgba(200,242,95,.35)}
+.result__h p{margin-top:12px;font-size:17px;font-weight:550;letter-spacing:-.015em;line-height:1.35}
+.result__h small{display:block;margin-top:8px;font-size:12.5px;line-height:1.5;color:var(--text-3)}
+.result__stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.5fr);gap:0}
+.result__stats>div{padding:2px 22px;border-left:1px solid var(--line)}
+.result__stats dt{font-size:12px;color:var(--text-3);line-height:1.35}
+.result__stats dd{margin-top:8px;font-size:26px;font-weight:550;letter-spacing:-.035em;line-height:1}
+.result__stats dd small{font-size:14px;color:var(--text-3);font-weight:500;letter-spacing:0;margin-left:2px}
+.result__stats .key dd{font-size:34px;color:var(--signal)}
+.result__stats .key p{margin-top:8px;font-size:12.5px;color:var(--text-2)}
+
+/* ---------- savings band ---------- */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.tile{position:relative;padding:24px 24px 22px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01));box-shadow:inset 0 0 0 1px var(--line),inset 0 1px 0 rgba(255,255,255,.05);display:flex;flex-direction:column}
+.tile__top{display:flex;align-items:center;justify-content:space-between}
+.tile__v{margin-top:28px;font-size:clamp(44px,4.4vw,62px);line-height:1;font-weight:540;letter-spacing:-.05em}
+.tile__v small{font-size:.32em;font-weight:500;letter-spacing:-.01em;color:var(--text-2);margin-left:6px}
+.tile--key .tile__v{color:var(--signal)}
+.tile__l{margin-top:10px;font-size:15.5px;color:var(--text-1)}
+.tile__viz{margin-top:24px}
+.hbar{display:flex;gap:2px;height:8px}
+.hbar i{display:block;height:100%;border-radius:4px;transition:flex-grow .5s var(--ease)}
+.hbar .a{background:var(--signal)}
+.hbar .b{background:var(--ice)}
+.hbar .z{background:rgba(255,255,255,.09)}
+.hbar__k{display:flex;justify-content:space-between;gap:10px;margin-top:9px;font-size:12px;color:var(--text-3)}
+.hbar__k span{display:inline-flex;align-items:center;gap:6px}
+.hbar__k i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.tile__a{margin-top:auto;padding-top:18px;border-top:1px solid var(--line);font:500 11.5px/1.55 var(--mono);color:var(--text-3)}
+.tile__viz+.tile__a{margin-top:22px}
+.calc{margin-top:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,3fr);gap:0;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.015);box-shadow:inset 0 0 0 1px var(--line)}
+.calc__intro{padding:24px;border-right:1px solid var(--line)}
+.calc__intro h3{font-size:17px;font-weight:550;letter-spacing:-.015em;margin-top:14px}
+.calc__intro p{margin-top:8px;font-size:13px;line-height:1.55;color:var(--text-3)}
+.calc__reset{margin-top:16px}
+.calc__fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.field{padding:24px 22px 20px;border-left:1px solid var(--line);display:flex;flex-direction:column}
+.field:first-child{border-left:0}
+.field__l{font-size:12.5px;line-height:1.4;color:var(--text-2);min-height:36px}
+.field output{display:block;margin-top:8px;font-size:24px;font-weight:550;letter-spacing:-.03em}
+.field output small{font-size:13px;color:var(--text-3);font-weight:500;letter-spacing:0;margin-left:3px}
+.range{-webkit-appearance:none;appearance:none;width:100%;height:22px;margin-top:10px;background:transparent;cursor:pointer;--p:20%}
+.range::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--signal) var(--p),rgba(255,255,255,.1) var(--p))}
+.range::-moz-range-track{height:4px;border-radius:4px;background:rgba(255,255,255,.1)}
+.range::-moz-range-progress{height:4px;border-radius:4px;background:var(--signal)}
+.range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-7px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(200,242,95,.22),0 2px 6px rgba(0,0,0,.5)}
+.range::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(200,242,95,.22)}
+.range:focus-visible{outline:none}
+.range:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px var(--signal)}
+.field__s{display:flex;justify-content:space-between;margin-top:4px;font:500 10.5px/1 var(--mono);color:var(--text-3)}
+.calc__sum{display:none;grid-column:1/-1;padding:18px 24px;border-top:1px solid var(--line);background:var(--signal-a06)}
+.calc__sum span{display:block;font-size:12.5px;color:var(--text-2)}
+.calc__sum b{display:block;margin-top:4px;font-size:34px;line-height:1.05;font-weight:550;letter-spacing:-.04em;color:var(--signal)}
+.calc__sum small{display:block;margin-top:6px;font-size:12.5px;color:var(--text-2)}
+.calc__sum small span{display:inline;font-size:inherit;color:var(--text-1)}
+.calc__note{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:14px 24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--text-3)}
+.calc__note b{font-weight:500;color:var(--text-2)}
+.calc__note .ico{width:13px;height:13px;color:var(--ice)}
+.calc__note span{display:inline-flex;align-items:center;gap:7px}
+
+/* ---------- process ---------- */
+.steps{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+.steps::before{content:"";position:absolute;left:0;right:0;top:6px;height:1px;background:linear-gradient(90deg,var(--signal) 0%,rgba(200,242,95,.35) 18%,var(--line-2) 34%,var(--line-2) 100%)}
+.step{position:relative;padding-right:36px;display:flex;flex-direction:column}
+.step__node{position:relative;display:block;width:13px;height:13px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line-3)}
+.step:first-child .step__node{background:var(--signal);box-shadow:0 0 0 4px rgba(200,242,95,.14),0 0 18px rgba(200,242,95,.55)}
+.step__meta{margin-top:26px;display:flex;align-items:center;gap:10px;font:500 11.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)}
+.step__meta b{color:var(--text-1);font-weight:500}
+.step h3{margin-top:14px;font-size:19px;font-weight:560;letter-spacing:-.02em}
+.step p{margin-top:10px;font-size:14.5px;line-height:1.6;color:var(--text-2)}
+.step p:not(.step__get):not(.step__meta){margin-bottom:18px}
+.step .step__get{display:flex;align-items:flex-start;gap:8px;margin-top:auto;padding-top:14px;border-top:1px solid var(--line);font-size:13px;line-height:1.45;color:var(--text-1)}
+.step__get .ico{width:14px;height:14px;margin-top:2px;color:var(--signal)}
+
+/* ---------- closing CTA ---------- */
+.cta{position:relative;overflow:hidden;border-radius:24px;padding:96px 64px 72px;text-align:center;
+  background:radial-gradient(ellipse 60% 70% at 50% 0%,rgba(200,242,95,.11),transparent 70%),linear-gradient(180deg,#0f1217,#0a0c0f);
+  box-shadow:inset 0 0 0 1px var(--line-2),inset 0 1px 0 rgba(255,255,255,.07)}
+.cta__grid{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(to right,rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:48px 48px;background-position:center top;
+  -webkit-mask-image:radial-gradient(ellipse 55% 75% at 50% 0%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 55% 75% at 50% 0%,#000 10%,transparent 75%)}
+.cta__mark{position:relative;width:56px;height:56px;margin:0 auto;filter:drop-shadow(0 10px 30px rgba(200,242,95,.25))}
+.cta .eyebrow{justify-content:center;margin:28px 0 18px}
+.cta h2{position:relative;font-size:clamp(36px,4.6vw,64px);line-height:1.02;letter-spacing:-.045em;font-weight:560;text-wrap:balance}
+.cta .lead{position:relative;max-width:660px;margin:20px auto 0;text-wrap:balance}
+.cta__btns{position:relative;display:flex;justify-content:center;gap:10px;margin-top:36px}
+.cta__list{position:relative;display:flex;justify-content:center;flex-wrap:wrap;gap:10px 28px;margin-top:44px;padding-top:28px;border-top:1px solid var(--line)}
+.cta__list li{display:inline-flex;align-items:center;gap:9px;font-size:13.5px;color:var(--text-2)}
+.cta__list .ico{width:15px;height:15px;color:var(--signal)}
+
+/* ---------- footer ---------- */
+.foot{border-top:1px solid var(--line)}
+.foot .wrap{padding-block:64px 40px}
+.foot__top{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));gap:40px}
+.foot__brand p{margin-top:16px;max-width:300px;font-size:14px;line-height:1.6;color:var(--text-3)}
+.foot h4{font:500 11.5px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);margin-bottom:16px}
+.foot ul{display:flex;flex-direction:column;gap:10px}
+.foot ul a{font-size:14px;color:var(--text-2);transition:color .2s}
+.foot ul a:hover{color:var(--text-1)}
+.foot__bot{display:flex;justify-content:space-between;gap:24px;margin-top:56px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.55;color:var(--text-3)}
+.foot__bot p:last-child{text-align:right;max-width:560px}
+
+/* ---------- reveal ---------- */
+.js .rv{opacity:0;transform:translateY(14px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.js .rv.in{opacity:1;transform:none}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width:1320px){
+  .float{left:-20px}
+}
+@media (max-width:1200px){
+  .console{grid-template-columns:210px minmax(0,1fr)}
+  .c-aside{display:none}
+  .float{display:none}
+  .hero__trust{margin-top:52px}
+  .panes{grid-template-columns:minmax(0,300px) minmax(0,1fr) minmax(0,270px)}
+  .result{grid-template-columns:1fr}
+}
+@media (max-width:820px){
+  .svc-grid{grid-template-columns:1fr}
+}
+@media (max-width:960px){
+  :root{--band-y:96px}
+  .nav__links,.nav__login{display:none}
+  .nav__menu{display:grid}
+  .mnav{display:block;position:fixed;left:0;right:0;top:64px;z-index:59;padding:12px 16px 20px;background:rgba(8,9,12,.97);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-bottom:1px solid var(--line);transform:translateY(-8px);opacity:0;visibility:hidden;transition:opacity .2s,transform .2s,visibility .2s}
+  .mnav.open{opacity:1;transform:none;visibility:visible}
+  .mnav a:not(.btn){display:block;padding:12px 4px;font-size:16px;border-bottom:1px solid var(--line);color:var(--text-1)}
+  .mnav .btn{display:flex;margin-top:16px}
+  .sec-head{grid-template-columns:1fr;gap:20px;margin-bottom:44px}
+  .hero__row{flex-direction:column;align-items:flex-start;gap:28px}
+  .hero__trust{margin-top:48px}
+  .console{grid-template-columns:1fr;grid-template-rows:auto;height:auto}
+  .c-side,.c-tabs,.c-time,.c-seg{display:none}
+  .c-aside{display:flex;border-left:0;border-top:1px solid var(--line);background:none}
+  .cpl,.appr--min{display:none}
+  .c-feed__list{height:auto;max-height:none;-webkit-mask-image:none;mask-image:none}
+  .float{display:none}
+  .integr__list{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .integr__list li{box-shadow:inset 1px 0 0 var(--line),inset 0 1px 0 var(--line)!important}
+  .integr__list{box-shadow:inset 0 0 0 1px var(--line)}
+  .demo-tabs{display:flex;gap:4px;padding:8px;border-bottom:1px solid var(--line)}
+  .demo-tabs button{flex:1;height:34px;border-radius:8px;font-size:13px;color:var(--text-3)}
+  .demo-tabs button[aria-selected="true"]{background:rgba(255,255,255,.07);color:var(--text-1);box-shadow:inset 0 0 0 1px var(--line)}
+  .panes{display:block;min-height:0}
+  .pane{display:none}
+  .pane.show{display:block}
+  .pane+.pane{border-left:0}
+  .player{order:-1;grid-template-columns:auto minmax(0,1fr);border-top:0;border-bottom:1px solid var(--line)}
+  .player__time{display:none}
+  .win__bar{order:-2}
+  .tiles{grid-template-columns:1fr}
+  .calc{grid-template-columns:1fr}
+  .calc__intro{border-right:0;border-bottom:1px solid var(--line)}
+  .calc__sum{display:block}
+  .calc__fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .field:nth-child(3){border-left:0}
+  .field:nth-child(n+3){border-top:1px solid var(--line)}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:48px}
+  .steps::before{display:none}
+  .foot__top{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .foot__brand{grid-column:1/-1}
+}
+@media (max-width:640px){
+  :root{--gutter:16px;--band-y:80px}
+  body{font-size:15.5px}
+  .nav__cta-long{display:none}
+  .nav__cta-short{display:inline}
+  .c-live__l{display:none}
+  .c-live__s{display:inline}
+  .player__steps .lbl{display:none}
+  .player__steps{margin-top:12px}
+  .vg{height:auto;min-height:0;padding:16px}
+  .svc__body{padding:22px 20px 24px}
+  .svc__head{grid-template-columns:40px minmax(0,1fr);gap:14px}
+  .svc__icon{width:40px;height:40px}
+  .svc__n{display:none}
+  .svc h3{font-size:19px}
+  .vg-rows small{white-space:normal}
+  .hero__in{padding-top:44px;padding-bottom:64px}
+  .pill{font-size:12.5px;height:30px}
+  .hero__title{margin-top:22px;font-size:clamp(38px,11vw,46px);line-height:1.03;letter-spacing:-.042em}
+  .hero__ctas{flex-direction:column;width:100%}
+  .hero__ctas .btn{width:100%}
+  .stage{margin-top:44px}
+  .c-top{padding:0 12px;gap:10px}
+  .c-ws{font-size:12.5px}
+  .c-tag{display:none}
+  .c-live{font-size:11.5px}
+  .c-main{padding:16px 14px 0}
+  .c-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .c-metric svg.spark{display:none}
+  .row__in{grid-template-columns:26px minmax(0,1fr) auto;gap:10px;padding:10px 2px}
+  .row__t{display:none}
+  .row__x{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:12.5px}
+  .row{max-height:90px}
+  .row .chip{display:none}
+  .c-feed__list .row:nth-child(n+6){display:none}
+  .c-aside{padding:14px}
+  .hero__trust{flex-direction:column;align-items:flex-start;gap:12px;margin-top:36px}
+  .hero__trust li{padding:0}
+  .hero__trust li+li{border-left:0}
+  .integr .wrap{padding-block:48px 56px}
+  .integr__head{flex-direction:column;gap:10px}
+  .integr__list li{height:68px}
+  .integr__list b{font-size:14.5px}
+  .win__title span.sub{display:none}
+  .pane{padding:16px}
+  .result{padding:20px;gap:20px}
+  .result__stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .result__stats>div{padding:0 12px}
+  .result__stats>div:first-child{border-left:0;padding-left:0}
+  .result__stats dd{font-size:20px}
+  .result__stats .key{grid-column:1/-1;border-left:0;padding:18px 0 0;margin-top:16px;border-top:1px solid var(--line)}
+  .tile__v{font-size:52px}
+  .calc__fields{grid-template-columns:1fr}
+  .field{border-left:0!important;border-top:1px solid var(--line)}
+  .field:first-child{border-top:0}
+  .field__l{min-height:0}
+  .steps{grid-template-columns:1fr;row-gap:0}
+  .step{padding:0 0 36px 32px}
+  .step__node{position:absolute;left:0;top:4px}
+  .step::before{content:"";position:absolute;left:6px;top:20px;bottom:0;width:1px;background:var(--line-2)}
+  .step:last-child::before{display:none}
+  .step__meta{margin-top:0}
+  .cta{padding:64px 22px 48px;border-radius:18px}
+  .cta__btns{flex-direction:column}
+  .cta__list{flex-direction:column;align-items:flex-start;text-align:left}
+  .foot__top{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .foot__bot{flex-direction:column}
+  .foot__bot p:last-child{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .js .rv{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ===================== SVG sprite ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="mk-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#232931"/><stop offset="1" stop-color="#11141a"/></linearGradient>
+  </defs>
+  <!-- logo mark: an H whose crossbar is a rising line (the halyard raising the sail) -->
+  <symbol id="mark" viewBox="0 0 32 32">
+    <rect x=".5" y=".5" width="31" height="31" rx="9" fill="url(#mk-g)" stroke="rgba(255,255,255,.16)"/>
+    <path d="M10.5 8.5v15M21.5 8.5v15" fill="none" stroke="#eef1f4" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M10.5 19.4 21.5 12.6" fill="none" stroke="#c8f25f" stroke-width="2.6" stroke-linecap="round"/>
+  </symbol>
+  <!-- ui icons (24 grid, 1.6 stroke) -->
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1.2" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-replay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5 5 5-5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path d="M8.8 12.2l2.3 2.3 4.3-4.6"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l8.5-8.5M16.5 6.5l2.5 2.5M14 9l2 2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+  <symbol id="i-user-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="8" r="3.5"/><path d="M3.5 19.5a6 6 0 0 1 11.2-3"/><path d="M15.5 17.5l2 2 3.5-4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-news" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M7.5 9h9M7.5 12.5h9M7.5 16h5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5h15v9h-8l-4 3.5v-3.5h-3z"/></symbol>
+  <symbol id="i-brief" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="17" height="12.5" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/></symbol>
+  <!-- agent glyphs (16 grid) -->
+  <symbol id="g-chat" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><path d="M3 3h10a1.5 1.5 0 0 1 1.5 1.5v5.2A1.5 1.5 0 0 1 13 11.2H8.2L5 13.6v-2.4H3a1.5 1.5 0 0 1-1.5-1.5V4.5A1.5 1.5 0 0 1 3 3z"/></symbol>
+  <symbol id="g-grid" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><rect x="2" y="2.5" width="12" height="11" rx="1.6"/><path d="M2 6.2h12M6.4 6.2v7.3"/></symbol>
+  <symbol id="g-inbox" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><path d="M1.8 9l1.7-5.3a1 1 0 0 1 1-.7h7a1 1 0 0 1 1 .7L14.2 9v3.6a1 1 0 0 1-1 1H2.8a1 1 0 0 1-1-1z"/><path d="M1.8 9h3.6l1 1.8h3.2l1-1.8h3.6"/></symbol>
+  <symbol id="g-target" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.3" cy="8.7" r="5.3"/><circle cx="7.3" cy="8.7" r="1.9"/><path d="M7.3 8.7 13 3M10.8 2.6H13.4V5.2"/></symbol>
+  <symbol id="g-send" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"><path d="M14.2 1.8 6.9 9.1"/><path d="M14.2 1.8 9.6 14.2 6.9 9.1 1.8 6.4z"/></symbol>
+  <!-- service icons (24 grid): each carries exactly one signal-lime element -->
+  <symbol id="s-agents" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.5" r="2.8" style="fill:var(--signal);stroke:var(--signal)"/><circle cx="5.5" cy="17" r="2.6"/><circle cx="18.5" cy="17" r="2.6"/><path d="M10.5 8.9 7 14.6M13.5 8.9 17 14.6M8.2 17h7.6"/></symbol>
+  <symbol id="s-mkt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="13" r="7.5"/><circle cx="11" cy="13" r="3.4"/><circle cx="11" cy="13" r=".9" style="fill:var(--signal);stroke:var(--signal)"/><path d="M11 13 19.5 4.5M16.5 4h3.5v3.5" style="stroke:var(--signal)"/></symbol>
+  <symbol id="s-sales" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="7.5" r="3.5"/><path d="M3 19.5a6.5 6.5 0 0 1 10.2-5.3"/><circle cx="17" cy="16" r="3" style="stroke:var(--signal)"/><path d="M19.2 18.2 21 20" style="stroke:var(--signal)"/></symbol>
+  <symbol id="s-cons" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18"/><rect x="4" y="12" width="3.4" height="8.5" rx=".8"/><rect x="8.8" y="9" width="3.4" height="3" rx=".8"/><rect x="13.6" y="6" width="3.4" height="3" rx=".8"/><rect x="18.4" y="6" width="2.6" height="14.5" rx=".8" style="fill:var(--signal);stroke:var(--signal)"/></symbol>
+</svg>
+
+<!-- ===================== NAV ===================== -->
+<header class="nav" id="nav">
+  <div class="wrap nav__in">
+    <a class="brand" href="#top" aria-label="Halyard home">
+      <svg aria-hidden="true"><use href="#mark"/></svg>
+      <span data-brand>Halyard</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#services">Services</a>
+      <a href="#demo">Demos</a>
+      <a href="#results">Results</a>
+      <a href="#approach">Approach</a>
+    </nav>
+    <div class="nav__right">
+      <a class="nav__login" href="#contact">Contact</a>
+      <a class="btn btn--primary btn--sm" href="#contact"><span class="nav__cta-long">Book a free assessment</span><span class="nav__cta-short">Free assessment</span></a>
+      <button class="nav__menu" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Open menu"><svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="mnav" id="mnav">
+  <a href="#services">Services</a><a href="#demo">Demos</a><a href="#results">Results</a><a href="#approach">Approach</a><a href="#contact">Contact</a>
+  <a class="btn btn--primary" href="#contact">Book a free assessment <svg class="ico arr" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+</div>
+
+<main id="main">
+<!-- ===================== HERO ===================== -->
+<section class="hero" id="top">
+  <div class="hero__bg" aria-hidden="true">
+    <div class="hero__grid"></div>
+    <div class="hero__glow hero__glow--a"></div>
+    <div class="hero__glow hero__glow--b"></div>
+  </div>
+  <div class="wrap hero__in">
+    <p class="pill rv"><span class="dot dot--live"></span>Done-for-you AI for small and mid-size businesses</p>
+    <h1 class="hero__title rv">
+      <span>More done by every employee.</span>
+      <span class="muted">More kept from every dollar.</span>
+    </h1>
+    <div class="hero__row rv">
+      <p class="hero__sub"><b data-brand>Halyard</b> builds and runs AI agents inside the tools you already use. They answer customers, do the spreadsheets, run your marketing and find new business. Your team approves anything that matters.</p>
+      <div class="hero__ctas">
+        <a class="btn btn--primary" href="#contact">Book a free assessment <svg class="ico arr" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn--ghost" href="#demo"><span class="play-dot"><svg class="ico" aria-hidden="true"><use href="#i-play"/></svg></span>Watch an agent work</a>
+      </div>
+    </div>
+
+    <!-- ===== AI workforce console ===== -->
+    <div class="stage rv">
+      <div class="console" role="img" aria-label="Product illustration with sample data: the Halyard console for a home-services company, showing five AI agents at work, a live activity feed, today's metrics and two items waiting for a human's approval.">
+        <div class="c-top">
+          <div class="c-top__l">
+            <svg class="m" aria-hidden="true"><use href="#mark"/></svg>
+            <span class="c-slash">/</span>
+            <span class="c-ws">Riverbend Heating &amp; Air <svg class="ico"><use href="#i-chev"/></svg></span>
+            <span class="tag tag--plain c-tag">Demo data</span>
+          </div>
+          <div class="c-tabs"><span class="on">Overview</span><span>Agents</span><span>Approvals <i>2</i></span><span>Reports</span></div>
+          <div class="c-top__r">
+            <span class="c-live"><span class="dot dot--live"></span><span class="c-live__l">5 agents working</span><span class="c-live__s">Live</span></span>
+            <span class="c-time" data-clock>Tue 9:41 AM</span>
+            <span class="c-avatar">SO</span>
+          </div>
+        </div>
+
+        <div class="c-side">
+          <p class="c-label">Workforce</p>
+          <ul class="c-agents">
+            <li class="c-agent on"><span class="glyph"><svg class="ico"><use href="#g-chat"/></svg></span><span><b>Customer Agent</b><small>3 live conversations <i class="typing" aria-hidden="true"><i></i><i></i><i></i></i></small></span><span class="dot dot--live"></span></li>
+            <li class="c-agent"><span class="glyph"><svg class="ico"><use href="#g-grid"/></svg></span><span><b>Analyst Agent</b><small>Q3 margin model · <span data-prog-t>64</span>%</small><span class="c-prog"><i data-prog style="width:64%"></i></span></span><span class="dot dot--live"></span></li>
+            <li class="c-agent"><span class="glyph"><svg class="ico"><use href="#g-inbox"/></svg></span><span><b>Executive Assistant</b><small>Inbox 41 → 6 to review</small></span><span class="dot dot--live"></span></li>
+            <li class="c-agent"><span class="glyph"><svg class="ico"><use href="#g-target"/></svg></span><span><b>Marketing Director</b><small>2 experiments running</small></span><span class="dot dot--live"></span></li>
+            <li class="c-agent"><span class="glyph"><svg class="ico"><use href="#g-send"/></svg></span><span><b>Sales Agent</b><small>Researching 12 prospects</small></span><span class="dot dot--live"></span></li>
+          </ul>
+          <p class="c-label">Guardrails</p>
+          <ul class="c-rules">
+            <li><svg class="ico"><use href="#i-lock"/></svg>You approve refunds over $100</li>
+            <li><svg class="ico"><use href="#i-lock"/></svg>You approve quotes over $2,500</li>
+            <li><svg class="ico"><use href="#i-lock"/></svg>You approve first emails</li>
+            <li><svg class="ico"><use href="#i-lock"/></svg>Ad budget moves ≤ 15% a day</li>
+          </ul>
+        </div>
+
+        <div class="c-main">
+          <div class="c-head">
+            <div>
+              <p class="c-hello">Good morning, Sam</p>
+              <p class="c-sub">Your agents have handled <span data-tasks>143</span> tasks since 6:00 AM.</p>
+            </div>
+            <div class="c-seg"><span class="on">Today</span><span>7 days</span><span>30 days</span></div>
+          </div>
+          <div class="c-metrics">
+            <div class="c-metric"><p class="c-metric__l">Hours returned</p><div class="c-metric__row"><p class="c-metric__v"><span data-hours>27.5</span><small>h</small></p><svg class="spark" data-spark="18.2,19.5,21,20.4,22.8,23.1,22,24.6,25.2,24.9,26.3,27.5" viewBox="0 0 46 20" aria-hidden="true"></svg></div><p class="c-metric__d"><span class="up">+4.1 h</span> vs. last Tue</p></div>
+            <div class="c-metric"><p class="c-metric__l">Conversations</p><div class="c-metric__row"><p class="c-metric__v">86</p><svg class="spark" data-spark="61,70,66,74,72,79,77,81,76,84,82,86" viewBox="0 0 46 20" aria-hidden="true"></svg></div><p class="c-metric__d"><span class="up">79</span> resolved by agent</p></div>
+            <div class="c-metric"><p class="c-metric__l">Jobs booked</p><div class="c-metric__row"><p class="c-metric__v">14</p><svg class="spark" data-spark="8,9,7,10,11,9,12,11,13,12,13,14" viewBox="0 0 46 20" aria-hidden="true"></svg></div><p class="c-metric__d"><span class="up">$9,860</span> est. value</p></div>
+            <div class="c-metric"><p class="c-metric__l">Ad spend moved</p><div class="c-metric__row"><p class="c-metric__v">$1,240</p><svg class="spark" data-spark="200,340,310,520,610,580,760,820,900,1010,1130,1240" viewBox="0 0 46 20" aria-hidden="true"></svg></div><p class="c-metric__d">to <span class="up">3</span> winning ad sets</p></div>
+          </div>
+          <div class="c-feed">
+            <div class="c-feed__head"><p class="c-label">Live activity</p><span class="c-stream"><span class="dot dot--live"></span>Streaming</span></div>
+            <ol class="c-feed__list" data-feed>
+              <li class="row"><div class="row__in"><time class="row__t">9:41</time><span class="glyph"><svg class="ico"><use href="#g-chat"/></svg></span><p class="row__x"><b>Customer Agent</b> booked a furnace tune-up for <em>Dana K.</em>, Thu 8–10 AM</p><span class="chip chip--ok"><svg class="ico"><use href="#i-check"/></svg>Booked</span></div></li>
+              <li class="row"><div class="row__in"><time class="row__t">9:40</time><span class="glyph"><svg class="ico"><use href="#g-grid"/></svg></span><p class="row__x"><b>Analyst Agent</b> reconciled <em>214 QuickBooks transactions</em>, flagged 3 duplicates</p><span class="chip chip--warn"><svg class="ico"><use href="#i-alert"/></svg>Review</span></div></li>
+              <li class="row"><div class="row__in"><time class="row__t">9:38</time><span class="glyph"><svg class="ico"><use href="#g-inbox"/></svg></span><p class="row__x"><b>Executive Assistant</b> drafted 6 replies and assigned 4 tasks to <em>Marco</em> and <em>Jen</em></p><span class="chip">Drafted</span></div></li>
+              <li class="row"><div class="row__in"><time class="row__t">9:36</time><span class="glyph"><svg class="ico"><use href="#g-target"/></svg></span><p class="row__x"><b>Marketing Director</b> paused 2 Google Ads keywords spending <em>$38/day</em> with no leads</p><span class="chip chip--ok"><svg class="ico"><use href="#i-down"/></svg>$38/day</span></div></li>
+              <li class="row"><div class="row__in"><time class="row__t">9:35</time><span class="glyph"><svg class="ico"><use href="#g-send"/></svg></span><p class="row__x"><b>Sales Agent</b> researched <em>Lakeside Property Group</em> and drafted an intro email</p><span class="chip chip--wait"><svg class="ico"><use href="#i-user-ok"/></svg>Your OK</span></div></li>
+              <li class="row"><div class="row__in"><time class="row__t">9:33</time><span class="glyph"><svg class="ico"><use href="#g-inbox"/></svg></span><p class="row__x"><b>Executive Assistant</b> built the <em>Monday ops deck</em>, 12 slides from last week's numbers</p><span class="chip chip--ok"><svg class="ico"><use href="#i-check"/></svg>Ready</span></div></li>
+              <li class="row"><div class="row__in"><time class="row__t">9:31</time><span class="glyph"><svg class="ico"><use href="#g-chat"/></svg></span><p class="row__x"><b>Customer Agent</b> answered an after-hours question about a <em>water-heater warranty</em></p><span class="chip chip--ok"><svg class="ico"><use href="#i-check"/></svg>Resolved</span></div></li>
+              <li class="row"><div class="row__in"><time class="row__t">9:28</time><span class="glyph"><svg class="ico"><use href="#g-grid"/></svg></span><p class="row__x"><b>Analyst Agent</b> refreshed the <em>cash-flow forecast</em> with this week's invoices</p><span class="chip">Updated</span></div></li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="c-aside">
+          <div class="c-aside__head"><p class="c-label">Needs your OK</p><span class="c-count">2</span></div>
+          <div class="appr">
+            <div class="appr__top"><span class="glyph"><svg class="ico"><use href="#g-send"/></svg></span><span class="appr__who">Sales Agent · intro email</span></div>
+            <p class="appr__t">Jordan Alvarez, Lakeside Property Group</p>
+            <p class="appr__q">“Congratulations on taking over the six Westfield buildings. Properties built around 2000 are often still on their original boilers…”</p>
+            <p class="appr__meta"><svg class="ico"><use href="#i-check"/></svg>3 sourced facts · passed 4 of 4 checks</p>
+            <div class="appr__btns"><span class="btn btn--ui btn--xs">Approve &amp; send</span><span class="btn btn--ghost btn--xs">Review</span></div>
+          </div>
+          <div class="appr appr--min">
+            <span class="glyph" style="width:22px;height:22px;border-radius:6px"><svg class="ico" style="width:12px;height:12px"><use href="#g-chat"/></svg></span>
+            <span><p class="appr__t">Refund request · $180</p><p class="appr__who">M. Chen · duplicate charge</p></span>
+            <span class="btn btn--ghost btn--xs">Review</span>
+          </div>
+          <div class="cpl" data-cpl-card>
+            <div class="cpl__top">
+              <p class="cpl__l">Cost per lead<small>Google + Meta · 30 days</small></p>
+              <p class="cpl__v">$31<span class="cpl__d">−26% since Sep 12</span></p>
+            </div>
+            <svg data-cpl viewBox="0 0 272 104" aria-hidden="true"></svg>
+            <div class="cpl__tip" data-cpl-tip></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- layered glass: an insight surfacing from the Analyst Agent -->
+      <div class="float" aria-hidden="true">
+        <div class="float__top"><span class="glyph"><svg class="ico"><use href="#g-grid"/></svg></span><b>Analyst Agent</b> · insight<time>9:24</time></div>
+        <h4>Why September margin slipped</h4>
+        <p>Maintenance-plan margin fell <em>3.2 pts</em>. Parts costs rose 11% while the $37 plan price stayed flat. Raising it <em>$2/month</em> restores it.</p>
+        <div class="float__chart">
+          <svg viewBox="0 0 110 34" aria-hidden="true">
+            <line x1="0" y1="33.5" x2="110" y2="33.5" stroke="rgba(255,255,255,.08)"/>
+            <polyline points="6,7 55,9.5 104,24" fill="none" stroke="#a9b1bb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="6" cy="7" r="3" fill="#a9b1bb" stroke="#151920" stroke-width="2"/>
+            <circle cx="55" cy="9.5" r="3" fill="#a9b1bb" stroke="#151920" stroke-width="2"/>
+            <circle cx="104" cy="24" r="4" fill="#c8f25f" stroke="#151920" stroke-width="2"/>
+          </svg>
+          <dl><div><dt>Jul</dt><dd>41.8%</dd></div><div><dt>Aug</dt><dd>41.2%</dd></div><div><dt>Sep</dt><dd>38.0%</dd></div></dl>
+        </div>
+      </div>
+    </div>
+
+    <ul class="hero__trust rv" aria-label="How we keep you in control">
+      <li><svg class="ico" aria-hidden="true"><use href="#i-user-ok"/></svg>Human approval on anything sensitive</li>
+      <li><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg>Least-privilege access, every action logged</li>
+      <li><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg>AI providers whose terms exclude training on your data</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== INTEGRATIONS ===================== -->
+<section class="band integr" aria-labelledby="integr-h">
+  <div class="wrap">
+    <div class="integr__head rv">
+      <p id="integr-h">Works inside the tools you already run on</p>
+      <p>Plus most other tools with an API or a clean export.</p>
+    </div>
+    <ul class="integr__list rv">
+      <li><b>Gmail</b><small>Email</small></li>
+      <li><b>Outlook</b><small>Email</small></li>
+      <li><b>Excel</b><small>Spreadsheets</small></li>
+      <li><b>QuickBooks</b><small>Accounting</small></li>
+      <li><b>Shopify</b><small>Commerce</small></li>
+      <li><b>HubSpot</b><small>CRM</small></li>
+      <li><b>Google Ads</b><small>Advertising</small></li>
+      <li><b>Meta Ads</b><small>Advertising</small></li>
+      <li><b>Slack</b><small>Team chat</small></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== SERVICES ===================== -->
+<section class="band" id="services" aria-labelledby="svc-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div class="rv">
+        <p class="eyebrow"><b>01</b><i></i>Services</p>
+        <h2 class="h2" id="svc-h">Four ways AI goes to work for you.</h2>
+      </div>
+      <p class="lead rv">Each one is designed around your business, connected to your tools and run by us. <b>You get the outcome, not another login to figure out.</b></p>
+    </header>
+    <div class="svc-grid">
+      <article class="svc rv">
+        <div class="vg" aria-hidden="true">
+          <p class="vg__h"><span class="dot dot--live" style="width:6px;height:6px"></span>Agents on shift<span class="vg__tag">Illustrative</span></p>
+          <ul class="vg-rows">
+            <li><span class="glyph"><svg class="ico"><use href="#g-chat"/></svg></span><span><b>Customer Agent</b><small>Booked a furnace tune-up from a 9:40 PM chat</small></span><span class="chip chip--ok"><svg class="ico"><use href="#i-check"/></svg>Booked</span></li>
+            <li><span class="glyph"><svg class="ico"><use href="#g-grid"/></svg></span><span><b>Analyst Agent</b><small>Rebuilt the Q3 margin model from QuickBooks</small></span><span class="chip">Updated</span></li>
+            <li><span class="glyph"><svg class="ico"><use href="#g-inbox"/></svg></span><span><b>Executive Assistant</b><small>41 emails triaged, 6 replies drafted</small></span><span class="chip chip--wait"><svg class="ico"><use href="#i-user-ok"/></svg>Review</span></li>
+          </ul>
+        </div>
+        <div class="svc__body">
+          <div class="svc__head"><span class="svc__icon"><svg aria-hidden="true"><use href="#s-agents"/></svg></span><div><h3>AI Agents</h3><p class="svc__v">An AI workforce for your team and your customers.</p></div><span class="svc__n">01</span></div>
+          <ul class="svc__list">
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Answers, quotes and books 24/7 by chat, SMS, email and phone</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Reads the books and does the Excel: cleanup, pivots, forecasts, charts</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Clears the inbox, assigns tasks, builds decks and briefings</li>
+          </ul>
+          <a class="svc__link" href="#demo">See the agents work <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </article>
+
+      <article class="svc rv">
+        <div class="vg" aria-hidden="true">
+          <p class="vg__h">Budget share by ad set<span class="vg__tag">Illustrative</span></p>
+          <ul class="vg-bars">
+            <li><span class="n">Ad set D</span><span class="b"><i class="a" style="width:46%"></i></span><span class="v">$24<small>CPL</small></span></li>
+            <li><span class="n">Ad set A</span><span class="b"><i style="width:30%"></i></span><span class="v">$31<small>CPL</small></span></li>
+            <li><span class="n">Ad set C</span><span class="b"><i style="width:24%"></i></span><span class="v">$38<small>CPL</small></span></li>
+            <li class="off"><span class="n">Ad set B</span><span class="b"><i style="width:0"></i></span><span class="v">Paused</span></li>
+          </ul>
+          <p class="vg-k"><span><i style="background:var(--signal)"></i>Winner of a 9-day test</span><span><svg class="ico" style="width:12px;height:12px"><use href="#i-lock"/></svg>Moves capped at 15% a day</span></p>
+        </div>
+        <div class="svc__body">
+          <div class="svc__head"><span class="svc__icon"><svg aria-hidden="true"><use href="#s-mkt"/></svg></span><div><h3>AI Marketing Director</h3><p class="svc__v">Stops wasted ad spend and finds what actually converts.</p></div><span class="svc__n">02</span></div>
+          <ul class="svc__list">
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Audits every Google and Meta campaign against real leads and sales</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Designs and runs its own creative, audience, offer and landing-page tests</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Moves budget to what wins, within limits you set, and reports in plain English</li>
+          </ul>
+          <a class="svc__link" href="#demo">See the audit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </article>
+
+      <article class="svc rv">
+        <div class="vg" aria-hidden="true">
+          <p class="vg__h">Outbound · draft 4 of 12<span class="vg__tag">Illustrative</span></p>
+          <div class="vg-mail">
+            <p class="vg-mail__to"><span>To <b>Jordan Alvarez</b> · Lakeside Property Group</span></p>
+            <p>Congratulations on taking over the <mark>six Westfield buildings<sup>1</sup></mark>. Properties <mark>built around 2000<sup>1</sup></mark> are often still on their original boilers…</p>
+          </div>
+          <div class="vg-chips"><span class="chip chip--ok"><svg class="ico"><use href="#i-check"/></svg>3 facts cited</span><span class="chip chip--ok"><svg class="ico"><use href="#i-check"/></svg>4 of 4 checks</span><span class="chip chip--wait"><svg class="ico"><use href="#i-user-ok"/></svg>Awaiting your OK</span></div>
+        </div>
+        <div class="svc__body">
+          <div class="svc__head"><span class="svc__icon"><svg aria-hidden="true"><use href="#s-sales"/></svg></span><div><h3>AI Sales Agent</h3><p class="svc__v">Researches every prospect and writes emails worth answering.</p></div><span class="svc__n">03</span></div>
+          <ul class="svc__list">
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Finds companies that match your ideal customer, not a bought list</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Writes from real context: news, website, role and timing, every claim sourced</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Sends within your rules and limits, follows up, logs it all to your CRM</li>
+          </ul>
+          <a class="svc__link" href="#demo">Watch it prospect <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </article>
+
+      <article class="svc rv">
+        <div class="vg" aria-hidden="true">
+          <p class="vg__h">Gross margin roadmap<span class="vg__tag">Illustrative</span></p>
+          <div class="wf">
+            <div class="wf__c"><div class="wf__plot"><span class="wf__bar" style="bottom:0;height:60%"></span><span class="wf__v" style="bottom:calc(60% + 6px)">18.0%</span></div><span class="wf__l">Today</span></div>
+            <div class="wf__c"><div class="wf__plot"><i class="wf__ln" style="bottom:60%"></i><span class="wf__bar d" style="bottom:60%;height:10.33%"></span><span class="wf__v" style="bottom:calc(70.33% + 6px)">+3.1</span></div><span class="wf__l">Pricing</span></div>
+            <div class="wf__c"><div class="wf__plot"><i class="wf__ln" style="bottom:70.33%"></i><span class="wf__bar d" style="bottom:70.33%;height:8%"></span><span class="wf__v" style="bottom:calc(78.33% + 6px)">+2.4</span></div><span class="wf__l">Schedule</span></div>
+            <div class="wf__c"><div class="wf__plot"><i class="wf__ln" style="bottom:78.33%"></i><span class="wf__bar d" style="bottom:78.33%;height:4%"></span><span class="wf__v" style="bottom:calc(82.33% + 6px)">+1.2</span></div><span class="wf__l">Waste</span></div>
+            <div class="wf__c"><div class="wf__plot"><i class="wf__ln" style="bottom:82.33%"></i><span class="wf__bar t" style="bottom:0;height:82.33%"></span><span class="wf__v" style="bottom:calc(82.33% + 6px)">24.7%</span></div><span class="wf__l">Target</span></div>
+          </div>
+        </div>
+        <div class="svc__body">
+          <div class="svc__head"><span class="svc__icon"><svg aria-hidden="true"><use href="#s-cons"/></svg></span><div><h3>AI Consulting</h3><p class="svc__v">Finds the cost and margin hiding in your operations.</p></div><span class="svc__n">04</span></div>
+          <ul class="svc__list">
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Analyzes your P&amp;L, pricing and day-to-day processes</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Ranks every saving by impact, effort and payback</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Hands you a roadmap for a fraction of a traditional engagement’s cost</li>
+          </ul>
+          <a class="svc__link" href="#demo">See a roadmap <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DEMO SHOWCASE ===================== -->
+<section class="band" id="demo" aria-labelledby="demo-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div class="rv">
+        <p class="eyebrow"><b>02</b><i></i>See it work · Sales Agent</p>
+        <h2 class="h2" id="demo-h">Prospecting that reads like you did the homework.</h2>
+      </div>
+      <div class="rv">
+        <p class="lead">The Sales Agent matches a prospect to your ideal customer, researches what is actually going on there and writes to it. <b>Nothing sends until it passes your quality rules and, if you want, your approval.</b></p>
+        <a class="sec-link" href="#demo">All six demos <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </header>
+
+    <div class="demo rv" data-demo data-variant="ours">
+      <div class="win">
+        <div class="win__bar">
+          <span class="win__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="win__title"><span class="glyph"><svg class="ico" aria-hidden="true"><use href="#g-send"/></svg></span><b>Sales Agent</b><span class="sub">· Outbound: property managers, Metro East</span></span>
+          <span class="win__meta"><span class="tag tag--plain">Prospect 4 of 12</span></span>
+        </div>
+        <div class="demo-tabs" role="tablist" aria-label="Demo panes">
+          <button type="button" role="tab" aria-selected="false" data-pane="research">Research</button>
+          <button type="button" role="tab" aria-selected="true" data-pane="draft">Draft</button>
+          <button type="button" role="tab" aria-selected="false" data-pane="check">Check</button>
+        </div>
+        <div class="panes">
+          <!-- pane 1: dossier -->
+          <section class="pane" data-pane-id="research" aria-label="Research dossier">
+            <div class="pane__h"><p class="c-label">Research dossier</p><small>4 sources</small></div>
+            <div class="co" data-t="0.2"><span class="co__logo">LP</span><span><b>Lakeside Property Group</b><small>Property management · 38 buildings · Metro East</small></span></div>
+            <div class="person" data-t="0.8"><span class="person__av">JA</span><span><b>Jordan Alvarez</b><small>Director of Facilities</small></span><span class="chip chip--ok"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Verified</span></div>
+            <div class="fit" data-t="1.2">
+              <div class="fit__row"><span>Ideal-customer fit</span><b>92 <small>/ 100</small></b></div>
+              <div class="meter" data-meter><i></i></div>
+              <p class="fit__why">Property manager · 25+ buildings · inside service area</p>
+            </div>
+            <div class="facts-h"><p class="c-label">What it found</p></div>
+            <div class="skel" data-until="3.8"><i style="width:92%"></i><i style="width:70%"></i><i style="width:84%"></i><i style="width:58%"></i></div>
+            <ol class="facts">
+              <li class="fact" data-t="3.8"><span class="fact__n">1</span><div><p>Took over six apartment buildings in Westfield, built 1998–2004.</p><p class="fact__src"><svg class="ico" aria-hidden="true"><use href="#i-news"/></svg>Local news · Aug 28</p></div></li>
+              <li class="fact" data-t="4.9"><span class="fact__n">2</span><div><p>Hiring an after-hours maintenance coordinator.</p><p class="fact__src"><svg class="ico" aria-hidden="true"><use href="#i-brief"/></svg>Job post · Sep 30</p></div></li>
+              <li class="fact" data-t="6.0"><span class="fact__n">3</span><div><p>Residents mention slow heat repairs last winter.</p><p class="fact__src"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg>Public reviews · 4 mentions</p></div></li>
+              <li class="fact" data-t="7.1"><span class="fact__n">4</span><div><p>Westfield is inside your 20-minute service area.</p><p class="fact__src"><svg class="ico" aria-hidden="true"><use href="#i-map"/></svg>Your service map</p></div></li>
+            </ol>
+            <p class="prio-h" data-t="8.0">Likely priorities (inferred)</p>
+            <div class="prio" data-t="8.2"><span class="chip chip--wait">Fewer winter emergencies</span><span class="chip chip--wait">After-hours coverage</span></div>
+          </section>
+
+          <!-- pane 2: draft -->
+          <section class="pane show" data-pane-id="draft" aria-label="Email draft">
+            <div class="pane__h">
+              <p class="c-label">Draft</p>
+              <div class="seg" role="group" aria-label="Compare drafts">
+                <button type="button" aria-pressed="true" data-variant-btn="ours">Halyard draft</button>
+                <button type="button" aria-pressed="false" data-variant-btn="generic">Typical AI email</button>
+              </div>
+            </div>
+            <div class="mail mail--ours">
+              <div class="mail__f"><span>To</span><b>Jordan Alvarez · Lakeside Property Group</b></div>
+              <div class="mail__f"><span>Subject</span><b><span data-subject>Heat calls at the Westfield buildings this winter</span><span class="caret" data-caret hidden></span></b></div>
+              <div class="skel" data-until="10.6" style="padding:16px"><i style="width:40%"></i><i style="width:96%"></i><i style="width:88%"></i><i style="width:74%"></i><i style="width:92%"></i><i style="width:60%"></i></div>
+              <div class="mail__body">
+                <p data-t="10.6">Hi Jordan,</p>
+                <p data-t="10.9">Congratulations on taking over the <mark>six Westfield buildings<sup>1</sup></mark>. Properties <mark>built around 2000<sup>1</sup></mark> are often still on their original boilers, and the first cold week tends to find the weak ones.</p>
+                <p data-t="12.1">I saw you’re <mark>hiring an after-hours maintenance coordinator<sup>2</sup></mark>. Until that seat is filled, we could take overnight heat calls for those buildings, with response times in writing. We’re <mark>20 minutes from Westfield<sup>4</sup></mark>.</p>
+                <p data-t="13.3">Worth a 15-minute call next week? I’d bring a pre-winter boiler check plan for all six.</p>
+                <p class="mail__sig" data-t="14.0">Sam Ortiz<br><span>Riverbend Heating &amp; Air</span></p>
+              </div>
+              <div class="mail__foot" data-t="14.4"><span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>80 words</span><span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>3 facts cited</span><span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Opt-out + address added</span></div>
+            </div>
+            <div class="mail mail--generic">
+              <div class="mail__f"><span>To</span><b>{{first_name}} · {{company}}</b></div>
+              <div class="mail__f"><span>Subject</span><b>Quick question</b></div>
+              <div class="mail__body">
+                <p>Hi <mark class="bad">{{first_name}}</mark><span class="flag">Unfilled</span>,</p>
+                <p><mark class="bad">I hope this email finds you well!</mark><span class="flag">Filler</span> I wanted to reach out because we help <mark class="bad">businesses like yours achieve their goals with best-in-class HVAC solutions</mark><span class="flag">Could be anyone</span>.</p>
+                <p>We’d love to <mark class="bad">explore potential synergies</mark><span class="flag">Vague ask</span>. Do you have 15 minutes for a quick call this week?</p>
+                <p class="mail__sig">Best regards,<br><span>Sam</span></p>
+              </div>
+              <div class="mail__foot"><span style="color:var(--rose)">0 facts about the prospect</span><span>Template phrases: 4</span></div>
+            </div>
+            <div class="seq" data-t="14.6">
+              <div class="seq__h"><p class="c-label">Sequence</p><small>Stops on reply</small></div>
+              <ol>
+                <li><span class="seq__n">1</span><span><b>Intro email</b><time>Today, after your OK</time></span><span class="chip chip--wait"><svg class="ico" aria-hidden="true"><use href="#i-user-ok"/></svg>Your OK</span></li>
+                <li><span class="seq__n">2</span><span><b>Follow-up: pre-winter check plan</b><time>Oct 16 · if no reply</time></span><span class="chip">Drafted</span></li>
+                <li><span class="seq__n">3</span><span><b>Last note, then stop</b><time>Oct 23 · if no reply</time></span><span class="chip">Drafted</span></li>
+              </ol>
+            </div>
+          </section>
+
+          <!-- pane 3: quality check -->
+          <section class="pane" data-pane-id="check" aria-label="Quality check">
+            <div class="pane__h"><p class="c-label">Quality check</p><small data-chk-count>4 of 4 passed</small></div>
+            <ul class="checks">
+              <li class="chk" data-tick="15.4" data-fail><span class="chk__i"><svg class="ico i-ok" aria-hidden="true"><use href="#i-check"/></svg><svg class="ico i-x" aria-hidden="true"><use href="#i-x"/></svg></span><span><b>Every claim traces to a source</b><small data-o="3 facts cited, each verified" data-g="Nothing about the prospect to verify">3 facts cited, each verified</small></span></li>
+              <li class="chk" data-tick="16.2" data-fail><span class="chk__i"><svg class="ico i-ok" aria-hidden="true"><use href="#i-check"/></svg><svg class="ico i-x" aria-hidden="true"><use href="#i-x"/></svg></span><span><b>Written for this prospect only</b><small data-o="No template phrases found" data-g="4 template phrases found">No template phrases found</small></span></li>
+              <li class="chk" data-tick="17.0" data-fail><span class="chk__i"><svg class="ico i-ok" aria-hidden="true"><use href="#i-check"/></svg><svg class="ico i-x" aria-hidden="true"><use href="#i-x"/></svg></span><span><b>Short, clean, one clear ask</b><small data-o="80 words · asks for a 15-min call" data-g="Unfilled merge field · vague ask">80 words · asks for a 15-min call</small></span></li>
+              <li class="chk" data-tick="17.8"><span class="chk__i"><svg class="ico i-ok" aria-hidden="true"><use href="#i-check"/></svg><svg class="ico i-x" aria-hidden="true"><use href="#i-x"/></svg></span><span><b>Compliant to send</b><small>Opt-out link and mailing address (CAN-SPAM)</small></span></li>
+            </ul>
+            <ul class="rules" data-t="18.2">
+              <li>First email<b>Needs approval</b></li>
+              <li>Daily send limit<b>18 of 40 used</b></li>
+              <li>If no reply<b>Follow up Oct 16</b></li>
+              <li>Logs to<b>HubSpot</b></li>
+            </ul>
+            <div class="decide" data-t="18.6">
+              <p class="decide__wait"><svg class="ico" aria-hidden="true"><use href="#i-user-ok"/></svg>Waiting for your approval</p>
+              <div class="decide__btns"><span class="btn btn--ui btn--sm" data-approve>Approve &amp; send</span><span class="btn btn--ghost btn--sm">Edit draft</span></div>
+            </div>
+            <div class="sent"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><span><b>Approved by Sam · sent 9:52 AM</b><small>Logged in HubSpot · follow-up set for Oct 16</small></span></div>
+            <div class="log" data-t="18.7">
+              <p class="c-label">Audit log</p>
+              <ol>
+                <li><time>9:34:12</time><span>Matched to your ideal-customer profile (92)</span></li>
+                <li><time>9:34:41</time><span>Read 4 sources, kept 4 citable facts</span></li>
+                <li><time>9:35:30</time><span>Drafted intro, 80 words, 3 facts cited</span></li>
+                <li><time>9:35:52</time><span>Passed 4 of 4 checks, sent to Sam for approval</span></li>
+                <li data-t="20.6"><time>9:52:07</time><span>Approved by Sam, sent, logged in HubSpot</span></li>
+              </ol>
+            </div>
+            <div class="blocked"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg><span><b>Blocked: 3 of 4 checks failed</b><small><span data-brand>Halyard</span> won’t send an email like this.</small></span></div>
+          </section>
+        </div>
+
+        <div class="player">
+          <button class="player__btn" type="button" data-play aria-label="Play the demo from the start">
+            <svg class="ico i-play" aria-hidden="true"><use href="#i-play"/></svg>
+            <svg class="ico i-pause" aria-hidden="true"><use href="#i-pause"/></svg>
+            <svg class="ico i-replay" aria-hidden="true"><use href="#i-replay"/></svg>
+          </button>
+          <div>
+            <p class="player__cap" aria-live="polite" data-cap><span>Step 4 of 5</span>Every claim checked against its source. Waiting on your approval.</p>
+            <ol class="player__steps" data-steps>
+              <li><span class="bar"><i></i></span><span class="lbl">Match profile</span></li>
+              <li><span class="bar"><i></i></span><span class="lbl">Research</span></li>
+              <li><span class="bar"><i></i></span><span class="lbl">Draft</span></li>
+              <li><span class="bar"><i></i></span><span class="lbl">Quality check</span></li>
+              <li><span class="bar"><i></i></span><span class="lbl">Send &amp; log</span></li>
+            </ol>
+          </div>
+          <span class="player__time" data-time>0:19 / 0:23</span>
+        </div>
+      </div>
+
+      <div class="result" data-result>
+        <div class="result__h">
+          <span class="tag tag--ex">Illustrative example</span>
+          <p>One prospect, start to finish</p>
+          <small>Assumes 40 prospects a week, 20 min to research and write by hand vs. 2 min to review a draft, and a $35/h loaded labor cost. Agent run time isn’t staff time.</small>
+        </div>
+        <dl class="result__stats">
+          <div><dt>Agent research and draft</dt><dd>3m 40s</dd></div>
+          <div><dt>Your review and approval</dt><dd>~2<small>min</small></dd></div>
+          <div><dt>Doing it by hand</dt><dd>~20<small>min</small></dd></div>
+          <div class="key"><dt>Returned at 40 prospects a week</dt><dd>~12<small>h / week</small></dd><p>≈ $21,840 a year at $35/h</p></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SAVINGS ===================== -->
+<section class="band" id="results" aria-labelledby="res-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div class="rv">
+        <p class="eyebrow"><b>03</b><i></i>Results</p>
+        <h2 class="h2" id="res-h">Measured in hours and dollars, <span class="muted">not hype.</span></h2>
+      </div>
+      <p class="lead rv">Here is the math for a typical 25-person home-services company. <b>Every figure is a modeled estimate with its assumptions shown.</b> Your free assessment swaps them for your real numbers.</p>
+    </header>
+
+    <div class="roi" data-roi>
+      <div class="tiles">
+        <article class="tile rv">
+          <div class="tile__top"><span class="tag tag--est">Modeled estimate</span></div>
+          <p class="tile__v"><span data-o="weekly">18</span><small>h / week</small></p>
+          <p class="tile__l">returned to your team</p>
+          <div class="tile__viz">
+            <div class="hbar" aria-hidden="true"><i class="a" style="flex:1"></i><i class="z" style="flex:1"></i></div>
+            <p class="hbar__k"><span><i style="background:var(--signal)"></i>Handled by agents</span><span><span data-o="weekly2">18</span> of <span data-o="adminTotal">36</span> admin hours</span></p>
+          </div>
+          <p class="tile__a"><span data-o="staffA">6</span> staff × <span data-o="hoursA">6</span> h of repetitive admin × 50% handled by agents</p>
+        </article>
+        <article class="tile rv">
+          <div class="tile__top"><span class="tag tag--est">Modeled estimate</span></div>
+          <p class="tile__v"><span data-o="adMo">$1,200</span><small>/ month</small></p>
+          <p class="tile__l">in ad spend moved to what converts</p>
+          <div class="tile__viz">
+            <div class="hbar" aria-hidden="true"><i class="a" style="flex:1"></i><i class="z" style="flex:9"></i></div>
+            <p class="hbar__k"><span><i style="background:var(--signal)"></i>Redirected</span><span>10% of <span data-o="adBudget">$12,000</span> a month</span></p>
+          </div>
+          <p class="tile__a">Spend on keywords and audiences that bring no leads, shifted to ones that do</p>
+        </article>
+        <article class="tile tile--key rv">
+          <div class="tile__top"><span class="tag tag--est">Modeled estimate</span></div>
+          <p class="tile__v"><span data-o="total">$47,160</span><small>/ year</small></p>
+          <p class="tile__l">modeled annual value</p>
+          <div class="tile__viz">
+            <div class="hbar" aria-hidden="true"><i class="a" data-o-flex="labor" style="flex:32760"></i><i class="b" data-o-flex="adYr" style="flex:14400"></i></div>
+            <p class="hbar__k"><span><i style="background:var(--signal)"></i>Team time <span data-o="labor">$32,760</span></span><span><i style="background:var(--ice)"></i>Ad spend <span data-o="adYr">$14,400</span></span></p>
+          </div>
+          <p class="tile__a"><span data-o="hoursYr">936</span> h × <span data-o="rateA">$35</span>/h loaded cost + <span data-o="adMo2">$1,200</span> × 12 months</p>
+        </article>
+      </div>
+
+      <div class="calc rv">
+        <div class="calc__intro">
+          <span class="tag tag--est">Modeled estimate</span>
+          <h3>Run your own numbers</h3>
+          <p>Move the sliders and the figures above update. Fixed assumptions: agents take on 50% of repetitive admin, and 10% of ad spend is redirected.</p>
+          <button class="btn btn--ghost btn--xs calc__reset" type="button" data-reset>Reset to example</button>
+        </div>
+        <div class="calc__fields">
+          <label class="field"><span class="field__l">People who’ll work with agents</span><output data-out="staff">6</output><input class="range" type="range" min="1" max="60" step="1" value="6" data-in="staff"><span class="field__s"><span>1</span><span>60</span></span></label>
+          <label class="field"><span class="field__l">Repetitive admin per person, per week</span><output data-out="hours">6<small>h</small></output><input class="range" type="range" min="1" max="20" step="1" value="6" data-in="hours"><span class="field__s"><span>1 h</span><span>20 h</span></span></label>
+          <label class="field"><span class="field__l">Loaded cost per hour (pay, taxes, benefits)</span><output data-out="rate">$35</output><input class="range" type="range" min="18" max="95" step="1" value="35" data-in="rate"><span class="field__s"><span>$18</span><span>$95</span></span></label>
+          <label class="field"><span class="field__l">Monthly ad spend</span><output data-out="ads">$12,000</output><input class="range" type="range" min="0" max="60000" step="500" value="12000" data-in="ads"><span class="field__s"><span>$0</span><span>$60k</span></span></label>
+        </div>
+        <p class="calc__sum" aria-live="polite"><span>Modeled annual value</span><b data-o="total">$47,160</b><small><span data-o="weekly">18</span> h a week returned · <span data-o="adMo">$1,200</span> a month redirected</small></p>
+        <p class="calc__note"><span><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><b>Not a quote or a guarantee.</b></span><span>Estimates exclude the cost of the engagement, which is scoped after your assessment.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PROCESS ===================== -->
+<section class="band" id="approach" aria-labelledby="ap-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div class="rv">
+        <p class="eyebrow"><b>04</b><i></i>Approach</p>
+        <h2 class="h2" id="ap-h">From first call to working agents.</h2>
+      </div>
+      <p class="lead rv">We do the building, the integrating and the babysitting, without disrupting your week. <b>Your team keeps working the whole time</b>, and nothing goes live until they’ve tried it.</p>
+    </header>
+    <ol class="steps">
+      <li class="step rv"><span class="step__node" aria-hidden="true"></span><p class="step__meta"><b>01</b>45 minutes · free</p><h3>Free assessment</h3><p>We map where your team’s hours and your margin actually go, and point to the two or three places AI pays off first.</p><p class="step__get"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>A one-page opportunity map</p></li>
+      <li class="step rv"><span class="step__node" aria-hidden="true"></span><p class="step__meta"><b>02</b>About a week</p><h3>Blueprint</h3><p>A written plan: which agents, which tools they connect to, the guardrails, and the modeled savings, so you decide with real numbers.</p><p class="step__get"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Blueprint with modeled payback</p></li>
+      <li class="step rv"><span class="step__node" aria-hidden="true"></span><p class="step__meta"><b>03</b>Typically 2–6 weeks</p><h3>Build and integrate</h3><p>We connect agents to your email, books, CRM and ad accounts with least-privilege access, load your know-how and test with your team.</p><p class="step__get"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Agents your team has signed off on</p></li>
+      <li class="step rv"><span class="step__node" aria-hidden="true"></span><p class="step__meta"><b>04</b>Ongoing</p><h3>Run and improve</h3><p>We operate and tune the agents, keep a human on sensitive actions, and report results monthly in hours and dollars.</p><p class="step__get"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>A monthly report: hours and dollars</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ===================== CLOSING CTA ===================== -->
+<section class="band" id="contact" aria-labelledby="cta-h">
+  <div class="wrap">
+    <div class="cta rv">
+      <div class="cta__grid" aria-hidden="true"></div>
+      <svg class="cta__mark" aria-hidden="true"><use href="#mark"/></svg>
+      <p class="eyebrow">Free AI assessment</p>
+      <h2 id="cta-h">Raise what your business can do.</h2>
+      <p class="lead">In 45 minutes you’ll know where agents fit, what they’d connect to and what they’re likely worth, with the math shown. It’s yours to keep, whether or not we work together.</p>
+      <div class="cta__btns">
+        <a class="btn btn--primary" href="#contact">Book a free assessment <svg class="ico arr" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn--ghost" href="#approach">See how we work</a>
+      </div>
+      <ul class="cta__list">
+        <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Where your team’s hours actually go</li>
+        <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>The agents that would pay back first</li>
+        <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>A modeled estimate, every assumption shown</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__top">
+      <div class="foot__brand">
+        <a class="brand" href="#top"><svg aria-hidden="true"><use href="#mark"/></svg><span data-brand>Halyard</span></a>
+        <p>AI agents, integration and consulting for small and mid-size businesses. We build it, connect it and run it.</p>
+      </div>
+      <div><h4>Services</h4><ul><li><a href="#services">AI Agents</a></li><li><a href="#services">AI Marketing Director</a></li><li><a href="#services">AI Sales Agent</a></li><li><a href="#services">AI Consulting</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="#demo">Demos</a></li><li><a href="#results">Results</a></li><li><a href="#approach">Approach</a></li><li><a href="#contact">Contact</a></li></ul></div>
+      <div><h4>Trust</h4><ul><li><a href="#approach">Security and data</a></li><li><a href="#approach">Human in the loop</a></li><li><a href="#results">How we model savings</a></li></ul></div>
+    </div>
+    <div class="foot__bot">
+      <p>© 2026 <span data-brand>Halyard</span> (working name)</p>
+      <p>Outcome figures on this site are illustrative examples or modeled estimates, not guarantees. Product names are trademarks of their owners and are used only to describe integrations.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* One config value for the brand name: swap it here. */
+const SITE = { brand: 'Halyard' };
+document.documentElement.classList.add('js');
+document.querySelectorAll('[data-brand]').forEach(el => { el.textContent = SITE.brand; });
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- nav: stuck state + mobile menu ---------- */
+(() => {
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('is-stuck', scrollY > 8);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  const btn = nav.querySelector('.nav__menu'), menu = document.getElementById('mnav');
+  btn.addEventListener('click', () => {
+    const open = btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', open); menu.classList.toggle('open', open);
+  });
+  menu.addEventListener('click', e => { if (e.target.closest('a')) { btn.setAttribute('aria-expanded', 'false'); menu.classList.remove('open'); } });
+})();
+
+/* ---------- reveal on scroll ---------- */
+(() => {
+  const els = document.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) { els.forEach(e => e.classList.add('in')); return; }
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+  els.forEach(e => io.observe(e));
+})();
+
+/* ---------- sparklines (gray line, signal end-dot) ---------- */
+document.querySelectorAll('[data-spark]').forEach(svg => {
+  const v = svg.dataset.spark.split(',').map(Number), W = 46, H = 20, p = 3;
+  const mn = Math.min(...v), mx = Math.max(...v);
+  const x = i => (W - p) * i / (v.length - 1), y = n => p + (H - 2 * p) * (1 - (n - mn) / (mx - mn || 1));
+  const d = v.map((n, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(n).toFixed(1)).join(' ');
+  const lx = x(v.length - 1), ly = y(v[v.length - 1]);
+  svg.innerHTML = `<path d="${d}" fill="none" stroke="#5b636e" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${lx}" cy="${ly}" r="3" fill="#c8f25f" stroke="#12151a" stroke-width="2"/>`;
+});
+
+/* ---------- cost-per-lead chart with hover crosshair ---------- */
+(() => {
+  const svg = document.querySelector('[data-cpl]'); if (!svg) return;
+  const V = [42.4,43.1,41.8,42.9,43.6,42.2,41.5,42.8,43.3,41.9,42.5,41.7,40.6,39.8,39.1,38.2,37.9,36.8,36.1,35.7,34.9,34.2,33.8,33.1,32.9,32.2,31.8,31.5,31.2,31.0];
+  const W = 272, H = 104, t = 10, b = 20, l = 28, r = 6, mn = 26, mx = 46;
+  const x = i => l + (W - l - r) * i / (V.length - 1), y = v => t + (H - t - b) * (1 - (v - mn) / (mx - mn));
+  const d = V.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+  const date = i => { const dt = new Date(2026, 8, 12 + i); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+  const grid = [30, 40].map(g => `<line x1="${l}" x2="${W}" y1="${y(g)}" y2="${y(g)}" stroke="rgba(255,255,255,.07)"/><text x="0" y="${y(g) + 3.5}" fill="#808892" font-size="9.5" font-family="Geist Mono, monospace">$${g}</text>`).join('');
+  const sx = x(12);
+  svg.innerHTML = `
+    <defs><linearGradient id="cplg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8f25f" stop-opacity=".16"/><stop offset="1" stop-color="#c8f25f" stop-opacity="0"/></linearGradient></defs>
+    ${grid}
+    <line x1="${sx}" x2="${sx}" y1="${t - 2}" y2="${H - b}" stroke="rgba(138,184,255,.45)"/>
+    <text x="${sx + 5}" y="${t + 6}" fill="#b4d0ff" font-size="9.5" font-family="Geist Mono, monospace">Budget shift</text>
+    <path d="${d} L ${x(V.length - 1)} ${H - b} L ${l} ${H - b} Z" fill="url(#cplg)"/>
+    <path d="${d}" fill="none" stroke="#c8f25f" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <line x1="${l}" x2="${W}" y1="${H - b + .5}" y2="${H - b + .5}" stroke="rgba(255,255,255,.1)"/>
+    <text x="${l}" y="${H - 4}" fill="#808892" font-size="9.5" font-family="Geist Mono, monospace">Sep 12</text>
+    <text x="${W}" y="${H - 4}" fill="#808892" font-size="9.5" font-family="Geist Mono, monospace" text-anchor="end">Oct 11</text>
+    <circle cx="${x(V.length - 1)}" cy="${y(V[V.length - 1])}" r="4" fill="#c8f25f" stroke="#101318" stroke-width="2"/>
+    <g data-hover style="opacity:0"><line data-hl y1="${t - 2}" y2="${H - b}" stroke="rgba(255,255,255,.35)"/><circle data-hd r="4" fill="#fff" stroke="#101318" stroke-width="2"/></g>
+    <rect x="0" y="0" width="${W}" height="${H}" fill="transparent" data-hit/>`;
+  const card = document.querySelector('[data-cpl-card]'), tip = document.querySelector('[data-cpl-tip]');
+  const g = svg.querySelector('[data-hover]'), hl = svg.querySelector('[data-hl]'), hd = svg.querySelector('[data-hd]');
+  svg.querySelector('[data-hit]').addEventListener('pointermove', e => {
+    const box = svg.getBoundingClientRect(), k = W / box.width;
+    const i = Math.max(0, Math.min(V.length - 1, Math.round(((e.clientX - box.left) * k - l) / ((W - l - r) / (V.length - 1)))));
+    hl.setAttribute('x1', x(i)); hl.setAttribute('x2', x(i)); hd.setAttribute('cx', x(i)); hd.setAttribute('cy', y(V[i])); g.style.opacity = 1;
+    const cb = card.getBoundingClientRect();
+    tip.textContent = `${date(i)} · $${V[i].toFixed(2)}`;
+    tip.style.left = (box.left - cb.left + x(i) / k) + 'px'; tip.style.top = (box.top - cb.top + y(V[i]) / k - 10) + 'px'; tip.classList.add('on');
+  });
+  svg.querySelector('[data-hit]').addEventListener('pointerleave', () => { g.style.opacity = 0; tip.classList.remove('on'); });
+})();
+
+/* ---------- live activity feed ---------- */
+(() => {
+  const list = document.querySelector('[data-feed]'); if (!list || reduce) return;
+  const ICON = { ok: 'i-check', warn: 'i-alert', wait: 'i-user-ok', down: 'i-down' };
+  const POOL = [
+    ['g-chat', 'Customer Agent', 'quoted a <em>ductless mini-split</em> install from your price book', 'ok', 'Quote sent', .2],
+    ['g-target', 'Marketing Director', 'moved <em>$120/day</em> from Meta ad set B to winning ad set D', 'ok', 'CPL −14%', 0],
+    ['g-inbox', 'Executive Assistant', 'scheduled a site visit with <em>Priya</em> at 2:30 PM and sent the invite', '', 'Scheduled', .3],
+    ['g-chat', 'Customer Agent', 'handed a billing dispute to <em>Jen</em> with the full conversation', 'wait', 'Handed off', .1],
+    ['g-send', 'Sales Agent', 'sent <em>3 approved follow-ups</em> and logged them in HubSpot', 'ok', 'Sent', .2],
+    ['g-grid', 'Analyst Agent', 'explained why <em>September gross margin</em> fell 3.2 points', '', 'Insight', .4],
+    ['g-chat', 'Customer Agent', 'rescheduled tomorrow’s 9 AM job at the <em>customer’s request</em>', 'ok', 'Rescheduled', .1],
+    ['g-inbox', 'Executive Assistant', 'turned a 14-email thread into <em>3 tasks</em> for the install crew', '', 'Assigned', .3]
+  ];
+  const hoursEl = document.querySelector('[data-hours]'), tasksEl = document.querySelector('[data-tasks]'), clock = document.querySelector('[data-clock]');
+  const progEl = document.querySelector('[data-prog]'), progT = document.querySelector('[data-prog-t]');
+  let i = 0, min = 9 * 60 + 41, hours = 27.5, tasks = 143, prog = 64, timer = null, visible = true;
+  const fmt = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+  function add() {
+    const [g, who, txt, k, chip, h] = POOL[i++ % POOL.length]; min += 1;
+    const li = document.createElement('li'); li.className = 'row enter fresh';
+    li.innerHTML = `<div class="row__in"><time class="row__t">${fmt(min)}</time><span class="glyph"><svg class="ico"><use href="#${g}"/></svg></span><p class="row__x"><b>${who}</b> ${txt}</p><span class="chip${k && k !== 'down' ? ' chip--' + k : (k === 'down' ? ' chip--ok' : '')}">${ICON[k] ? `<svg class="ico"><use href="#${ICON[k]}"/></svg>` : ''}${chip}</span></div>`;
+    list.prepend(li); requestAnimationFrame(() => requestAnimationFrame(() => li.classList.remove('enter')));
+    while (list.children.length > 9) list.lastElementChild.remove();
+    tasks += 1; tasksEl.textContent = tasks;
+    clock.textContent = `Tue ${fmt(min)} AM`;
+    if (prog < 97) { prog += 3; progEl.style.width = prog + '%'; progT.textContent = prog; }
+    if (h) { hours = Math.round((hours + h) * 10) / 10; hoursEl.textContent = hours.toFixed(1); hoursEl.classList.remove('flash'); void hoursEl.offsetWidth; hoursEl.classList.add('flash'); }
+  }
+  const start = () => { stop(); timer = setInterval(add, 3600); };
+  const stop = () => { if (timer) clearInterval(timer); timer = null; };
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; visible ? start() : stop(); }, { threshold: .25 }).observe(list.closest('.console'));
+  document.addEventListener('visibilitychange', () => document.hidden ? stop() : (visible && start()));
+})();
+
+/* ---------- Sales Agent demo player ---------- */
+(() => {
+  const root = document.querySelector('[data-demo]'); if (!root) return;
+  const S = [0, 3.5, 9, 15, 19, 23], END = 23, POSTER = 18.9;
+  const CAPS = [
+    'Finds a company that fits your ideal customer: property manager, 25+ buildings, inside your service area.',
+    'Reads their news, job posts, reviews and website, and keeps only facts it can cite.',
+    'Writes to what is actually happening there, in your voice, in under 100 words.',
+    'Every claim checked against its source. Waiting on your approval.',
+    'You approve, it sends, logs to HubSpot and schedules the follow-up.'
+  ];
+  const timed = [...root.querySelectorAll('[data-t]')], until = [...root.querySelectorAll('[data-until]')], ticks = [...root.querySelectorAll('[data-tick]')];
+  const steps = [...root.querySelectorAll('[data-steps] li')], cap = root.querySelector('[data-cap]'), time = root.querySelector('[data-time]');
+  const meter = root.querySelector('[data-meter]'), subj = root.querySelector('[data-subject]'), caret = root.querySelector('[data-caret]');
+  const approve = root.querySelector('[data-approve]'), result = root.querySelector('[data-result]'), btn = root.querySelector('[data-play]');
+  const SUBJ = subj.textContent, tabs = [...root.querySelectorAll('[data-pane]')], panes = [...root.querySelectorAll('[data-pane-id]')];
+  const mobile = matchMedia('(max-width: 960px)');
+  let t = POSTER, playing = false, last = 0, raf = 0, lastStage = -1;
+  const sec = s => `0:${String(Math.floor(s)).padStart(2, '0')}`;
+  function showPane(id) { tabs.forEach(b => b.setAttribute('aria-selected', b.dataset.pane === id)); panes.forEach(p => p.classList.toggle('show', p.dataset.paneId === id)); }
+  function render() {
+    const st = Math.min(4, S.findIndex((s, i) => t < S[i + 1]) === -1 ? 4 : S.findIndex((s, i) => t < S[i + 1]));
+    timed.forEach(el => el.classList.toggle('on', t >= +el.dataset.t));
+    until.forEach(el => el.style.display = t < +el.dataset.until ? '' : 'none');
+    ticks.forEach(el => el.classList.toggle('done', t >= +el.dataset.tick));
+    meter.classList.toggle('on', t >= 1.2);
+    const typing = t >= 9.2 && t < 10.5;
+    subj.textContent = t < 9.2 ? '' : SUBJ.slice(0, Math.round(SUBJ.length * Math.min(1, (t - 9.2) / 1.2)));
+    caret.hidden = !typing;
+    approve.classList.toggle('press', t >= 20 && t < 20.5);
+    root.classList.toggle('is-sent', t >= 20.5);
+    result.classList.toggle('lit', t >= 21.3);
+    steps.forEach((li, i) => {
+      const p = Math.max(0, Math.min(1, (t - S[i]) / (S[i + 1] - S[i])));
+      li.querySelector('i').style.setProperty('--p', p);
+      li.classList.toggle('cur', i === st); li.classList.toggle('past', i < st);
+    });
+    if (st !== lastStage) { cap.innerHTML = `<span>Step ${st + 1} of 5</span>${CAPS[st]}`; lastStage = st; if (playing && mobile.matches) showPane(st < 2 ? 'research' : st === 2 ? 'draft' : 'check'); }
+    time.textContent = `${sec(t)} / ${sec(END)}`;
+  }
+  function frame(now) {
+    if (!playing) return;
+    t = Math.min(END, t + (now - last) / 1000); last = now; render();
+    if (t >= END) { playing = false; root.classList.remove('is-playing'); root.classList.add('is-ended'); btn.setAttribute('aria-label', 'Replay the demo'); return; }
+    raf = requestAnimationFrame(frame);
+  }
+  function play(fromStart) {
+    setVariant('ours');
+    if (fromStart) { t = 0; lastStage = -1; }
+    playing = true; root.classList.add('is-playing'); root.classList.remove('is-ended');
+    btn.setAttribute('aria-label', 'Pause the demo'); last = performance.now(); raf = requestAnimationFrame(frame);
+  }
+  function pause() { playing = false; cancelAnimationFrame(raf); root.classList.remove('is-playing'); btn.setAttribute('aria-label', 'Resume the demo'); }
+  let started = false;
+  btn.addEventListener('click', () => {
+    if (playing) return pause();
+    if (!started || t >= END) { started = true; return play(true); }
+    play(false);
+  });
+  tabs.forEach(b => b.addEventListener('click', () => showPane(b.dataset.pane)));
+  /* generic-vs-ours comparison */
+  const vBtns = [...root.querySelectorAll('[data-variant-btn]')], chkCount = root.querySelector('[data-chk-count]');
+  function setVariant(v) {
+    root.dataset.variant = v;
+    vBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.variantBtn === v));
+    ticks.forEach(el => {
+      const fails = v === 'generic' && el.hasAttribute('data-fail');
+      el.classList.toggle('fail', fails);
+      const s = el.querySelector('small[data-o]'); if (s) s.textContent = v === 'generic' ? s.dataset.g : s.dataset.o;
+    });
+    chkCount.textContent = v === 'generic' ? '1 of 4 passed' : '4 of 4 passed';
+  }
+  vBtns.forEach(b => b.addEventListener('click', () => { if (playing) pause(); if (b.dataset.variantBtn === 'generic') { t = Math.max(t, POSTER); render(); } setVariant(b.dataset.variantBtn); }));
+  render();
+})();
+
+/* ---------- ROI calculator (modeled estimate) ---------- */
+(() => {
+  const root = document.querySelector('[data-roi]'); if (!root) return;
+  const DEF = { staff: 6, hours: 6, rate: 35, ads: 12000 }, SHARE = .5, REDIRECT = .10;
+  const usd = n => '$' + Math.round(n).toLocaleString('en-US');
+  const inputs = [...root.querySelectorAll('[data-in]')];
+  const set = (k, v) => root.querySelectorAll(`[data-o="${k}"]`).forEach(el => el.textContent = v);
+  function calc() {
+    const f = Object.fromEntries(inputs.map(i => [i.dataset.in, +i.value]));
+    inputs.forEach(i => i.style.setProperty('--p', ((i.value - i.min) / (i.max - i.min) * 100) + '%'));
+    root.querySelector('[data-out="staff"]').textContent = f.staff;
+    root.querySelector('[data-out="hours"]').innerHTML = `${f.hours}<small>h</small>`;
+    root.querySelector('[data-out="rate"]').textContent = usd(f.rate);
+    root.querySelector('[data-out="ads"]').textContent = usd(f.ads);
+    const weekly = f.staff * f.hours * SHARE, yearH = weekly * 52, labor = yearH * f.rate, adMo = f.ads * REDIRECT, adYr = adMo * 12, total = labor + adYr;
+    const wk = Number.isInteger(weekly) ? String(weekly) : weekly.toFixed(1);
+    set('weekly', wk); set('weekly2', wk); set('adminTotal', f.staff * f.hours);
+    set('staffA', f.staff); set('hoursA', f.hours); set('adMo', usd(adMo)); set('adMo2', usd(adMo)); set('adBudget', usd(f.ads));
+    set('total', usd(total)); set('labor', usd(labor)); set('adYr', usd(adYr)); set('hoursYr', Math.round(yearH).toLocaleString('en-US')); set('rateA', usd(f.rate));
+    root.querySelector('[data-o-flex="labor"]').style.flexGrow = labor;
+    root.querySelector('[data-o-flex="adYr"]').style.flexGrow = adYr;
+  }
+  inputs.forEach(i => i.addEventListener('input', calc));
+  root.querySelector('[data-reset]').addEventListener('click', () => { inputs.forEach(i => i.value = DEF[i.dataset.in]); calc(); });
+  calc();
+})();
+</script>
+</body>
+</html>

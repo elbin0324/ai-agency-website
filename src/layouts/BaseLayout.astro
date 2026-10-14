@@ -19,6 +19,7 @@ import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
 import frauncesLatin from '@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2?url';
 import '@/styles/global.css';
+import '@/styles/motion.css';
 import Header from '@/components/layout/Header.astro';
 import Footer from '@/components/layout/Footer.astro';
 import { site, pageTitle } from '@/config/site';
@@ -113,5 +114,6 @@ const hasMain = /<main[\s>]/i.test(content);
       import { initReveal } from '@/scripts/reveal';
       initReveal();
     </script>
+    <script>import '@/scripts/motion';</script>
   </body>
 </html>

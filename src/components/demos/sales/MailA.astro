@@ -1,0 +1,28 @@
+---
+// Email A, "Generic AI email" (COPY.md §6.3 verbatim; DEMOS.md §5 step 5). OWNER: demo-sales.
+// Shown already written (no streaming). Red markers 1–4 and their highlights arrive 1.2 s into the step;
+// marker 4 sits in the corner because it marks the whole email.
+import { emailA } from './data';
+
+const claim = { 'data-el': 'a-claim', 'data-final-class': 'mark-flag' };
+const mark = { 'data-el': 'a-mk', 'data-ghost': '' };
+---
+<div class="aw-doc sa-mail sa-mail--compare sa-mail--generic" data-el="a-doc">
+  <div class="aw-doc__row sa-mail__subject">
+    <span>Subject</span><b><span class="sa-claim mark-flag" {...claim}>Partnership opportunity</span><span class="sa-mk" {...mark}><span class="marker marker--flag">1</span></span> for Hollis &amp; Grant</b>
+  </div>
+  <div class="aw-doc__body sa-mail__body">
+    <p>Hi Dana,</p>
+    <p><span class="sa-claim mark-flag" {...claim}>I hope this email finds you well!</span><span class="sa-mk" {...mark}><span class="marker marker--flag">2</span></span> I came across Hollis &amp; Grant and was really impressed by your firm’s <span class="sa-claim mark-flag" {...claim}>commitment to excellence</span><span class="sa-mk" {...mark}><span class="marker marker--flag">3</span></span> and client satisfaction.</p>
+    <p>At Parkline IT, we provide innovative, end-to-end managed IT solutions that help businesses like yours streamline operations, enhance security and drive growth. Our team of experts is passionate about delivering world-class service tailored to your unique needs.</p>
+    <p>I’d love to set up a quick 15-minute call to explore how we can add value to your organization. Are you available this Thursday or Friday?</p>
+    <p>Looking forward to connecting!</p>
+    <p class="sa-mail__sig"><span>Best regards,</span><span class="sa-mail__name">Sam</span></p>
+  </div>
+  <span class="sa-mk sa-mk--corner" {...mark}><span class="marker marker--flag">4</span></span>
+  <ol class="sa-notes sa-notes--flag" aria-label="Problems with the generic email">
+    {emailA.notes.map((text, i) => (
+      <li data-el="a-note" data-ghost><span class="marker marker--flag">{i + 1}</span><span>{text}</span></li>
+    ))}
+  </ol>
+</div>

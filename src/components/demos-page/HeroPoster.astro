@@ -1,0 +1,68 @@
+---
+// OWNER: theater. /demos/ hero art: an "Agents on shift" window listing the six demos, so the first viewport
+// shows product, not just copy (DESIGN.md §6.10 chrome, §6.23 split hero). Each row links to its chapter;
+// the page script scrolls the demo itself into view and plays it. Status chips say where each job stands,
+// with no numbers (figures live in each demo's labeled result card). Under 1024px it stacks under the CTAs
+// and stands in for the chapter nav index, which hides there.
+import Badge from '@/components/ui/Badge.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { demoCopy, type DemoCopy } from './demo-copy';
+
+type Status = { variant: 'done' | 'running' | 'attention'; label: string };
+const status: Record<DemoCopy['id'], Status> = {
+  customer: { variant: 'done', label: 'Booked' },
+  analyst: { variant: 'done', label: 'Report ready' },
+  assistant: { variant: 'done', label: 'Inbox cleared' },
+  marketing: { variant: 'running', label: 'Test running' },
+  sales: { variant: 'attention', label: 'Waiting on you' },
+  consulting: { variant: 'done', label: 'Plan ready' },
+};
+---
+<div class="app-window dp">
+  <div class="aw-bar">
+    <span class="aw-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="aw-crumb"><b>Agents on shift</b></span>
+    <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+  </div>
+  <div class="dp__pane">
+    <ol class="dp__list" aria-label="The six demos">
+      {demoCopy.map((d) => (
+        <li>
+          <a class="dp__row" href={`#${d.anchor}`} data-demo-link={d.anchor}>
+            <span class="vg-glyph dp__glyph"><Icon name={d.icon} /></span>
+            <span class="dp__text"><b>{d.label}</b><span>{d.headline}</span></span>
+            <Badge variant={status[d.id].variant} class="dp__chip">{status[d.id].label}</Badge>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </div>
+</div>
+
+<style>
+  .dp__pane { padding: 8px; }
+  .dp__list > li + li { border-top: 1px solid var(--color-rule-dark); }
+  .dp__row {
+    display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+    padding: 11px 12px; border-radius: 8px; color: inherit; text-decoration: none;
+    transition: background-color 0.2s var(--ease-out-soft);
+  }
+  .dp__row:hover { background: var(--color-navy-700); }
+  .dp__row:focus-visible { outline-offset: 0; }
+  .dp__glyph { width: 28px; height: 28px; border-radius: 7px; }
+  .dp__glyph > :global(.icon) { width: 14px; height: 14px; }
+  .dp__text { min-width: 0; font-size: var(--text-ui); line-height: var(--text-ui--line-height); }
+  .dp__text b { display: block; font-weight: 550; color: var(--color-on); }
+  .dp__text span { display: block; color: var(--color-on-2); }
+  .dp__row:hover .dp__text b { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+  /* Phones: the chip moves up beside the name and the line takes the full width under both. */
+  @media (width < 40rem) {
+    .dp__row { align-items: start; row-gap: 2px; column-gap: 10px; padding: 10px; }
+    .dp__text { display: contents; }
+    .dp__glyph { grid-row: 1 / span 2; margin-top: 1px; }
+    .dp__text b { grid-column: 2; align-self: center; }
+    .dp__row :global(.dp__chip) { grid-column: 3; grid-row: 1; }
+    .dp__text span { grid-column: 2 / span 2; font-size: var(--text-ui); line-height: var(--text-ui--line-height); }
+  }
+</style>

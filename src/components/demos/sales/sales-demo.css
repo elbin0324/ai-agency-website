@@ -1,0 +1,294 @@
+/* ==========================================================================
+   Sales Agent demo panes (content/DEMOS.md §5). OWNER: demo-sales.
+   Tokens and existing values only (DESIGN.md §2–§4, §6.10, §6.25); the window chrome, player and result
+   card come from global.css + demo.css. Every selector is scoped to .sales-demo (the AppWindow root).
+   Text floor 12px. Navy = the agent's UI; .aw-doc (paper) = the emails Dana and Sam would see.
+   ========================================================================== */
+
+/* Each pane is a size container, so a narrow pane (tablet widths, a narrower page column) adapts on its own */
+.sales-demo .sa-pane { padding: 16px 18px 18px; container: sa-pane / inline-size; }
+.sales-demo .sa-pane :is(b, strong) { font-weight: 600; }
+.sales-demo .aw-label { line-height: 1.3; }
+
+/* Shared object: a raised tile inside a pane (same recipe as .kpi) */
+.sales-demo .sa-card,
+.sales-demo .sa-icp {
+  padding: 12px 14px 13px;
+  border-radius: var(--radius-tile);
+  background: var(--color-navy-700);
+  box-shadow: inset 0 0 0 1px var(--color-rule-dark), inset 0 1px 0 rgb(255 255 255 / 0.03);
+}
+.sales-demo .sa-card__head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.sales-demo .sa-card__sub { font-size: 0.75rem; line-height: 1.3; color: var(--color-on-3); }
+/* Done mark: a small sage disc with a check (status = icon + word, DESIGN.md §2.4) */
+.sales-demo .sa-ok {
+  display: inline-grid; flex: none; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+  color: var(--chip-done); background: var(--chip-done-bg); box-shadow: inset 0 0 0 1px var(--chip-done-ring);
+}
+.sales-demo .sa-ok > .icon { width: 11px; height: 11px; stroke-width: 2.2; }
+
+/* Waiting panes: skeleton lines, never blank */
+.sales-demo .sa-wait { padding-top: 2px; }
+
+/* ---------- LEFT: profile + prospects ---------- */
+.sales-demo .sa-left { display: flex; flex-direction: column; gap: 12px; }
+.sales-demo .sa-left > * { flex: none; }
+
+.sales-demo .sa-icp__head { display: flex; align-items: center; gap: 8px; }
+.sales-demo .sa-icp__icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: var(--radius-chip); color: var(--color-on-2); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+.sales-demo .sa-icp__icon .icon { width: 13px; height: 13px; }
+.sales-demo .sa-icp__title { font-size: 0.8125rem; font-weight: 600; color: var(--color-on); }
+.sales-demo .sa-icp__by { margin-left: auto; font-size: 0.75rem; color: var(--color-on-3); white-space: nowrap; }
+.sales-demo .sa-icp__lines { display: grid; gap: 4px; margin-top: 10px; }
+.sales-demo .sa-icp__lines > div { font-size: 0.75rem; line-height: 1.45; color: var(--color-on); }
+.sales-demo .sa-icp__lines dt { display: inline; font-weight: 500; color: var(--color-on-3); }
+.sales-demo .sa-icp__lines dd { display: inline; margin: 0; }
+.sales-demo .sa-icp__chips { display: none; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.sales-demo .sa-icp__chips li {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--radius-chip);
+  font-size: 0.75rem; color: var(--color-on-2); white-space: nowrap;
+  background: rgb(255 255 255 / 0.04); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong);
+}
+.sales-demo .sa-icp__count { display: none; align-items: center; gap: 4px; margin-left: auto; font-size: 0.75rem; color: var(--color-on-3); white-space: nowrap; }
+.sales-demo .sa-icp__count .icon { width: 12px; height: 12px; }
+/* Folded (step 2 on): one line on desktop, filter chips on phones (DEMOS.md §5 Layout) */
+.sales-demo .sa-icp.is-folded { padding-block: 10px; }
+.sales-demo .sa-icp.is-folded .sa-icp__lines, .sales-demo .sa-icp.is-folded .sa-icp__by { display: none; }
+.sales-demo .sa-icp.is-folded .sa-icp__count { display: inline-flex; }
+
+.sales-demo .sa-stats { display: flex; align-items: flex-start; gap: 7px; font-size: 0.75rem; line-height: 1.45; color: var(--color-on-3); }
+.sales-demo .sa-stats > .icon { width: 13px; height: 13px; margin-top: 2px; }
+.sales-demo .sa-stats b { color: var(--color-on); font-variant-numeric: tabular-nums; }
+
+/* Prospect rows: fit score (an emphasis meter: the pick is --viz-accent, the rest --viz-context; each unfilled
+   track is a lighter step of its own fill, and the bar is square at the baseline, rounded at the data end) + firm */
+.sales-demo .sa-rows { display: grid; margin-top: -4px; }
+.sales-demo .sa-row {
+  position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start;
+  margin: 0 -8px; padding: 7px 8px 8px; border-radius: var(--radius-control);
+}
+.sales-demo .sa-row + .sa-row::before { content: ""; position: absolute; left: 48px; right: 8px; top: 0; height: 1px; background: var(--color-rule-dark); }
+.sales-demo .sa-row.is-picked { background: var(--color-navy-600); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+.sales-demo .sa-row.is-picked::before, .sales-demo .sa-row.is-picked + .sa-row::before { opacity: 0; }
+.sales-demo .sa-fit { display: grid; gap: 6px; padding-top: 1px; }
+.sales-demo .sa-fit__n { font-size: 0.875rem; line-height: 1; color: var(--color-on); font-variant-numeric: tabular-nums; }
+.sales-demo .sa-fit__track { --fit: var(--viz-context); display: block; height: 4px; overflow: hidden; border-radius: 0 2px 2px 0; background: color-mix(in srgb, var(--fit) 24%, transparent); }
+.sales-demo .sa-fit__track.is-top { --fit: var(--viz-accent); }
+.sales-demo .sa-fit__bar { display: block; width: var(--v); height: 100%; border-radius: 0 2px 2px 0; background: var(--fit); }
+.sales-demo .sa-row__text { min-width: 0; }
+.sales-demo .sa-row__firm { display: block; overflow: hidden; font-size: 0.8125rem; line-height: 1.3; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+.sales-demo .sa-row__meta { display: block; margin-top: 1px; font-size: 0.75rem; line-height: 1.35; color: var(--color-on-3); }
+.sales-demo .sa-row__signal { display: block; margin-top: 3px; overflow: hidden; font-size: 0.75rem; line-height: 1.4; color: var(--color-on-2); white-space: nowrap; text-overflow: ellipsis; }
+.sales-demo .sa-row.is-picked .sa-row__signal { white-space: normal; }
+
+.sales-demo .sa-skip {
+  display: flex; align-items: flex-start; gap: 9px; padding: 8px 10px; border-radius: var(--radius-control);
+  font-size: 0.75rem; line-height: 1.45; color: var(--color-on-3);
+  outline: 1px dashed var(--color-rule-dark-strong); outline-offset: -1px;
+}
+.sales-demo .sa-skip__icon { display: grid; flex: none; place-items: center; width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+.sales-demo .sa-skip__icon .icon { width: 11px; height: 11px; }
+
+/* "Why 94" popover beside the selected row (the tooltip recipe: .chart-tip) */
+.sales-demo .sa-why {
+  position: absolute; z-index: 4; top: var(--why-top, 150px); left: calc(28% - 10px); width: 250px;
+  padding: 12px 14px 13px; border-radius: var(--radius-tile); background: var(--color-navy-900);
+  box-shadow: 0 0 0 1px var(--color-rule-dark-strong), 0 16px 32px -16px rgb(0 0 0 / 0.6);
+}
+.sales-demo .sa-why::before {
+  content: ""; position: absolute; left: -6px; top: 14px; width: 11px; height: 11px; rotate: 45deg;
+  background: var(--color-navy-900); box-shadow: -1px 1px 0 var(--color-rule-dark-strong);
+}
+.sales-demo .sa-why__title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.sales-demo .sa-why__title b { font-size: 0.8125rem; color: var(--color-on); }
+.sales-demo .sa-why__title span { font-size: 0.75rem; color: var(--color-on-3); }
+.sales-demo .sa-why ul { display: grid; gap: 6px; }
+.sales-demo .sa-why li { display: grid; grid-template-columns: 13px minmax(0, 1fr); gap: 8px; font-size: 0.75rem; line-height: 1.4; color: var(--color-on-2); }
+.sales-demo .sa-why li > .icon { width: 13px; height: 13px; margin-top: 1px; color: var(--color-sage); stroke-width: 2; }
+
+/* ---------- CENTER: dossier, then draft ---------- */
+.sales-demo .sa-work { align-content: start; }
+
+.sales-demo .sa-dossier__head {
+  position: sticky; top: -16px; z-index: 1; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  margin: -16px -18px 0; padding: 16px 18px 11px; background: var(--color-navy-800); border-bottom: 1px solid var(--color-rule-dark);
+}
+.sales-demo .sa-avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.02em; color: var(--color-on); background: var(--color-navy-500); }
+.sales-demo .sa-dossier__who { display: grid; gap: 3px; min-width: 0; }
+.sales-demo .sa-dossier__who b { overflow: hidden; font-size: 0.8125rem; line-height: 1.3; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+.sales-demo .sa-dossier__check { display: grid; justify-items: end; gap: 6px; }
+.sales-demo .sa-dossier__count { font-size: 0.75rem; line-height: 1.2; color: var(--color-on-3); white-space: nowrap; }
+.sales-demo .sa-dossier__count b { color: var(--color-on); font-variant-numeric: tabular-nums; }
+.sales-demo .sa-segs { display: flex; gap: 2px; min-width: 0; }
+.sales-demo .sa-segs > span { flex: 0 1 12px; min-width: 4px; height: 4px; overflow: hidden; border-radius: 1px; background: color-mix(in srgb, var(--color-sage) 22%, transparent); }
+.sales-demo .sa-segs i { display: block; height: 100%; background: var(--color-sage); }
+
+.sales-demo .sa-facts { display: grid; }
+.sales-demo .sa-fact { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 2px 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--color-rule-dark); }
+.sales-demo .sa-fact__n { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1; color: var(--color-on-2); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+.sales-demo .sa-fact__t { min-width: 0; font-size: 0.8125rem; line-height: 1.4; color: var(--color-on); }
+.sales-demo .sa-fact__meta { display: flex; grid-column: 2 / -1; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; }
+.sales-demo .sa-fact__src { font-size: 0.75rem; line-height: 1.4; color: var(--color-on-3); }
+.sales-demo .sa-verified { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 550; line-height: 18px; color: var(--chip-done); white-space: nowrap; }
+.sales-demo .sa-use { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: 0.75rem; line-height: 1.4; color: var(--color-on-3); white-space: nowrap; }
+.sales-demo .sa-use .icon { width: 12px; height: 12px; }
+.sales-demo .sa-use--email { color: var(--color-on); }
+.sales-demo .sa-fact--out { margin-top: 8px; padding: 7px 10px; border: 0; border-radius: var(--radius-control); outline: 1px dashed var(--color-rule-dark-strong); outline-offset: -1px; }
+.sales-demo .sa-fact--out .sa-fact__t { grid-column: 2 / -1; color: var(--color-on-2); }
+.sales-demo .sa-fact__x { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; color: var(--color-on-3); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+.sales-demo .sa-fact__x .icon { width: 11px; height: 11px; }
+
+.sales-demo .sa-also { margin-top: 10px; font-size: 0.75rem; line-height: 1.5; color: var(--color-on-3); }
+.sales-demo .sa-also b { color: var(--color-on-2); }
+.sales-demo .sa-reason { margin-top: 10px; padding: 10px 12px 11px; }
+.sales-demo .sa-reason .aw-label { color: var(--color-brass-300); }
+.sales-demo .sa-reason p { margin-top: 4px; font-size: 0.8125rem; line-height: 1.45; }
+
+.sales-demo .sa-draft__head {
+  position: sticky; top: -16px; z-index: 1; display: flex; align-items: center; gap: 12px;
+  margin: -16px -18px 0; padding: 16px 18px 9px; background: var(--color-navy-800);
+}
+.sales-demo .sa-draft__wc { font-size: 0.75rem; color: var(--color-on-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sales-demo .sa-draft__wc b { color: var(--color-on-2); }
+.sales-demo .sa-seg { margin-left: auto; }
+.sales-demo .sa-seg > span { height: 26px; padding: 0 10px; white-space: nowrap; }
+
+/* The emails (paper): compact header rows, 13px body, markers paired with numbered notes */
+.sales-demo .sa-mail { position: relative; font-size: 0.8125rem; line-height: 1.5; }
+.sales-demo .sa-mail .aw-doc__row { padding: 5px 14px; font-size: 0.75rem; line-height: 1.45; }
+.sales-demo .sa-mail .aw-doc__row > span:first-child { width: 50px; }
+.sales-demo .sa-mail__addr { min-width: 0; overflow: hidden; color: var(--color-ink-2); white-space: nowrap; text-overflow: ellipsis; }
+.sales-demo .sa-mail__subject b { font-size: 0.8125rem; color: var(--color-ink); }
+.sales-demo .sa-mail__body { padding: 10px 14px 11px; }
+.sales-demo .sa-mail__body > p + p { margin-top: 7px; }
+.sales-demo .sa-mail__sig > span { display: block; font-size: 0.75rem; line-height: 1.45; color: var(--color-ink-3); }
+.sales-demo .sa-mail__sig > .sa-mail__name { font-size: 0.8125rem; line-height: 1.55; color: var(--color-ink-2); }
+.sales-demo .sa-claim { background-repeat: no-repeat; }
+.sales-demo .sa-mk .marker { width: 18px; height: 18px; vertical-align: 0; }
+.sales-demo .sa-mk--corner { position: absolute; top: 5px; right: 8px; }
+.sales-demo .sa-mail--generic .sa-mail__subject { padding-right: 36px; }
+.sales-demo .sa-mk--corner .marker { margin: 0; }
+.sales-demo .sa-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 14px; padding: 8px 14px 10px; border-top: 1px solid var(--color-rule); }
+.sales-demo .sa-notes li { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 0.75rem; line-height: 1.35; color: var(--color-ink-2); }
+.sales-demo .sa-notes .marker { flex: none; width: 18px; height: 18px; margin: 0; }
+
+/* ---------- RIGHT: quality check, approval, follow-up plan ---------- */
+.sales-demo .sa-right { display: flex; flex-direction: column; gap: 8px; padding-bottom: 14px; }
+.sales-demo .sa-right .sa-card { padding: 10px 13px 11px; }
+.sales-demo .sa-right > * { flex: none; }
+
+.sales-demo .sa-qc__done { display: none; }
+.sales-demo .sa-qc.is-folded .sa-qc__done { display: inline-grid; }
+.sales-demo .sa-qc__done { place-items: center; width: 18px; height: 18px; border-radius: 50%; color: var(--chip-done); background: var(--chip-done-bg); box-shadow: inset 0 0 0 1px var(--chip-done-ring); }
+.sales-demo .sa-qc__done > .icon { width: 11px; height: 11px; stroke-width: 2.2; }
+.sales-demo .sa-qc__score { margin-left: auto; font-size: 0.75rem; color: var(--color-on-2); white-space: nowrap; }
+.sales-demo .sa-qc__score b { color: var(--color-on); font-variant-numeric: tabular-nums; }
+.sales-demo .sa-qc__list { display: grid; gap: 7px; margin-top: 9px; }
+.sales-demo .sa-qc__list li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; font-size: 0.75rem; line-height: 1.42; color: var(--color-on-2); }
+.sales-demo .sa-qc__list b { color: var(--color-on); }
+.sales-demo .sa-qc__ready { margin-top: 11px; }
+.sales-demo .sa-qc.is-folded .sa-qc__body { display: none; }
+
+.sales-demo .sa-approval__state { margin-top: 8px; }
+.sales-demo .sa-approval__btns { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.sales-demo .sa-approval__wait { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: 0.75rem; font-weight: 550; color: var(--chip-att); white-space: nowrap; }
+.sales-demo .sa-approval__wait > .icon { width: 12px; height: 12px; stroke-width: 2; }
+.sales-demo .sa-approval__ok { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; font-size: 0.75rem; font-weight: 550; line-height: 1.42; color: var(--color-on); }
+.sales-demo .sa-approval__okicon { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; color: var(--chip-done); background: var(--chip-done-bg); box-shadow: inset 0 0 0 1px var(--chip-done-ring); }
+.sales-demo .sa-approval__okicon > .icon { width: 11px; height: 11px; stroke-width: 2.2; }
+.sales-demo .sa-approval__rows { display: grid; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--color-rule-dark); }
+.sales-demo .sa-approval__rows li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; font-size: 0.75rem; line-height: 1.42; color: var(--color-on); }
+.sales-demo .sa-approval__rows li > .icon { width: 13px; height: 13px; margin: 2px auto 0; color: var(--color-on-3); }
+.sales-demo .sa-approval__rows b { font-weight: 500; color: var(--color-on-3); }
+.sales-demo .sa-approval__queue { display: grid; gap: 6px; }
+/* Send-queue meter: one series (--viz-1) on a lighter step of the same blue, so 9 of 20 reads across the bar */
+.sales-demo .sa-meter { display: block; height: 4px; overflow: hidden; border-radius: 0 2px 2px 0; background: color-mix(in srgb, var(--viz-1) 24%, transparent); }
+.sales-demo .sa-meter > i { display: block; width: var(--v); height: 100%; border-radius: 0 2px 2px 0; background: var(--viz-1); }
+
+.sales-demo .sa-touches { position: relative; display: grid; gap: 7px; margin-top: 8px; padding-left: 18px; }
+.sales-demo .sa-touches::before { content: ""; position: absolute; left: 3px; top: 6px; bottom: 8px; width: 1px; background: var(--color-rule-dark-strong); }
+.sales-demo .sa-touches > li { position: relative; display: grid; gap: 1px; }
+.sales-demo .sa-touches > li::before { content: ""; position: absolute; left: -18px; top: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--color-navy-700); box-shadow: inset 0 0 0 1.5px var(--color-on-3); }
+.sales-demo .sa-touch__when { font-size: 0.75rem; font-weight: 600; line-height: 1.4; color: var(--color-on); }
+.sales-demo .sa-touch__day { font-family: var(--font-mono); font-weight: 500; color: var(--color-on-3); }
+.sales-demo .sa-touch__text { font-size: 0.75rem; line-height: 1.42; color: var(--color-on-2); }
+.sales-demo .sa-follow__rules { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--color-rule-dark); font-size: 0.75rem; line-height: 1.42; color: var(--color-on-3); }
+.sales-demo .sa-follow__rules > .icon { width: 13px; height: 13px; margin: 2px auto 0; }
+
+/* ---------- Comparison overlay (step 5): covers the center and right panes ---------- */
+.sales-demo .sa-compare {
+  --sa-gap: 16px;
+  position: absolute; z-index: 3; top: 0; right: 0; bottom: 0; left: 28%;
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 16px;
+  background: var(--color-navy-800); border-left: 1px solid var(--color-rule-dark);
+}
+.sales-demo .sa-compare__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sales-demo .sa-compare__toggle { display: none; margin-left: 0; }
+.sales-demo .sa-compare__grid { display: grid; flex: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sa-gap); min-height: 0; }
+.sales-demo .sa-compare__col { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
+.sales-demo .sa-compare__label { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 0.75rem; color: var(--color-on-3); }
+.sales-demo .sa-mail--compare { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; }
+.sales-demo .sa-mail--compare .sa-mail__body { flex: 1; min-height: 0; overflow: hidden; }
+.sales-demo .sa-mail--compare .sa-notes { flex: none; }
+
+/* ---------- Narrow center pane (under ~480px: tablets, phones, narrow columns) ---------- */
+@container sa-pane (width < 30rem) {
+  .sales-demo .sa-draft__for { display: none; }
+  .sales-demo .sa-dossier__head { grid-template-columns: 34px minmax(0, 1fr); row-gap: 10px; }
+  .sales-demo .sa-dossier__check { grid-column: 1 / -1; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 12px; justify-items: start; }
+  .sales-demo .sa-segs { justify-self: stretch; justify-content: flex-end; }
+}
+@container sa-pane (width < 22.5rem) {
+  .sales-demo .sa-seg > span { padding: 0 8px; }
+}
+
+/* ---------- Static view: reduced motion and no JavaScript show everything, folds open ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .sales-demo .sa-icp.is-folded { padding-block: 12px 13px; }
+  .sales-demo .sa-icp.is-folded .sa-icp__lines { display: grid; }
+  .sales-demo .sa-icp.is-folded .sa-icp__by { display: inline; }
+  .sales-demo .sa-icp.is-folded :is(.sa-icp__chips, .sa-icp__count) { display: none; }
+  .sales-demo .sa-qc.is-folded .sa-qc__body { display: block; }
+  .sales-demo .sa-work { display: flex; flex-direction: column; gap: 22px; }
+  .sales-demo .sa-dossier__head { position: static; }
+  .sales-demo .sa-compare { position: static; grid-column: 1 / -1; padding: 18px 22px 22px; border-top: 1px solid var(--color-rule-dark); border-left: 0; }
+  .sales-demo .sa-mail--compare, .sales-demo .sa-mail--compare .sa-mail__body { overflow: visible; }
+}
+html.no-js .sales-demo .sa-icp.is-folded { padding-block: 12px 13px; }
+html.no-js .sales-demo .sa-icp.is-folded .sa-icp__lines { display: grid; }
+html.no-js .sales-demo .sa-icp.is-folded .sa-icp__by { display: inline; }
+html.no-js .sales-demo .sa-icp.is-folded :is(.sa-icp__chips, .sa-icp__count) { display: none !important; }
+html.no-js .sales-demo .sa-qc.is-folded .sa-qc__body { display: block; }
+html.no-js .sales-demo .sa-work { display: flex; flex-direction: column; gap: 22px; }
+html.no-js .sales-demo .sa-dossier__head { position: static; }
+html.no-js .sales-demo .sa-compare { position: static; grid-column: 1 / -1; padding: 18px 22px 22px; border-top: 1px solid var(--color-rule-dark); border-left: 0; }
+html.no-js .sales-demo .sa-mail--compare, html.no-js .sales-demo .sa-mail--compare .sa-mail__body { overflow: visible; }
+
+/* ---------- Phones (< 768px): one pane at a time, the player on top (DESIGN.md §6.10) ---------- */
+@media (width < 48rem) {
+  .sales-demo .sa-pane { padding: 14px; }
+  .sales-demo .sa-icp.is-folded .sa-icp__chips { display: flex; }
+  .sales-demo .sa-icp.is-folded .sa-icp__count { display: none; }
+  .sales-demo .sa-icp.is-folded .sa-icp__by { display: inline; }
+  .sales-demo .sa-dossier__head, .sales-demo .sa-draft__head { top: -14px; margin: -14px -14px 0; padding: 14px 14px 10px; }
+  /* From / To give way, so the subject, "Hi Dana," and fact 1 fit the 470px stage together (both stay in the transcript) */
+  .sales-demo [data-el="b-rows"] { display: none; }
+  .sales-demo .sa-why { top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; }
+  .sales-demo .sa-why::before { display: none; }
+  .sales-demo .sa-notes { grid-template-columns: minmax(0, 1fr); }
+  .sales-demo .sa-compare { left: 0; padding: 12px 14px 14px; border-left: 0; }
+  .sales-demo .sa-compare__bar > .aw-label { display: none; }
+  .sales-demo .sa-compare__toggle { display: inline-flex; }
+  .sales-demo .sa-compare__grid { grid-template-columns: minmax(0, 1fr); }
+  .sales-demo .sa-mail--compare .sa-mail__body { -webkit-mask-image: linear-gradient(180deg, black 78%, transparent); mask-image: linear-gradient(180deg, black 78%, transparent); }
+}
+@media (width < 48rem) and (prefers-reduced-motion: no-preference) {
+  html.js .sales-demo .sa-compare__col--b { display: none; }
+}
+@media (width < 48rem) and (prefers-reduced-motion: reduce) {
+  .sales-demo .sa-icp.is-folded .sa-icp__chips { display: none; }
+  .sales-demo .sa-compare { padding: 16px 14px; }
+  .sales-demo .sa-compare__toggle { display: none; }
+  .sales-demo .sa-compare__bar > .aw-label { display: inline; }
+  .sales-demo .sa-mail--compare .sa-mail__body { -webkit-mask-image: none; mask-image: none; }
+}

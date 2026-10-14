@@ -1,0 +1,339 @@
+---
+// Hero agent console, the annotated FIG. 1 (DESIGN.md §5, §6.10, §6.11, §9.4). OWNER: home-hero.
+// Ported from design-lab/reference/index.html (.con-*), with sample data from ./console-data.ts.
+// The window is decorative product UI: role="img" with a one-sentence summary; nothing inside is focusable.
+// Live behavior (rows slide in, clock ticks, counters count) lives in ./console-live.ts.
+// Layout: sidebar + main + rail at 1280px and up; agent strip + main + rail from 1024px;
+// one column below 1024px; on phones the simplified console: agent strip, 2 KPIs, approvals, 3 log rows.
+import Icon from '@/components/ui/Icon.astro';
+import Badge from '@/components/ui/Badge.astro';
+import Logo from '@/components/ui/Logo.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+// The weekly budget cap is the Marketing demo's, so every mention on the site says the same number.
+import { budgetCap } from '@/components/demos/marketing/data';
+import {
+  agent, agentShort, approvals, business, counters, hoursByAgent, hoursTotal, initialRows, legend,
+  liveRows, roster, scene, sparkline, statusChip, type LogRow,
+} from './console-data';
+
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const h = Math.floor(scene.minutes / 60);
+const clock = `${DAYS[scene.day]} ${((h + 11) % 12) + 1}:${String(scene.minutes % 60).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+
+const maxHours = Math.max(...hoursByAgent.map((a) => a.hours));
+const fmt1 = (n: number) => n.toFixed(1);
+
+// Sparkline in a 60 x 22 box: context line, then the latest step and dot in the accent.
+const lo = Math.min(...sparkline);
+const hi = Math.max(...sparkline);
+const pts = sparkline.map((v, i) => [
+  +((i * 60) / (sparkline.length - 1)).toFixed(1),
+  +(22 - ((v - lo) / (hi - lo)) * 20).toFixed(1),
+]);
+const ctxPath = 'M' + pts.slice(0, -1).map((p) => p.join(' ')).join(' L');
+const [px, py] = pts[pts.length - 2];
+const [lx, ly] = pts[pts.length - 1];
+
+const summary =
+  `Illustration: the agent console of ${business.name}, a fictional ${business.employees}-person ${business.kind}, ` +
+  `on a Tuesday evening with the office closed. Five agents are at work and every action is logged with its time, ` +
+  `the latest a booked AC repair. ${counters.waitingOnYou} items wait for the owner's approval, ` +
+  `and results are tracked in hours: ${fmt1(hoursTotal)} hours back over the last 7 days.`;
+
+const rowAttrs = (row: LogRow) => ({
+  'data-agent': row.agent,
+  'data-inquiry': row.effect?.inquiry ? '1' : undefined,
+  'data-resolved': row.effect?.resolved ? '1' : undefined,
+  'data-minutes': row.effect?.minutes ? String(row.effect.minutes) : undefined,
+});
+---
+<figure class="con-figure" data-console data-day={scene.day} data-minutes={scene.minutes}>
+  <div class="app-window" role="img" aria-label={summary} data-motion="tilt-in">
+    <div class="aw-bar">
+      <span class="aw-dots"><i></i><i></i><i></i></span>
+      <span class="aw-crumb con-crumb">
+        <Logo variant="dark" href={null} wordmark={false} size={18} />
+        <b>{business.name}</b>
+        <span class="aw-crumb__sep con-lg">/</span><span class="con-lg">Agent activity</span>
+      </span>
+      <span class="aw-meta">
+        <span class="aw-seg con-lg"><span>Today</span><span class="is-on">7 days</span><span>30 days</span></span>
+        <span class="live" data-live hidden><i></i>Live</span>
+        <span class="aw-status num-tab con-wide" data-clock>{clock}</span>
+        <span class="aw-tag">Illustrative</span>
+      </span>
+    </div>
+
+    <div class="con-body">
+      <div class="con-side">
+        <div class="con-side__head"><span class="aw-label">Agents</span><span>{roster.length} working</span></div>
+        <ul class="con-agents">
+          {roster.map((r, i) => (
+            <li class:list={['con-agent', i === 0 && 'is-sel']}>
+              <span class="vg-glyph con-glyph"><Icon name={agent(r.id).icon} /></span>
+              <span class="con-agent__text"><b>{agent(r.id).name}</b><small>{r.line}</small></span>
+              <span class:list={['con-state', r.state === 'you' && 'con-state--you']}></span>
+            </li>
+          ))}
+        </ul>
+        <div class="con-guard">
+          <p><Icon name="shield-check" /><span><b>Guardrails on</b>Sends, refunds and budget moves wait for your approval.</span></p>
+        </div>
+      </div>
+
+      <div class="con-main">
+        <div class="con-strip" tabindex="0" role="group" aria-label="Agents on shift">
+          {roster.map((r) => <span><Icon name={agent(r.id).icon} />{agentShort[r.id]}</span>)}
+        </div>
+
+        <div class="con-head">
+          <div>
+            <p class="con-head__title">Agent activity</p>
+            <p class="con-head__sub"><b class="num-tab" data-count="tasks">{counters.tasksToday}</b> tasks today · <span class="you">{counters.waitingOnYou} waiting on you</span></p>
+          </div>
+          <Badge variant="running" icon="refresh-cw" class="con-wide">Connected to 9 tools</Badge>
+        </div>
+
+        <div class="con-kpis">
+          <span class="fig-knot con-knot" aria-hidden="true">1</span>
+          <div class="kpi">
+            <span class="kpi__label">Hours back, 7 days</span>
+            <span class="kpi__value"><span class="num-tab" data-count="hours">{fmt1(hoursTotal)}</span><small>h</small></span>
+            <span class="kpi__delta"><b class="is-good">▲ {fmt1(counters.hoursDelta)} h</b>vs prior week</span>
+            <svg class="kpi__spark" viewBox="-3 -3 66 28" aria-hidden="true">
+              <path d={ctxPath} fill="none" stroke="var(--viz-context)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d={`M${px} ${py} L${lx} ${ly}`} fill="none" stroke="var(--viz-accent)" stroke-width="2" stroke-linecap="round" />
+              <circle cx={lx} cy={ly} r="3" fill="var(--viz-accent)" stroke="var(--color-navy-700)" stroke-width="2" />
+            </svg>
+          </div>
+          <div class="kpi">
+            <span class="kpi__label">First reply, median</span>
+            <span class="kpi__value">{counters.firstReplySec}<small>sec</small></span>
+            <span class="kpi__delta">Chat, text and email</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi__label">Resolved without staff</span>
+            <span class="kpi__value"><span class="num-tab" data-count="resolved">{counters.resolved}</span><small>of <span class="num-tab" data-count="inquiries">{counters.inquiries}</span></small></span>
+            <span class="kpi__delta">Inquiries, 7 days</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi__label">Ad spend moved</span>
+            <span class="kpi__value">${counters.adSpendMoved}</span>
+            {/* One line, no "weekly": the tile has 121 to 138px at desktop widths; the console is already in its 7-day view */}
+            <span class="kpi__delta">Within your {budgetCap}% cap</span>
+          </div>
+        </div>
+
+        <div class="con-card con-feed-card">
+          <span class="fig-knot con-knot" aria-hidden="true">3</span>
+          <div class="con-card__head">
+            <span class="aw-label">Activity log</span>
+            <span class="aw-seg con-wide"><span class="is-on">All</span><span>Needs you</span><span>Handoffs</span></span>
+          </div>
+          <div class="con-feed-wrap">
+            <ol class="con-feed" data-feed>
+              {initialRows.map((row) => (
+                <li class="con-row" {...rowAttrs(row)}>
+                  <span class="con-row__time num-tab">{row.time}</span>
+                  <span class="vg-glyph con-glyph"><Icon name={agent(row.agent).icon} /></span>
+                  <span class="con-row__body">
+                    <span class="con-row__meta"><b>{agent(row.agent).name}</b><span class="con-row__via"> · {row.via}</span></span>
+                    <span class="con-row__text">{row.text}</span>
+                  </span>
+                  <Badge variant={statusChip[row.status].variant}>{row.chip ?? statusChip[row.status].label}</Badge>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="con-rail">
+        <div class="con-card con-card--appr">
+          <span class="fig-knot con-knot" aria-hidden="true">2</span>
+          <div class="con-card__head"><span class="aw-label">Waiting on you</span><Badge variant="count">{counters.waitingOnYou}</Badge></div>
+          <div class="con-appr">
+            {approvals.map((a) => (
+              <div class="con-appr__item">
+                <span class="con-appr__who"><span>{a.who}</span><Badge variant="attention">Your OK</Badge></span>
+                <p class="con-appr__what">{a.what}<span>{a.sub}</span></p>
+                <span class="con-appr__act"><span class="app-btn">Review</span><span class="app-btn app-btn--primary">Approve</span></span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="con-card con-card--hours">
+          <div class="con-card__head"><span class="aw-label">Hours back by agent</span><span class="con-card__note">7 days</span></div>
+          <ul class="con-hours">
+            {hoursByAgent.map((a) => (
+              <li class="con-hbar" data-hbar={a.id} data-hours={a.hours}>
+                <span class="con-hbar__top"><span>{agent(a.id).name}</span><b><span class="num-tab" data-hbar-val>{fmt1(a.hours)}</span> h</b></span>
+                <span class="con-hbar__track"><span class="con-hbar__fill" data-hbar-fill style={`width:${((a.hours / maxHours) * 100).toFixed(1)}%`}></span></span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <template data-live-rows>
+    {liveRows.map((row) => (
+      <li class="con-row" {...rowAttrs(row)}>
+        <span class="con-row__time num-tab"></span>
+        <span class="vg-glyph con-glyph"><Icon name={agent(row.agent).icon} /></span>
+        <span class="con-row__body">
+          <span class="con-row__meta"><b>{agent(row.agent).name}</b><span class="con-row__via"> · {row.via}</span></span>
+          <span class="con-row__text">{row.text}</span>
+        </span>
+        <Badge variant={statusChip[row.status].variant}>{row.chip ?? statusChip[row.status].label}</Badge>
+      </li>
+    ))}
+  </template>
+
+  <figcaption class="con-caption">
+    <div class="con-legend">
+      <ol class="fig-legend" aria-label="What the console shows">
+        {legend.map((line, i) => <li><span class="fig-legend__n" aria-hidden="true">{i + 1}</span>{line}</li>)}
+      </ol>
+      <IllustrativeLabel />
+    </div>
+    <p class="fig-caption"><b>FIG. 1</b> The agent console with sample data. {business.name} is a fictional {business.employees}-person {business.kind}.</p>
+  </figcaption>
+</figure>
+
+<script>
+  import { initConsoles } from './console-live';
+  initConsoles();
+</script>
+
+<style>
+  /* ---- Figure and window ---------------------------------------------------------------- */
+  .con-figure { position: relative; margin: clamp(36px, 4vw, 48px) 0 0; }
+  .con-figure::before { content: ""; position: absolute; left: 12%; right: 12%; top: -40px; height: 160px; z-index: -1; background: radial-gradient(closest-side, rgb(209 174 108 / .22), transparent); filter: blur(24px); pointer-events: none; }
+  .con-crumb :global(.brand) { gap: 0; }
+  .con-crumb :global(.brand__mark) { width: 18px; height: 18px; }
+  .con-crumb b { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+  .con-body { display: grid; grid-template-columns: 212px minmax(0, 1fr) 300px; }
+
+  /* ---- Sidebar: agents on shift --------------------------------------------------------- */
+  .con-side { display: flex; flex-direction: column; padding: 18px 12px 14px; background: var(--color-navy-850); border-right: 1px solid var(--color-rule-dark); }
+  .con-side__head { display: flex; justify-content: space-between; align-items: center; padding: 0 8px 12px; font-size: 12px; color: var(--color-on-3); }
+  .con-agents { display: grid; gap: 2px; }
+  .con-agent { display: grid; grid-template-columns: 28px minmax(0, 1fr) 8px; align-items: center; gap: 10px; padding: 8px; border-radius: 9px; }
+  .con-agent.is-sel { background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .con-agent__text { min-width: 0; line-height: 1.4; }
+  .con-agent b { display: block; font-size: 12.5px; font-weight: 550; color: var(--color-on); white-space: nowrap; }
+  .con-agent small { display: block; overflow: hidden; font-size: 12px; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
+  .con-glyph { width: 28px; height: 28px; border-radius: 8px; }
+  .con-glyph :global(.icon) { width: 14px; height: 14px; }
+  .con-state { width: 7px; height: 7px; border-radius: 50%; background: var(--color-sage); box-shadow: 0 0 0 3px rgb(140 197 166 / .12); }
+  .con-state--you { background: var(--color-sky); box-shadow: 0 0 0 3px rgb(143 184 224 / .16); }
+  .con-guard { margin-top: auto; padding: 14px 8px 2px; border-top: 1px solid var(--color-rule-dark); }
+  .con-guard p { display: flex; gap: 10px; font-size: 12px; line-height: 1.45; color: var(--color-on-3); }
+  .con-guard b { display: block; font-size: 12.5px; font-weight: 550; color: var(--color-on); }
+  .con-guard :global(.icon) { margin-top: 1px; color: var(--color-brass-300); }
+
+  /* ---- Main column ---------------------------------------------------------------------- */
+  .con-main { min-width: 0; padding: 18px; }
+  .con-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  .con-head__title { font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; color: var(--color-on); }
+  .con-head__sub { margin-top: 5px; font-size: 12.5px; line-height: 1.4; color: var(--color-on-3); }
+  .con-head__sub b { font-weight: 550; color: var(--color-on-2); }
+  .con-head__sub .you { font-weight: 550; color: var(--color-sky); }
+  .con-strip { display: none; gap: 6px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  .con-strip:focus-visible { outline: 2px solid var(--color-brass-300); outline-offset: 2px; border-radius: 8px; }
+  .con-strip > span { display: inline-flex; align-items: center; gap: 6px; flex: none; height: 28px; padding: 0 10px 0 8px; border-radius: 999px; font-size: 12px; color: var(--color-on-2); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .con-strip :global(.icon) { width: 13px; height: 13px; color: var(--color-brass-300); }
+
+  .con-kpis { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+  /* the sparkline sits beside the value, clear of the label and the delta line */
+  .kpi__spark { position: absolute; top: 35px; right: 14px; width: 56px; height: 20px; }
+
+  .con-card { position: relative; min-width: 0; border-radius: 12px; background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark), inset 0 1px 0 rgb(255 255 255 / .03); }
+  .con-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 42px; padding: 0 14px; border-bottom: 1px solid var(--color-rule-dark); }
+  .con-card__note { font-size: 12px; color: var(--color-on-3); }
+
+  /* ---- Activity log: fixed-height rows so new arrivals never shift the page -------------- */
+  .con-feed-card { --row-h: 58px; --rows: 6; }
+  .con-feed-wrap { position: relative; height: calc(var(--row-h) * var(--rows)); overflow: hidden; border-radius: 0 0 12px 12px; }
+  .con-feed { transition: transform .6s var(--ease-out-soft); }
+  .con-row { display: grid; grid-template-columns: 56px 28px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; height: var(--row-h); padding: 0 14px; }
+  .con-row + .con-row { border-top: 1px solid var(--color-rule-dark); }
+  .con-row.is-new { animation: var(--animate-row-in); }
+  .con-row.is-leaving { opacity: 0; transition: opacity .5s var(--ease-out-soft); }
+  .con-row__time { font-family: var(--font-mono); font-size: 12px; color: var(--color-on-3); white-space: nowrap; }
+  .con-row__body { min-width: 0; }
+  .con-row__meta { display: block; overflow: hidden; font-size: 12px; line-height: 16px; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
+  .con-row__meta b { font-weight: 550; color: var(--color-on-2); }
+  .con-row__text { display: block; margin-top: 2px; overflow: hidden; font-size: 13px; line-height: 19px; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+
+  /* ---- Rail: approvals and hours back --------------------------------------------------- */
+  .con-rail { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 18px 18px 18px 0; }
+  .con-appr { display: grid; gap: 8px; padding: 10px; }
+  .con-appr__item { padding: 11px 12px; border-radius: 10px; background: var(--color-navy-800); box-shadow: inset 0 0 0 1px rgb(143 184 224 / .22); }
+  .con-appr__who { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; line-height: 1.4; color: var(--color-on-3); }
+  .con-appr__what { margin: 6px 0 10px; font-size: 13px; font-weight: 550; line-height: 1.4; color: var(--color-on); }
+  .con-appr__what span { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--color-on-3); }
+  .con-appr__act { display: flex; gap: 6px; }
+  .con-hours { display: grid; gap: 9px; padding: 12px 14px 14px; }
+  .con-hbar { display: grid; gap: 4px; }
+  .con-hbar__top { display: flex; justify-content: space-between; font-size: 12px; line-height: 1.4; color: var(--color-on-2); }
+  .con-hbar__top b { font-weight: 600; color: var(--color-on); }
+  .con-hbar__track { display: block; height: 6px; }
+  .con-hbar__fill { display: block; height: 100%; border-radius: 0 var(--radius-data) var(--radius-data) 0; background: var(--viz-1); transition: width .7s var(--ease-out-soft); }
+
+  /* ---- FIG. 1 knots, legend, caption ---------------------------------------------------- */
+  .con-knot { top: -12px; left: -10px; }
+  .con-legend { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; margin-top: 18px; }
+  .con-caption .fig-caption { margin-top: 10px; }
+
+  /* ---- Responsive ----------------------------------------------------------------------- */
+  @media (width >= 64rem) {
+    /* With the rail beside it, the log card grows to the rail's height so both columns end on one
+       line: the six rows share the extra height (sized against the wrapper, a size container). */
+    .con-main { display: flex; flex-direction: column; }
+    .con-feed-card { display: flex; flex: 1 0 auto; flex-direction: column; }
+    .con-feed-wrap { flex: 1 0 auto; height: auto; min-height: calc(var(--row-h) * var(--rows)); container-type: size; }
+    .con-row { height: max(var(--row-h), calc(100cqh / var(--rows))); }
+  }
+  @media (width < 80rem) {
+    .con-body { grid-template-columns: minmax(0, 1fr) 280px; }
+    .con-side { display: none; }
+    .con-strip { display: flex; }
+  }
+  @media (width < 64rem) {
+    /* One column: strip, head, KPIs, then the approvals (the control point) before the log */
+    .con-lg { display: none; }
+    .con-body { display: flex; flex-direction: column; padding-top: 14px; }
+    .con-main { display: contents; }
+    .con-main > *, .con-rail { margin-inline: 14px; }
+    .con-strip { order: 1; }
+    .con-head { order: 2; }
+    .con-kpis { order: 3; }
+    .con-rail { order: 4; padding: 0; margin-bottom: 14px; }
+    .con-feed-card { order: 5; margin-bottom: 14px; }
+    .con-card--hours { display: none; }
+    .con-appr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (width < 48rem) {
+    /* Phones: agent strip, 2 KPIs, the approvals card, 3 log rows */
+    .aw-dots, .kpi__spark, .con-crumb :global(.brand), .con-figure :global(.con-wide) { display: none; }
+    .con-main > *, .con-rail { margin-inline: 12px; }
+    .con-head { margin-bottom: 12px; }
+    .con-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+    .con-kpis > .kpi:nth-of-type(n + 3) { display: none; }
+    .con-rail { margin-bottom: 12px; }
+    .con-appr { grid-template-columns: minmax(0, 1fr); }
+    .con-feed-card { margin-bottom: 12px; --row-h: 80px; --rows: 3; }
+    .con-row { grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-areas: "glyph meta chip" "glyph text text"; align-content: center; align-items: start; row-gap: 3px; }
+    .con-row__time, .con-row__via { display: none; }
+    .con-row > .con-glyph { grid-area: glyph; }
+    .con-row__body { display: contents; }
+    .con-row__meta { grid-area: meta; align-self: center; }
+    .con-row > :global(.chip) { grid-area: chip; }
+    .con-row__text { grid-area: text; margin-top: 0; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .con-legend .fig-legend { flex-direction: column; gap: 10px; }
+  }
+</style>

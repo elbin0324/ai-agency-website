@@ -1,0 +1,104 @@
+---
+// Right pane: the {site.name} Assistant panel. Top slot: activity log (step 2), swapped for the Morning briefing
+// (step 7); then Tasks (step 4); then the calendar card (step 5) that receives the deck (step 6).
+// OWNER: demo-assistant. Final state (DEMOS.md §3): briefing, the 5 tasks, the booked event with
+// "Q3_Operations_Review.pptx · 6 slides ✓" and the six slide thumbnails with their titles.
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+import Thumb from './Thumb.astro';
+import {
+  bookingLog, bookingRule, briefing, event, meeting, needsYou, slides, slots, tasks, tasksFoot, triageLog,
+} from './data';
+---
+<section class="aw-pane ea-side" data-pane="assistant">
+  <div class="ea-side__head" data-el="open" data-ghost>
+    <p class="ea-agent"><span class="vg-glyph ea-agent__glyph"><Icon name="inbox" /></span>{site.name} Assistant</p>
+    <span class="demo-stack ea-side__st">
+      <span class="chip chip-running" data-el="st-work" data-hide hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>Working</span>
+      <span class="chip chip-attention" data-el="st-wait" data-hide><Icon name="user-check" />{needsYou} need you</span>
+    </span>
+  </div>
+
+  <div class="ea-scroll" data-el="side-scroll">
+    <div class="ea-feed" data-el="open" data-ghost>
+      <div class="demo-stack">
+        <div class="ea-card ea-skelcard" data-el="skel" data-placeholder hidden>
+          <div class="skel"><span class="skel__label">Starting</span><i></i><i></i><i></i></div>
+        </div>
+        <div class="ea-card" data-el="act" data-hide hidden>
+          <div class="ea-card__head"><span class="aw-label">Activity</span></div>
+          <p class="ea-log"><span class="ea-log__time">7:31 am</span><span class="demo-check" data-el="act-check" data-check><Icon name="check" /></span><span>{triageLog}</span></p>
+        </div>
+        <div class="ea-card ea-brief" data-el="brief" data-hide>
+          <div class="ea-card__head"><span class="aw-label">{briefing.title}</span><span class="ea-meta">{briefing.when}</span></div>
+          <ul class="ea-brief__list">
+            {briefing.lines.map((l) => (
+              <li class:list={['ea-brief__line', l.you && 'is-you']} data-el="brief-line" data-ghost>
+                <Icon name={l.icon} /><span><b>{l.lead}</b> {l.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div class="ea-card ea-tasks" data-el="tasks" data-hide>
+        <div class="ea-card__head"><span class="aw-label">Tasks · {tasks.length} new</span></div>
+        <ul class="ea-tasklist">
+          {tasks.map((t) => (
+            <li class="ea-task" data-el="task" data-ghost>
+              <span class="ea-av" aria-hidden="true">{t.initials}</span>
+              <div class="ea-task__main">
+                <p class="ea-task__t">{t.task}</p>
+                <p class="ea-task__meta"><span class="ea-due"><Icon name="calendar" />{t.due}</span><span class="ea-task__from">From: {t.from}</span></p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p class="ea-card__foot" data-el="tasks-foot" data-ghost><Icon name="check" />{tasksFoot}</p>
+      </div>
+
+      <div class="ea-card ea-cal" data-el="cal" data-hide>
+        <div class="ea-finder" data-el="finder" data-placeholder hidden>
+          <div class="ea-card__head"><span class="aw-label">Find a time</span><span class="ea-meta">{meeting.meta}</span></div>
+          <p class="ea-finder__t">{meeting.title}</p>
+          <ul class="ea-slots">
+            {slots.map((s) => (
+              <li data-el="slot" data-ghost>
+                <div class:list={['ea-slot', s.booked && 'is-booked']} data-el={s.booked ? 'slot-thu' : undefined} data-final-class={s.booked ? 'is-booked' : undefined}>
+                  <span class="ea-slot__when">{s.when}</span>
+                  <span class="ea-slot__dots" aria-hidden="true">{Array.from({ length: meeting.people }, (_, i) => <i class:list={[i < s.free && 'is-free']}></i>)}</span>
+                  <span class="ea-slot__free">{s.free} of {meeting.people} free</span>
+                  {s.note
+                    ? <span class="ea-slot__note">{s.note}</span>
+                    : <span class="ea-slot__note"><span class="chip chip-done" data-el="booked" data-ghost><Icon name="check" />Booked</span></span>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="ea-event" data-el="event" data-ghost>
+          <div class="ea-event__top">
+            <span class="ea-event__ic"><Icon name="calendar-check" /></span>
+            <div class="ea-event__txt"><p class="ea-event__t">{event.title}</p><p class="ea-event__when">{event.when}</p></div>
+          </div>
+          <p class="ea-event__who">{event.people}</p>
+          <p class="ea-attach">
+            <Icon name="presentation" /><span class="ea-attach__name" data-el="attach" data-initial-text={event.building}>{event.done}</span>
+            <span class="ea-attach__ok" data-el="attach-ok" data-ghost><Icon name="check" /></span>
+          </p>
+        </div>
+        <p class="ea-log ea-log--cal" data-el="cal-log" data-ghost>
+          <span class="ea-log__time">7:32 am</span><span class="demo-check"><Icon name="check" /></span><span>{bookingLog.text} {bookingLog.quote}</span>
+        </p>
+        <p class="ea-rule" data-el="cal-log" data-ghost><Icon name="shield-check" />{bookingRule}</p>
+
+        <ol class="ea-thumbs" data-el="thumbs" data-hide>
+          {slides.map((s) => (
+            <li><span class="ea-thumbs__box"><Thumb kind={s.kind} /></span><span class="ea-thumbs__t">{s.n}. {s.title}</span></li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>

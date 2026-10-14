@@ -14,7 +14,7 @@ import Container from '@/components/ui/Container.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
 import Icon from '@/components/ui/Icon.astro';
 import type { IconName } from '@/components/ui/icons';
-import { site } from '@/config/site';
+import { site, emailReady } from '@/config/site';
 
 type Cta = { label: string; href: string; icon?: IconName };
 type LeaveItem = string | { title: string; body?: string };
@@ -53,7 +53,9 @@ const showArt = dark && art;
 const primaryCta: Cta = primary ?? { label: site.cta.label, href: site.cta.href, icon: 'arrow-right' };
 const leave = leaveWith.map((l) => (typeof l === 'string' ? { title: l } : l));
 const revealAttr = reveal ? { 'data-reveal': '' } : {};
-const microParts = micro ? micro.split('{email}') : [];
+// A micro line built around {email} is dropped while site.email is still the placeholder (emailReady).
+const showMicro = !!micro && (emailReady || !micro.includes('{email}'));
+const microParts = showMicro && micro ? micro.split('{email}') : [];
 const gradId = `sail-wash-${id}`;
 ---
 <section
@@ -77,7 +79,7 @@ const gradId = `sail-wash-${id}`;
               <Button href={secondary.href} variant={dark ? 'outline-dark' : 'secondary'} size="lg" icon={secondary.icon}>{secondary.label}</Button>
             )}
           </div>
-          {micro && (
+          {showMicro && (
             <p class="cta__micro">
               {microParts.map((part, i) => (
                 <Fragment>{part}{i < microParts.length - 1 && <a class="link" href={`mailto:${site.email}`}>{site.email}</a>}</Fragment>

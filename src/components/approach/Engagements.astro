@@ -1,0 +1,167 @@
+---
+// OWNER: pages-misc
+// /approach/ §10.4 "Engagement models" (id "engagements"), with the pricing structure the buyer critique
+// asked for (CRITIQUE.md edit 1 and "Pricing structure"): how each model is priced, never a price.
+// Founder to confirm each structural term (fixed-price pilot, flat monthly fee incl. agreed AI usage,
+// pass-through costs at cost, same-business-day incident notice).
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { site } from '@/config/site';
+import { url } from '@/lib/url';
+
+type Plan = {
+  name: string;
+  promise: string;
+  facts: { k: string; v: string }[];
+  includes: string[];
+  note?: { icon: IconName; text: string };
+  cta: string;
+  start?: boolean;
+};
+
+const plans: Plan[] = [
+  {
+    name: 'Pilot',
+    promise: 'Prove it on one job.',
+    start: true,
+    facts: [
+      { k: 'Best for', v: 'Your first project, or trying a new service' },
+      { k: 'Length', v: 'Typically 4 to 8 weeks, from kickoff to the pilot report' },
+      { k: 'How it’s priced', v: 'A fixed price for a fixed scope' },
+    ],
+    includes: [
+      'Discovery and design for one agent or one focused project',
+      'Integration with the tools in scope',
+      'Testing on your past work',
+      'A live pilot, with your team approving the agent’s work',
+      'Daily, then weekly, quality reviews',
+      'A results report against the success measure',
+      'A go, adjust or stop recommendation',
+    ],
+    note: { icon: 'check', text: 'No obligation to continue. If the pilot misses its measure, we say so plainly and you decide what’s next.' },
+    cta: 'Start with a pilot',
+  },
+  {
+    name: 'Managed',
+    promise: 'We run it. You get the results.',
+    facts: [
+      { k: 'Best for', v: 'Agents working every day, without you managing them' },
+      { k: 'Length', v: 'Ongoing' },
+      { k: 'How it’s priced', v: 'A flat monthly fee, AI usage included at the agreed volumes' },
+    ],
+    includes: [
+      'Everything from the pilot, carried into daily work',
+      'Monitoring, maintenance and tuning',
+      'New skills and rules within the agreed scope',
+      'Updates when your tools, prices or policies change',
+      'A monthly report in hours and dollars',
+      'A named lead and a direct line',
+      'A quarterly roadmap review',
+    ],
+    note: { icon: 'clock', text: 'Issues reported to you the same business day. Support hours and response times are written into your agreement.' },
+    cta: 'Talk about managed agents',
+  },
+  {
+    name: 'Partner',
+    promise: 'Your AI team, across the business.',
+    facts: [
+      { k: 'Best for', v: 'Mid-size companies putting AI to work across several teams' },
+      { k: 'Length', v: 'Ongoing, with quarterly planning' },
+      { k: 'How it’s priced', v: 'One monthly plan across every agent and service' },
+    ],
+    includes: [
+      'Several agents and services under one plan',
+      'Quarterly AI Consulting reviews of cost and margin',
+      'Priority builds for new agents',
+      'Executive reporting across every agent',
+      'Staff training and an AI use policy',
+      'Planning sessions with your leadership team',
+      'Coordination with your IT provider and other vendors',
+    ],
+    note: { icon: 'workflow', text: 'Starts with a pilot on one job, so you see results before anything expands.' },
+    cta: 'Talk about a partnership',
+  },
+];
+
+const pricing: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'file-text', title: 'Agreed in writing first', body: 'Scope, price and terms are set in writing before any work starts. New work outside the scope is quoted the same way.' },
+  { icon: 'receipt', title: 'Outside costs at cost', body: 'Third-party costs, like phone minutes or a software seat, are listed in your proposal at what we pay.' },
+  { icon: 'scale', title: 'Payback before you sign', body: 'Every proposal puts our fee next to the modeled savings, so you can weigh the payback before you commit.' },
+];
+---
+<Section id="engagements" tone="sunken" aria-labelledby="engagements-title">
+  <SectionHeader
+    num="02"
+    eyebrow="Engagement models"
+    subtitle="Every engagement is scoped and priced in writing after the free assessment. There’s no long-term contract to start."
+    titleId="engagements-title"
+  ><span slot="title" data-motion="split">Three ways to work together.</span></SectionHeader>
+  <ul class="plans" role="list" data-reveal data-motion="stagger">
+    {plans.map((p, i) => (
+      <li class:list={['card', 'plan', p.start && 'plan--start']}>
+        <div class="plan__top">
+          <span class="plan__n">{String(i + 1).padStart(2, '0')}</span>
+          {p.start && <span class="plan__flag">Start here</span>}
+        </div>
+        <h3 class="type-h3 plan__name">{p.name}</h3>
+        <p class="plan__promise">{p.promise}</p>
+        <dl class="plan__facts">
+          {p.facts.map((f) => (
+            <div><dt>{f.k}</dt><dd>{f.v}</dd></div>
+          ))}
+        </dl>
+        <p class="type-label plan__label">What’s included</p>
+        <ul class="knot-list plan__list" role="list">
+          {p.includes.map((it) => <li>{it}</li>)}
+        </ul>
+        {p.note && (
+          <p class="plan__note"><Icon name={p.note.icon} />{p.note.text}</p>
+        )}
+        <div class="plan__cta">
+          <Button href={site.cta.href} variant={p.start ? 'primary' : 'secondary'} block icon="arrow-right">{p.cta}</Button>
+        </div>
+      </li>
+    ))}
+  </ul>
+
+  <div class="leave-with" data-reveal>
+    <p class="type-label leave-with__label">How pricing works</p>
+    <ul class="leave-with__list" role="list">
+      {pricing.map((p) => (
+        <li><Icon name={p.icon} /><div><b>{p.title}</b><p>{p.body}</p></div></li>
+      ))}
+    </ul>
+  </div>
+  <p class="plans__micro">
+    AI Consulting can also be booked as a standalone project. Want a yardstick before we talk? The <a class="link" href={url(site.ctas.calculator.href)}>savings calculator</a> estimates what your team’s time is worth each month: the most an AI program could cost and still pay for itself.
+  </p>
+</Section>
+
+<style>
+  .plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+  .plan { display: flex; flex-direction: column; min-width: 0; }
+  /* The one brass emphasis in this view: a 2px rule across the top of the card to start with. */
+  .plan--start { box-shadow: inset 0 2px 0 var(--color-brass-500), var(--card-shadow); }
+  .plan__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 22px; }
+  .plan__n { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--accent); }
+  .plan__flag { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .plan__name { margin-top: 12px; }
+  .plan__promise { margin-top: 6px; font-size: 1rem; line-height: 1.5; color: var(--fg-2); }
+  .plan__facts { margin: 20px 0 0; border-top: 1px solid var(--line-strong); }
+  .plan__facts > div { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .plan__facts dt { font-size: 0.8125rem; line-height: 1.4; color: var(--fg-3); }
+  .plan__facts dd { margin: 2px 0 0; font-size: 0.9375rem; font-weight: 550; line-height: 1.45; color: var(--fg); }
+  .plan__label { margin-top: 22px; }
+  .plan__list { margin-top: 12px; gap: 8px; font-size: 0.9375rem; color: var(--fg-2); }
+  .plan__note { display: flex; gap: 10px; margin-top: 18px; padding: 12px 14px; border-radius: var(--radius-tile); background: var(--color-paper-sunken); font-size: 0.875rem; line-height: 1.5; color: var(--fg-2); }
+  .plan__note :global(.icon) { width: 16px; height: 16px; margin-top: 2px; color: var(--accent); }
+  .plan__cta { margin-top: auto; padding-top: 24px; }
+  .plans__micro { max-width: 68ch; margin-top: 24px; font-size: 0.875rem; line-height: 1.55; color: var(--fg-3); }
+
+  @media (width < 64rem) {
+    .plans { grid-template-columns: minmax(0, 1fr); max-width: 40rem; }
+  }
+</style>

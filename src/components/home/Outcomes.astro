@@ -1,0 +1,154 @@
+---
+// "What changes": a before/after ledger for the owner and for the team. OWNER: home-hero.
+// Copy: COPY.md §2.3, tightened, with a plain "Today" line per row so the change reads at a glance.
+// No figures here on purpose (BRIEF.md numbers policy): this section describes the work, the
+// numbers live in the labeled examples and the calculator further down.
+// Layout: the 3 + 9 label-and-list rhythm of DESIGN.md §5 (group label on 3 columns, rows on 9),
+// ledger hairlines instead of cards (§1.4). Rows stack under 768px with visible Today / With agents labels.
+// Keep id="outcomes": it is the anchor from COPY.md.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+
+type Row = { icon: IconName; topic: string; before: string; after: string };
+const groups: { id: string; title: string; rows: Row[] }[] = [
+  {
+    id: 'outcomes-you',
+    title: 'For you',
+    rows: [
+      {
+        icon: 'message-square',
+        topic: 'Leads after hours',
+        before: 'Wait until morning, and some call someone else.',
+        after: 'An answer in seconds, even at 9 p.m. Routine jobs get booked; the rest reach your team with the full conversation.',
+      },
+      {
+        icon: 'chart-column',
+        topic: 'Your numbers',
+        before: 'Pieced together at month-end, if there’s time.',
+        after: 'A plain-English summary every week, plus a ranked list of where to save and where to grow.',
+      },
+      {
+        icon: 'target',
+        topic: 'Ad spend',
+        before: 'Checked when someone finds the time.',
+        after: 'Waste gets cut and budget moves to what brings in customers, inside limits you set.',
+      },
+      {
+        icon: 'send',
+        topic: 'Prospecting',
+        before: 'Stops whenever the team gets busy.',
+        after: 'Researched, personal emails go out every week, each one after your OK. Replies land in your inbox.',
+      },
+    ],
+  },
+  {
+    id: 'outcomes-team',
+    title: 'For your team',
+    rows: [
+      {
+        icon: 'inbox',
+        topic: 'The inbox',
+        before: 'Sorted by hand, one email at a time.',
+        after: 'Mail gets sorted, routine replies get drafted and action items land on the right person’s list.',
+      },
+      {
+        icon: 'workflow',
+        topic: 'Data entry',
+        before: 'The same details retyped into three systems.',
+        after: 'Details move from email to spreadsheet to CRM without copy and paste.',
+      },
+      {
+        icon: 'presentation',
+        topic: 'Reports',
+        before: 'Built by hand the night before the meeting.',
+        after: 'Spreadsheets, charts and decks are built and refreshed on schedule.',
+      },
+      {
+        icon: 'users',
+        topic: 'Customer questions',
+        before: 'Routine questions crowd out the ones that need a person.',
+        after: 'Agents take the routine ones and pass the rest along with full context, so nobody starts from scratch.',
+      },
+    ],
+  },
+];
+---
+<Section id="outcomes" tightTop class="oc-section" aria-labelledby="outcomes-title">
+  <SectionHeader
+    num="01"
+    eyebrow="What changes"
+    title="Same team. More gets done."
+    subtitle="Agents take the repetitive work off your plate and your team’s. Here’s what changes, day to day."
+    titleId="outcomes-title"
+  />
+
+  <div class="oc" data-reveal>
+    <div class="oc-head" aria-hidden="true">
+      <div class="oc-head__in"><span></span><span>Today</span><span class="oc-head__after">With agents running</span></div>
+    </div>
+
+    {groups.map((g) => (
+      <section class="oc-group" aria-labelledby={g.id}>
+        <h3 class="oc-group__title" id={g.id}>{g.title}</h3>
+        <ul class="oc-rows" role="list">
+          {g.rows.map((r) => (
+            <li class="oc-row">
+              <p class="oc-row__topic"><Icon name={r.icon} size={18} />{r.topic}</p>
+              <p class="oc-row__before"><span class="oc-k">Today<span class="sr-only">: </span></span>{r.before}</p>
+              <p class="oc-row__after"><span class="oc-k oc-k--after">With agents<span class="sr-only">: </span></span>{r.after}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    <div class="oc-foot">
+      <p>Agents handle the routine. People handle the judgment calls.</p>
+      <a class="link-arrow" href="#services"><span>See the four services</span><Icon name="arrow-right" /></a>
+    </div>
+  </div>
+</Section>
+
+<style>
+  /* Services follows on the same paper: a short bottom keeps the joint near DESIGN.md §5's ~120px. */
+  :global(.oc-section) { padding-bottom: clamp(32px, 4vw, 48px); }
+
+  /* Desktop: group label on columns 1-3; rows on 4-12 split topic / today / after (2 : 3 : 4). */
+  .oc { --cols: minmax(0, 2fr) minmax(0, 3fr) minmax(0, 4fr); border-top: 1px solid var(--line-strong); }
+  .oc-head, .oc-group, .oc-foot { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+
+  .oc-head { padding: 14px 0 13px; border-bottom: 1px solid var(--line); }
+  .oc-head__in { grid-column: 4 / span 9; display: grid; grid-template-columns: var(--cols); column-gap: 24px; font-family: var(--font-mono); font-size: .75rem; font-weight: 500; line-height: 1.2; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3); }
+  .oc-head__after { color: var(--accent); }
+
+  .oc-group { border-bottom: 1px solid var(--line-strong); }
+  /* the group label stays in view while its rows scroll past (desktop) */
+  .oc-group__title { position: sticky; top: calc(var(--header-h) + 24px); align-self: start; grid-column: 1 / span 3; padding: 20px 0; font-family: var(--font-serif); font-size: var(--text-h3); font-weight: 420; line-height: 1.2; letter-spacing: -.014em; color: var(--fg); }
+  .oc-rows { grid-column: 4 / span 9; }
+  .oc-row { display: grid; grid-template-columns: var(--cols); column-gap: 24px; padding: 20px 0; }
+  .oc-row + .oc-row { border-top: 1px solid var(--line); }
+  .oc-row__topic { display: flex; align-items: flex-start; gap: 10px; font-size: 1.0625rem; font-weight: 600; line-height: 1.4; letter-spacing: -.01em; color: var(--fg); }
+  .oc-row__topic :global(.icon) { margin-top: 2px; color: var(--accent-display); }
+  .oc-row__before { font-size: .9375rem; line-height: 1.55; color: var(--fg-3); }
+  .oc-row__after { font-size: 1rem; line-height: 1.55; color: var(--fg); }
+  .oc-k { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .oc-foot { align-items: center; padding-top: 22px; }
+  .oc-foot p { grid-column: 4 / span 5; font-size: .9375rem; line-height: 1.5; color: var(--fg-2); }
+  .oc-foot .link-arrow { grid-column: 9 / span 4; justify-self: end; }
+
+  @media (width < 64rem) {
+    .oc-head__in, .oc-group__title, .oc-rows, .oc-foot p, .oc-foot .link-arrow { grid-column: 1 / -1; }
+    .oc-group__title { position: static; padding: 26px 0 0; }
+    .oc-foot .link-arrow { justify-self: start; }
+  }
+  @media (width < 48rem) {
+    .oc-head { display: none; }
+    .oc-row { grid-template-columns: minmax(0, 1fr); row-gap: 8px; padding: 18px 0; }
+    .oc-k { position: static; width: auto; height: auto; overflow: visible; clip-path: none; margin-right: 8px; font-family: var(--font-mono); font-size: .75rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; color: var(--fg-3); }
+    .oc-k--after { color: var(--accent); }
+    .oc-foot { row-gap: 10px; }
+  }
+</style>

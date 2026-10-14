@@ -1,0 +1,85 @@
+---
+// Agent feed, the right pane (DEMOS.md §4 "Layout"). OWNER: demo-marketing.
+// The Guardrails card is pinned from step 1. Notes are newest-first: each one drops in at the top and the
+// older ones glide down (insertNote in marketing-demo.ts). Final state: the Week 8 report (a document for
+// Dr. Park, so it sits on paper) right under the guardrails, older notes below it.
+// Rendered as a direct child of the AppWindow scene (it IS the pane).
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+import { approval, fixes, guardrails, report, winRule } from './data';
+---
+<section class="aw-pane aw-pane--sunk md-feed" data-pane="feed">
+  <div class="md-feed__head">
+    <span class="aw-label">Agent feed</span>
+    <span class="md-feed__who">{site.name} Marketing Director</span>
+  </div>
+
+  <div class="aw-note md-guard">
+    <p class="md-guard__title"><Icon name="shield-check" /><b>{guardrails.title}</b><span>· {guardrails.by}</span></p>
+    <ul class="md-guard__list">
+      {guardrails.rules.map((r) => (
+        <li class:list={['human' in r && r.human && 'is-human']}><Icon name={r.icon} />{r.text}</li>
+      ))}
+    </ul>
+  </div>
+
+  <ol class="md-notes" data-el="notes">
+    <li class="md-note md-note--report" data-el="note-report" data-hide>
+      <span class="vg-glyph md-note__glyph"><Icon name="file-text" /></span>
+      <div class="md-note__body">
+        <p class="md-note__meta">Week 8</p>
+        <article class="aw-doc md-report">
+          <p class="md-report__title"><b>{report.title}</b> · {report.to}</p>
+          <div class="md-report__body" data-el="report-body" data-stream>
+            {report.lines.map((l) => <p>{l.lead && <><b>{l.lead}</b> </>}{l.text}</p>)}
+          </div>
+        </article>
+      </div>
+    </li>
+
+    <li class="md-note" data-el="note-6" data-hide>
+      <span class="vg-glyph md-note__glyph"><Icon name="sliders-horizontal" /></span>
+      <div class="md-note__body"><p class="md-note__meta">Week 5</p><p class="md-note__text">Budget moved</p></div>
+    </li>
+
+    <li class="md-note" data-el="note-5" data-hide>
+      <span class="vg-glyph md-note__glyph"><Icon name="chart-column" /></span>
+      <div class="md-note__body"><p class="md-note__meta">Week 4</p><p class="md-note__text">Results in</p></div>
+    </li>
+
+    <li class="md-note" data-el="note-4" data-hide>
+      <span class="vg-glyph md-note__glyph"><Icon name="workflow" /></span>
+      <div class="md-note__body"><p class="md-note__meta">Week 2</p><p class="md-note__text">3 experiments live. {winRule}</p></div>
+    </li>
+
+    <li class="md-note" data-el="note-3" data-hide>
+      <span class="vg-glyph md-note__glyph"><Icon name="wrench" /></span>
+      <div class="md-note__body">
+        <p class="md-note__meta">Week 2</p>
+        <p class="md-note__text">Fixes live</p>
+        <ul class="md-fixes">
+          {fixes.map((f) => (
+            <li data-el="fix-line" data-ghost>
+              <span class="demo-check" data-check data-el="fix-check"><Icon name="check" /></span>
+              <span><b>{f.lead}</b> {f.text}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="md-approval" data-el="fix-approval" data-ghost>
+          <span class="chip chip-attention"><Icon name="user-check" />{approval.who}</span>
+          <span class="md-approval__when">{approval.rest}</span>
+        </p>
+      </div>
+    </li>
+
+    <li class="md-note" data-el="note-2" data-hide>
+      <span class="vg-glyph md-note__glyph"><Icon name="search" /></span>
+      <div class="md-note__body"><p class="md-note__meta">Week 1</p><p class="md-note__text">Audit: 6 campaigns, 1,912 search terms, 14 ads · 6 min</p></div>
+    </li>
+
+    <li class="md-note" data-el="note-1" data-hide>
+      <span class="vg-glyph md-note__glyph"><Icon name="plug" /></span>
+      <div class="md-note__body"><p class="md-note__meta">Week 1</p><p class="md-note__text">Connected (read-only): Google Ads · Meta Ads · practice-management bookings</p></div>
+    </li>
+  </ol>
+</section>

@@ -1,0 +1,219 @@
+---
+// OWNER: results
+// One illustrative industry scenario from @/data/scenarios, set as an editorial ledger cell (.stat):
+//   provenance tag (IllustrativeLabel "Illustrative example", DESIGN.md §6.4, linked to the
+//   methodology) · industry and team size · the fictional business · modeled annual value (Fraunces,
+//   brass unit) · the situation · agents · time to value.
+//   variant 'compact' (Home): first sentence of the situation and a "See the math" link that opens
+//                             this scenario on /results/ (#scenario-{id}).
+//   variant 'full' (/results/): the whole situation, before → after metrics, and a disclosure with
+//                             the story, what each agent does, the math ledger and its source ids.
+//                             Under 640px the before → after metrics move into the disclosure (the
+//                             block renders twice; CSS shows one copy per breakpoint).
+// Renders no <section>: wrap cards in .sc-grid (full, ScenarioGrid) or .stat-ledger (compact).
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import type { IconName } from '@/components/ui/icons';
+import MathLedger from '@/components/blocks/MathLedger.astro';
+import type { Scenario } from '@/data/scenarios';
+import { currency, number } from '@/lib/format';
+import { url } from '@/lib/url';
+
+interface Props {
+  scenario: Scenario;
+  variant?: 'compact' | 'full';
+  /** Heading tag for the business name (default 3). */
+  level?: 3 | 4;
+  /** Full variant: open the math disclosure initially. */
+  open?: boolean;
+  class?: string;
+}
+
+const { scenario: s, variant = 'full', level = 3, open = false, class: className } = Astro.props;
+const full = variant === 'full';
+const H = `h${level}` as 'h3' | 'h4';
+
+const agentIcons: Record<string, IconName> = {
+  'Customer Agent': 'message-square',
+  'Analyst Agent': 'chart-column',
+  'Executive Assistant Agent': 'inbox',
+  'AI Marketing Director': 'target',
+  'AI Sales Agent': 'send',
+  'AI Consulting': 'trending-up',
+};
+const agents = s.agents.map((a) => {
+  const i = a.indexOf(':');
+  const name = (i > 0 ? a.slice(0, i) : a).trim();
+  const what = i > 0 ? a.slice(i + 1).trim() : '';
+  return { name, what: what ? what.charAt(0).toUpperCase() + what.slice(1) : '', icon: agentIcons[name] ?? 'workflow' };
+});
+
+const hoursRow = s.math.find((r) => /^hours back$/i.test(r.label));
+const hoursBack = hoursRow?.value.match(/^[\d,]+/)?.[0];
+const situation = full ? s.challenge : (s.challenge.split(/(?<=\.)\s+/)[0] ?? s.challenge);
+const domId = `scenario-${s.id}`;
+const sourceLinks = s.sources.map((id) => ({ id, href: `#src-${id}` }));
+---
+<article
+  class:list={['stat', 'sc', `sc--${variant}`, className]}
+  id={full ? domId : undefined}
+  data-scenario={s.id}
+  data-industry={s.industry}
+  aria-labelledby={`${domId}-${variant}-name`}
+>
+  <div class="stat__top sc__top">
+    <IllustrativeLabel kind="Illustrative example" />
+    <span class="stat__svc">{s.industry} · {number(s.employees)} staff</span>
+  </div>
+
+  <H class="type-h3 sc__name" id={`${domId}-${variant}-name`}>{s.business}</H>
+  <p class="sc__meta">
+    <span>Fictional business</span>
+    {full && <span>{s.size.toLowerCase()}</span>}
+    <span>{s.revenueRange} revenue</span>
+  </p>
+
+  <p class="stat__fig sc__fig" data-motion="count">{currency(s.annualValue)}<small>a year</small></p>
+  <p class="sc__desc">
+    Modeled value{hoursBack ? <Fragment>, with <b>{hoursBack} staff hours</b> back a year</Fragment> : null}.
+  </p>
+
+  <p class="sc__situation">{situation}</p>
+
+  {full && (
+    <div class="sc-metrics">
+      <p class="type-label sc-metrics__head"><span>Today</span><Icon name="arrow-right" size={12} /><span>With agents</span></p>
+      <ul role="list">
+        {s.metrics.map((m) => (
+          <li class="sc-metric">
+            <span class="sc-metric__k">{m.label}</span>
+            <span class="sc-metric__v">
+              <span class="sc-metric__before"><span class="sr-only">Today: </span>{m.before}</span>
+              <Icon name="arrow-right" size={14} class="sc-metric__arrow" />
+              <span class="sc-metric__after"><span class="sr-only">With agents: </span>{m.after}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  <div class="sc__facts">
+    <div>
+      <p class="type-label sc__label">Agents</p>
+      <ul class="sc__agents" role="list">
+        {agents.map((a) => <li><Icon name={a.icon} size={14} />{a.name}</li>)}
+      </ul>
+    </div>
+    <div>
+      <p class="type-label sc__label">Time to value</p>
+      <p class="sc__time">{s.timeToValue}</p>
+    </div>
+  </div>
+
+  {full ? (
+    <details class="sc__more" open={open} data-sc-details>
+      <summary class="sc__summary">
+        <span>See the math</span><Icon name="chevron-down" size={16} />
+      </summary>
+      <div class="sc__more-body">
+        <div class="sc-metrics sc-metrics--inner">
+          <p class="type-label sc-metrics__head"><span>Today</span><Icon name="arrow-right" size={12} /><span>With agents</span></p>
+          <ul role="list">
+            {s.metrics.map((m) => (
+              <li class="sc-metric">
+                <span class="sc-metric__k">{m.label}</span>
+                <span class="sc-metric__v">
+                  <span class="sc-metric__before"><span class="sr-only">Today: </span>{m.before}</span>
+                  <Icon name="arrow-right" size={14} class="sc-metric__arrow" />
+                  <span class="sc-metric__after"><span class="sr-only">With agents: </span>{m.after}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <p class="sc__story">{s.narrative}</p>
+        <div>
+          <p class="type-label sc__label">What each agent does</p>
+          <ul class="sc__roles" role="list">
+            {agents.map((a) => <li><b>{a.name}.</b> {a.what}</li>)}
+          </ul>
+        </div>
+        <MathLedger caption="The math" rows={s.math} />
+        <p class="sc__sources">
+          <span class="sc__sources-k">Sources</span>
+          {sourceLinks.map((l, i) => <Fragment>{i > 0 && <span aria-hidden="true"> · </span>}<a href={l.href}>{l.id}</a></Fragment>)}
+        </p>
+      </div>
+    </details>
+  ) : (
+    <a class="link-arrow sc__link" href={url(`/results/#${domId}`)}>
+      <span>See the math</span><Icon name="arrow-right" />
+      <span class="sr-only">for {s.business}</span>
+    </a>
+  )}
+</article>
+
+<style>
+  .sc { gap: 0; }
+  .sc__name { margin-top: 18px; }
+  .sc__meta { display: flex; flex-wrap: wrap; gap: 0 8px; margin-top: 6px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.6; letter-spacing: 0.02em; color: var(--fg-3); }
+  .sc__meta > span { white-space: nowrap; }
+  .sc__meta > span:not(:last-child)::after { content: "·"; margin-left: 8px; }
+  .sc--compact .sc__top { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .sc__fig { margin-top: 22px; }
+  .sc__desc { margin-top: 10px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2); }
+  .sc__desc b { font-weight: 600; color: var(--fg); }
+  .sc__situation { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 0.9375rem; line-height: 1.6; color: var(--fg-2); max-width: 62ch; }
+
+  .sc-metrics { margin-top: 20px; }
+  .sc-metrics__head { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line-strong); color: var(--fg-3); }
+  .sc-metrics__head :global(.icon) { color: var(--accent-display); }
+  .sc-metric { display: grid; gap: 3px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .sc-metric__k { font-size: 0.8125rem; line-height: 1.4; color: var(--fg-3); }
+  .sc-metric__v { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 0.9375rem; line-height: 1.45; }
+  .sc-metric__before { color: var(--fg-2); }
+  .sc-metric__after { font-weight: 600; color: var(--fg); }
+  .sc-metric__v :global(.sc-metric__arrow) { align-self: center; color: var(--accent-display); }
+
+  .sc__facts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 28px; margin-top: 20px; }
+  .sc__label { color: var(--fg-3); }
+  .sc__agents { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; }
+  .sc__agents > li { display: inline-flex; align-items: center; gap: 7px; font-size: 0.875rem; font-weight: 500; line-height: 1.4; color: var(--fg); }
+  .sc__agents :global(.icon) { color: var(--accent-display); }
+  .sc__time { margin-top: 8px; font-size: 0.875rem; line-height: 1.5; color: var(--fg-2); }
+  .sc--compact .sc__facts { grid-template-columns: minmax(0, 1fr); }
+  .sc__link { margin-top: auto; padding-top: 16px; align-self: flex-start; }
+  .sc--compact .sc__facts { margin-bottom: 8px; }
+
+  .sc__more { margin-top: 20px; border-top: 1px solid var(--line-strong); }
+  .sc__summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; list-style: none; cursor: pointer;
+    font-size: 0.9375rem; font-weight: 550; color: var(--fg);
+  }
+  .sc__summary::-webkit-details-marker { display: none; }
+  .sc__summary > span { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size 0.35s var(--ease-out-soft); }
+  .sc__summary:hover > span { background-size: 100% 1px; }
+  .sc__summary :global(.icon) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
+  .sc__more[open] .sc__summary :global(.icon) { transform: rotate(180deg); }
+  .sc__more-body { display: grid; gap: 22px; padding: 4px 0 6px; }
+  .sc__story { font-size: 0.9375rem; line-height: 1.65; color: var(--fg-2); max-width: 66ch; }
+  .sc__roles { display: grid; gap: 8px; margin-top: 10px; }
+  .sc__roles > li { position: relative; padding-left: 18px; font-size: 0.875rem; line-height: 1.55; color: var(--fg-2); }
+  .sc__roles > li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 1.25px var(--accent-line); }
+  .sc__roles b { font-weight: 600; color: var(--fg); }
+  .sc__sources { font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.7; color: var(--fg-3); }
+  .sc__sources-k { margin-right: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-2); }
+  .sc__sources a { white-space: nowrap; color: var(--fg-2); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  .sc__sources a:hover { color: var(--fg); text-decoration-color: currentColor; }
+
+  @media (width < 40rem) {
+    .sc__facts { grid-template-columns: minmax(0, 1fr); }
+    /* Phones: figure, situation, agents, then "See the math" (the metrics wait inside it). */
+    .sc--full > .sc-metrics { display: none; }
+  }
+  .sc-metrics--inner { margin-top: 0; }
+  @media (width >= 40rem) {
+    .sc-metrics--inner { display: none; }
+  }
+</style>

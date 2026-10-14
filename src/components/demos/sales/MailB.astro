@@ -1,0 +1,48 @@
+---
+// Email B, "Written by the Sales Agent" (COPY.md §6.3 verbatim; DEMOS.md §5 steps 4–5). OWNER: demo-sales.
+// The client's own artifact, so it sits on paper (.aw-doc). Markers 1–4 pair each claim with its source note.
+//   variant="draft"    center pane: From / To / Subject rows, the body streams in (step 4), markers, highlights
+//                      and notes arrive afterwards (start attributes below).
+//   variant="compare"  comparison overlay and static figure: subject only, everything already in place.
+import { emailB } from './data';
+
+interface Props {
+  variant?: 'draft' | 'compare';
+}
+const { variant = 'draft' } = Astro.props;
+const draft = variant === 'draft';
+const n = (name: string) => (draft ? `b-${name}` : undefined);
+
+// Start states (draft only): claims lose their highlight, markers and notes wait in place (no reflow).
+const claim = draft ? { 'data-el': 'b-claim', 'data-final-class': 'mark-ok' } : {};
+const mark = draft ? { 'data-el': 'b-mk', 'data-ghost': '', 'data-stream-skip': '' } : {};
+const note = draft ? { 'data-el': 'b-note', 'data-ghost': '' } : {};
+---
+<div class:list={['aw-doc sa-mail', `sa-mail--${variant}`]} data-el={draft ? 'b-doc' : 'cmp-b-doc'}>
+  {draft && (
+    <div class="sa-mail__rows" data-el="b-rows" data-ghost>
+      <div class="aw-doc__row"><span>From</span><span class="sa-mail__addr">{emailB.from}</span></div>
+      <div class="aw-doc__row"><span>To</span><span class="sa-mail__addr">{emailB.to}</span></div>
+    </div>
+  )}
+  <div class="aw-doc__row sa-mail__subject" data-el={n('subject')} data-ghost={draft ? '' : undefined}>
+    <span>Subject</span><b>{emailB.subject}</b>
+  </div>
+  <div class="aw-doc__body sa-mail__body" data-el={n('body')} data-stream={draft ? '' : undefined}>
+    <p>Hi Dana,</p>
+    <p>Congratulations on <span class="sa-claim mark-ok" {...claim}>opening the Riverside office last month.</span><span class="sa-mk" {...mark}><span class="marker">1</span></span></p>
+    <p>I noticed the office manager role you posted includes <span class="sa-claim mark-ok" {...claim}>“handling IT and vendor relationships.”</span><span class="sa-mk" {...mark}><span class="marker">2</span></span> At a two-office firm, that usually turns into password resets, laptop setups and quietly wondering whether last night’s backup ran.</p>
+    <p>We look after IT for <span class="sa-claim mark-ok" {...claim}>11 law and accounting offices</span><span class="sa-mk" {...mark}><span class="marker">3</span></span> in the county, including secure remote access for attorneys who split time between locations.</p>
+    <p>Would it help if I sent the <span class="sa-claim mark-ok" {...claim}>one-page checklist we use when a firm opens a second office? No call needed.</span><span class="sa-mk" {...mark}><span class="marker">4</span></span></p>
+    <p class="sa-mail__sig">
+      <span class="sa-mail__name">{emailB.signature.name}</span>
+      <span>{emailB.signature.address}</span>
+      <span>{emailB.signature.optOut}</span>
+    </p>
+  </div>
+  <ol class="sa-notes" data-el={n('notes')} aria-label="Sources for the marked claims">
+    {emailB.notes.map((text, i) => (
+      <li {...note}><span class="marker">{i + 1}</span><span>{text}</span></li>
+    ))}
+  </ol>
+</div>

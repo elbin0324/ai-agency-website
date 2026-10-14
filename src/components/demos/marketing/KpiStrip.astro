@@ -1,0 +1,33 @@
+---
+// KPI strip across the top of the workspace (DEMOS.md §4 "KPI strip"). OWNER: demo-marketing.
+// Final state = week 8 mode. Step 1 shows the 28-day tiles (data-placeholder) and counts them up;
+// step 7 crossfades each tile to week 8 mode (both modes share one .demo-stack cell, so nothing shifts).
+import { kpiStart, kpiWeek8 } from './data';
+---
+<div class="md-kpis">
+  {kpiStart.map((a, i) => {
+    const b = kpiWeek8[i];
+    return (
+      <div class="kpi md-kpi">
+        <div class="demo-stack">
+          <div class="md-kpi__mode" data-el="kpi-a" data-placeholder hidden>
+            <span class="kpi__label">{a.label}</span>
+            <span class="md-kpi__row"><span class="kpi__value"><span data-el="kpi-val" data-count>{a.value}</span></span></span>
+          </div>
+          <div class="md-kpi__mode" data-el="kpi-b" data-ghost>
+            <span class="kpi__label">{b.label}</span>
+            <span class="md-kpi__row">
+              <span class="kpi__value">{b.value}</span>
+              {b.delta && (
+                <span class="kpi__delta">
+                  {b.delta.arrow && <b class:list={['md-kpi__chg', b.delta.good && 'is-good']}><i>{b.delta.arrow}</i>{b.delta.strong}</b>}
+                  {b.delta.text}
+                </span>
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>

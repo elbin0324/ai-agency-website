@@ -1,0 +1,68 @@
+---
+// OWNER: services-b
+// Hero art for /services/sales/: the quality check a draft passes before anyone approves it.
+// Content follows the Sales demo storyboard (content/DEMOS.md §5, steps 6 and 7): five checks, the
+// approval point in sky (DESIGN.md §2.4), and the per-inbox daily cap. Decorative product view: role="img".
+import Icon from '@/components/ui/Icon.astro';
+
+const checks = [
+  { k: 'Personalization', v: '2 facts about Hollis & Grant, each linked to its source' },
+  { k: 'Fact check', v: 'Both facts match their sources; the proof point is on the approved claims list' },
+  { k: 'Tone', v: 'Plain and direct. No clichés, no meeting request' },
+  { k: 'Length', v: '89 words before the signature (limit 120)' },
+  { k: 'Compliance footer', v: 'Sender, postal address and opt-out line included' },
+];
+---
+<figure class="hqc">
+  <div class="app-window" role="img" aria-label="Illustration: a first email to Dana Whitaker at Hollis & Grant passes five quality checks, then waits for the sender's approval. The inbox has used 9 of its 20 daily sends.">
+    <div class="aw-bar">
+      <span class="aw-dots"><i></i><i></i><i></i></span>
+      <span class="aw-crumb"><b>Quality check</b><span class="aw-crumb__sep">/</span><span>Hollis &amp; Grant</span></span>
+      <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+    </div>
+    <div class="aw-pane hqc__pane">
+      <div class="hqc__head">
+        <span class="aw-label">First email · written for Dana</span>
+        <span class="hqc__score"><b>5</b> of 5 passed</span>
+      </div>
+      <ul class="hqc__list">
+        {checks.map((c) => (
+          <li>
+            <span class="hqc__mk"><Icon name="check" /></span>
+            <span class="hqc__t"><b>{c.k}</b>{c.v}</span>
+          </li>
+        ))}
+      </ul>
+      <div class="hqc__foot">
+        <span class="chip chip-attention"><Icon name="user-check" />Waits for Sam’s OK</span>
+        <span class="hqc__btns"><span class="app-btn">Edit</span><span class="app-btn app-btn--primary">Approve &amp; send</span></span>
+      </div>
+      <dl class="ledger-rows hqc__rows">
+        <div><dt>Daily limit, this inbox</dt><dd>9 of 20 used</dd></div>
+        <div><dt>Skipped today: no reason to write</dt><dd>3 firms</dd></div>
+      </dl>
+    </div>
+  </div>
+  <figcaption class="fig-caption hqc__cap"><b>FIG. 1</b> Illustrative interface. Parkline IT and Hollis &amp; Grant are fictional businesses.</figcaption>
+</figure>
+
+<style>
+  .hqc { margin: 0; }
+  .hqc__pane { padding: 20px 22px 18px; }
+  .hqc__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .hqc__score { font-size: 0.75rem; color: var(--color-on-2); white-space: nowrap; }
+  .hqc__score b { font-weight: 600; color: var(--color-on); }
+  .hqc__list { display: grid; gap: 2px; margin-top: 12px; }
+  .hqc__list li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 10px; border-radius: 8px; background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .hqc__mk { display: grid; place-items: center; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; color: var(--color-navy-900); background: var(--color-sage); }
+  .hqc__mk :global(.icon) { width: 11px; height: 11px; stroke-width: 2.4; }
+  .hqc__t { font-size: 0.8125rem; line-height: 1.45; color: var(--color-on-2); }
+  .hqc__t b { display: block; font-weight: 600; color: var(--color-on); }
+  .hqc__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-rule-dark); }
+  .hqc__btns { display: flex; gap: 6px; }
+  .hqc__rows { margin-top: 10px; }
+  .hqc__rows > div { font-size: 0.8125rem; }
+  .hqc__cap { margin-top: 14px; }
+  /* phones: keep the window title to its first crumb rather than truncating mid-word */
+  @media (width < 40rem) { .hqc .aw-crumb__sep, .hqc .aw-crumb > span:last-child { display: none; } }
+</style>

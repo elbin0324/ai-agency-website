@@ -1,0 +1,76 @@
+---
+// OWNER: home-story
+// Services (COPY.md §2.4, DESIGN.md §6.6): the four-column service ledger. Each column opens on a
+// tagged mini-window vignette, then the service art, name, one value line, three highlights and a link
+// to the service page. Names, links and highlights come from src/data/services.ts.
+// Keep id="services": it is the anchor from COPY.md and may be linked from other pages.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+import ServiceArt from './story/ServiceArt.astro';
+import ServiceVignette from './story/ServiceVignette.astro';
+import { homeNum } from './story/sections';
+import { services, type ServiceSlug } from '@/data/services';
+import { site } from '@/config/site';
+import { url } from '@/lib/url';
+
+// One value line per column, tightened from COPY.md §2.4 for the ledger's narrow columns.
+const value: Record<ServiceSlug, string> = {
+  'ai-agents': 'An AI staff for your front desk, your numbers and your inbox.',
+  marketing: 'Audits every ad you run, tests new ideas and moves budget to what works.',
+  sales: 'Researches each prospect and writes the email a thoughtful person would send.',
+  consulting: 'Reviews your books and operations, then ranks where to cut costs and fix pricing.',
+};
+---
+<Section id="services" tightTop aria-labelledby="services-title">
+  <SectionHeader
+    num={homeNum.services}
+    eyebrow="Services"
+    subtitle="Start with the one that pays off fastest, then add the next. One team designs, builds, runs and measures all of it."
+    titleId="services-title"
+  ><span slot="title" data-motion="split">Four ways to put AI to work.</span></SectionHeader>
+
+  <div class="svc-ledger" data-reveal data-motion="stagger">
+    {services.map((s) => (
+      <article class="svc-col" aria-labelledby={`svc-${s.slug}`}>
+        <ServiceVignette slug={s.slug} />
+        <div class="svc-col__head"><ServiceArt slug={s.slug} /><span class="svc-col__num">{s.num}</span></div>
+        <h3 class="type-h3 svc-col__title" id={`svc-${s.slug}`}>{s.name}</h3>
+        <p class="svc-col__value">{value[s.slug]}</p>
+        <ul class="ledger-list" role="list">
+          {s.highlights.map((h) => <li>{h}</li>)}
+        </ul>
+        <a class="link-arrow" href={url(s.href)}><span>{s.linkLabel}</span><Icon name="arrow-right" /></a>
+      </article>
+    ))}
+  </div>
+
+  <div class="svc-foot" data-reveal>
+    <p>Not sure where to start? <a class="link" href={url(site.cta.href)}>The free assessment</a> ranks your best first move.</p>
+    <a class="link-arrow" href={url('/services/')}><span>Compare all four services</span><Icon name="arrow-right" /></a>
+  </div>
+</Section>
+
+<style>
+  /* Each column is a subgrid of the ledger, so titles, value lines, lists and links share one baseline
+     across the row whatever their length (the column keeps the global .svc-col padding and rules). */
+  .svc-col { display: grid; grid-row: span 6; grid-template-rows: subgrid; align-content: start; }
+  .svc-col > :global(.link-arrow) { align-self: end; }
+
+  /* Laptops (1024-1279px): four columns leave each vignette about 200px wide, which truncates its title
+     and chips, so the ledger goes 2-up a breakpoint early (same rules global.css uses under 1024px). */
+  @media (64rem <= width < 80rem) {
+    .svc-ledger { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .svc-col:nth-child(2) { padding-right: 0; }
+    .svc-col:nth-child(3) { padding-left: 0; border-left: 0; }
+    .svc-col:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  }
+  .svc-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; margin-top: 18px; }
+  .svc-foot p { font-size: 0.9375rem; color: var(--fg-2); }
+  @media (width < 40rem) {
+    .svc-foot { flex-direction: column; align-items: flex-start; }
+    /* DESIGN.md §6.6: vignettes size to their content on phones. (global.css declares the 216px desktop
+       height after its own phone override, so the override never applies; restated here.) */
+    .svc-col > :global(.app-window--mini) { height: auto; }
+  }
+</style>

@@ -58,6 +58,10 @@ const derivedProfile = (() => {
 })();
 const profile = profileLine ?? derivedProfile;
 const monthly = currency(ex.monthlyValue);
+// The headline is rounded ("About $50,000") because the model rests on rounded inputs; the exact figure
+// stays in the math line and the ledger.
+const step = ex.annualValue >= 10000 ? 1000 : 100;
+const annualRounded = Math.round(ex.annualValue / step) * step;
 const annualRow = ex.math.find((r) => /^annual value/i.test(r.label));
 const revealAttr = reveal ? { 'data-reveal': '' } : {};
 ---
@@ -74,7 +78,7 @@ const revealAttr = reveal ? { 'data-reveal': '' } : {};
       {summary && <p class="worth__summary">{ex.summary}</p>}
     </div>
     <div class="worth__fig">
-      <p class="stat__fig worth__value">{currency(ex.annualValue)}<small>a year</small></p>
+      <p class="stat__fig worth__value"><span class="worth__about">About</span><span>{currency(annualRounded)}</span><small>a year</small></p>
       <p class="worth__value-note">
         {monthly} a month{ex.hoursPerMonth ? <Fragment> · {number(ex.hoursPerMonth)} hours back a month</Fragment> : null}
       </p>
@@ -110,6 +114,8 @@ const revealAttr = reveal ? { 'data-reveal': '' } : {};
   .worth__summary { margin-top: 14px; max-width: 60ch; font-size: 1rem; line-height: 1.6; color: var(--fg-2); }
   .worth__fig { padding-left: 28px; border-left: 1px solid var(--line-accent); }
   .worth__fig .worth__value { margin-top: 0; }
+  /* "About" sits on the figure's baseline at unit size (not brass: brass is for units), so the rounded figure keeps one line */
+  .worth__about { font-family: var(--font-sans); font-size: 1rem; font-weight: 500; letter-spacing: 0; color: var(--fg-2); }
   .worth__value-note { margin-top: 12px; font-size: 0.9375rem; line-height: 1.45; color: var(--fg); }
   .worth__fig .math { margin-top: 6px; }
   /* The worksheet: inputs (today / after) on the left, the calculation on the right. */

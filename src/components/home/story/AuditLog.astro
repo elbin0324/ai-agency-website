@@ -1,0 +1,69 @@
+---
+// The guardrails made visible (DESIGN.md §1 "Show the control point", §6.8 audit log rows): a navy
+// window tagged "Illustrative" listing one day of agent actions, each with a mono timestamp, the agent
+// glyph, a sentence and a status chip (done, waiting on your OK in sky, handed off), and the off switch
+// in the footer. Decorative: the guardrail list beside it carries the same content for screen readers.
+// Actions mirror the six demos (DEMOS.md) without naming their fictional businesses.
+import Badge from '@/components/ui/Badge.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+
+type Row = { time: string; icon: IconName; text: string; status: 'done' | 'attention' | 'handoff'; label: string };
+const rows: Row[] = [
+  { time: '7:30 am', icon: 'chart-column', text: 'Read the sales export, read-only', status: 'done', label: 'Done' },
+  { time: '7:34 am', icon: 'inbox', text: 'Drafted 5 replies in your voice', status: 'attention', label: 'Your OK' },
+  { time: '10:05 am', icon: 'send', text: 'First email to a new prospect', status: 'attention', label: 'Your OK' },
+  { time: '2:10 pm', icon: 'target', text: 'Moved budget inside the 20% cap', status: 'done', label: 'Done' },
+  { time: '9:49 pm', icon: 'message-square', text: 'Booked a repair for Wed, 8⁠–⁠10 am', status: 'done', label: 'Done' },
+  { time: '9:50 pm', icon: 'message-square', text: 'Financing question', status: 'handoff', label: 'Handed off' },
+];
+const waiting = rows.filter((r) => r.status === 'attention').length;
+---
+<div class="app-window audit" aria-hidden="true">
+  <div class="aw-bar">
+    <span class="aw-dots"><i></i><i></i><i></i></span>
+    <span class="aw-crumb"><b>Audit log</b><span class="aw-crumb__sep">/</span>Today</span>
+    <span class="aw-meta"><Badge variant="window">Illustrative</Badge></span>
+  </div>
+  <div class="audit__head">
+    <span class="aw-label">{rows.length} actions logged</span>
+    <span class="audit__wait"><Badge variant="attention">Waiting on you</Badge><span class="count">{waiting}</span></span>
+  </div>
+  <ol class="audit__list">
+    {rows.map((r) => (
+      <li class="audit__row">
+        <span class="audit__time">{r.time}</span>
+        <span class="vg-glyph"><Icon name={r.icon} /></span>
+        <span class="audit__text">{r.text}</span>
+        <Badge variant={r.status}>{r.label}</Badge>
+      </li>
+    ))}
+  </ol>
+  <div class="audit__foot">
+    <span class="audit__live"><span class="audit__dot"></span>5 agents running</span>
+    <span class="app-btn"><Icon name="power" />Pause all</span>
+  </div>
+</div>
+
+<style>
+  .audit { display: flex; flex-direction: column; }
+  .audit__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px 10px; }
+  .audit__wait { display: inline-flex; align-items: center; gap: 6px; }
+  .audit__list { flex: 1; margin: 0 10px; border-radius: var(--radius-tile); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .audit__row { display: grid; grid-template-columns: 60px 22px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 46px; padding: 8px 12px; border-bottom: 1px solid var(--color-rule-dark); }
+  .audit__row:last-child { border-bottom: 0; }
+  .audit__time { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-on-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .audit__text { min-width: 0; overflow: hidden; font-size: 0.8125rem; line-height: 1.35; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+  .audit__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px 14px; }
+  .audit__live { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 550; color: var(--color-on-2); }
+  .audit__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-sage); box-shadow: 0 0 0 3px rgb(140 197 166 / 0.12); }
+  .audit .app-btn .icon { width: 12px; height: 12px; color: var(--color-brass-300); }
+  /* Narrow window (laptops 1024-1279px beside the guardrails, and phones): drop the clock so each
+     action reads in full. */
+  @media (width < 40rem), (64rem <= width < 80rem) {
+    .audit__row { grid-template-columns: 22px minmax(0, 1fr) auto; }
+    .audit__time { display: none; }
+  }
+  /* Small phones (360px): an action that still doesn't fit wraps to a second line instead of truncating. */
+  @media (width < 40rem) { .audit__text { white-space: normal; text-wrap: pretty; } }
+</style>

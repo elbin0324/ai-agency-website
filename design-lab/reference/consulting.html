@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Consulting | Halyard</title>
+<meta name="description" content="Design reference: the AI Consulting page, with the traditional-consulting comparison and chart specimens.">
+<meta name="theme-color" content="#F5F0E6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E2136'/%3E%3Crect x='8' y='11' width='3.4' height='14' rx='.5' fill='%23F3EDE1'/%3E%3Crect x='20.6' y='6.5' width='3.4' height='18.5' rx='.5' fill='%23F3EDE1'/%3E%3Cpath d='M11.4 18.9 20.6 12.7v3.7l-9.2 6.2z' fill='%23D1AE6C'/%3E%3C/svg%3E">
+<!-- The production build self-hosts these exact files through @fontsource-variable (DESIGN.md §4). -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5.3.0/opsz.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5.3.0/opsz-italic.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5.3.0/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-mono@5.3.0/index.css">
+<!-- reference.css = global.css (this folder) compiled by Tailwind 4.3.3 with the utilities these pages use. -->
+<link rel="stylesheet" href="reference.css">
+<script>
+  /* One config value controls the brand everywhere (src/config/site.ts in the build). */
+  window.SITE = { name: 'Halyard', brandStory: true, email: 'hello@halyard.example', consultingPrice: null };
+  document.documentElement.classList.add('js');
+</script>
+<style>
+#sprite * { vector-effect: non-scaling-stroke; }
+.ref-note { display: flex; justify-content: center; gap: 10px; padding: 7px 16px; background: var(--color-navy-900); color: var(--color-on-2); font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; text-align: center; }
+.ref-note b { color: var(--color-brass-300); font-weight: 500; }
+.ref-note__links { display: inline-flex; gap: 14px; margin-left: 10px; }
+.ref-note__links a { color: var(--color-on); text-decoration: underline; text-decoration-color: rgb(209 174 108 / .5); text-underline-offset: 3px; }
+.ref-note__links a[aria-current="page"] { color: var(--color-brass-300); text-decoration: none; }
+@media (width < 40rem) { .ref-note { flex-wrap: wrap; gap: 4px 10px; } .ref-note > span:not(.ref-note__links) { display: none; } .ref-note__links { margin-left: 0; } }
+/* Page-level layout (in the build: src/components/services/*) */
+.worth-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px 56px; align-items: start; }
+.worth-side { padding-top: 8px; }
+.worth-side .stat__fig { font-size: clamp(3rem, 2.4rem + 2vw, 4.25rem); }
+@media (width < 64rem) { .worth-grid { grid-template-columns: minmax(0, 1fr); } }
+/* Final CTA + footer (shared with index.html; in the build these are FinalCta.astro and Footer.astro) */
+.cta .type-h2 { margin-top: 20px; max-width: 15ch; font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.75rem); }
+.cta .type-lead { margin-top: 20px; max-width: 52ch; }
+.cta__btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.cta__micro { margin-top: 14px; font-size: .8125rem; color: var(--color-on-3); }
+.sail { display: block; width: 100%; height: auto; overflow: visible; }
+@media (width < 40rem) { .cta__btns .btn { width: 100%; } }
+.foot-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; }
+.foot-brand { grid-column: 1 / span 5; }
+.foot-brand .brand { color: var(--color-on); }
+.foot-brand p { margin-top: 14px; max-width: 34ch; font-size: .9375rem; line-height: 1.6; color: var(--color-on-3); }
+.foot-brand .tagline { margin-top: 18px; font-family: var(--font-serif); font-size: 1.375rem; font-weight: 380; letter-spacing: -.01em; color: var(--color-on); }
+.foot-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 22px; }
+.foot-cta span { font-size: .8125rem; color: var(--color-on-3); }
+.foot-cols { grid-column: 7 / span 6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.foot-contact { margin-top: 18px; font-size: .9375rem; }
+.foot-story { margin-top: 20px; max-width: 46ch; font-family: var(--font-serif); font-size: 1rem; line-height: 1.5; color: var(--color-on-2); }
+@media (width < 64rem) { .foot-brand, .foot-cols { grid-column: 1 / -1; } }
+@media (width < 40rem) { .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 32px; } }
+</style>
+</head>
+<body>
+<svg id="sprite" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></symbol>
+    <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-message-square" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-chart-column" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
+    <symbol id="i-trending-up" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-user-check" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></symbol>
+    <symbol id="i-key-round" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></symbol>
+    <symbol id="i-house" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>
+    <symbol id="i-shopping-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/></symbol>
+    <symbol id="i-briefcase" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+    <symbol id="i-mark" viewBox="0 0 32 32"><rect x="6" y="10" width="4" height="17" rx=".6" fill="currentColor" stroke="none"/><rect x="22" y="4" width="4" height="23" rx=".6" fill="currentColor" stroke="none"/><path d="M10 19.2 22 11.2v4.4l-12 8z" fill="var(--mark-accent, #B8904A)" stroke="none"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+<div class="ref-note"><b>Design reference</b><span>Comparison figures come from the consulting-cost research and are calibrated in content/BENCHMARKS.md before the build.</span><span class="ref-note__links"><a href="index.html">Home</a><a href="consulting.html" aria-current="page">AI Consulting</a><a href="components.html">Components</a></span></div>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header" id="top">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="#top" data-brand-label aria-label="Halyard, home">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-mark"/></svg>
+      <span class="brand__word" data-brand>Halyard</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul class="nav-links">
+        <li class="nav-dropdown" data-dropdown>
+          <button class="nav-link" type="button" aria-expanded="false" aria-controls="services-panel">Services <svg class="icon" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+          <div class="nav-panel" id="services-panel">
+            <div class="nav-panel__grid">
+              <a class="nav-panel__item" href="#services"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-message-square"/></svg></span><span><b>AI Agents</b><span>Customer, Analyst and Executive Assistant agents for your customers and your team.</span></span></a>
+              <a class="nav-panel__item" href="#services"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg></span><span><b>AI Marketing Director</b><span>Audits your ads, runs the tests and moves budget to what works.</span></span></a>
+              <a class="nav-panel__item" href="#services"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg></span><span><b>AI Sales Agent</b><span>Researched, personal outreach that starts real conversations.</span></span></a>
+              <a class="nav-panel__item" href="consulting.html"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-trending-up"/></svg></span><span><b>AI Consulting</b><span>A ranked plan to cut costs and grow margin.</span></span></a>
+            </div>
+            <div class="nav-panel__foot"><a class="link-arrow" href="#services"><span>All services</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a><span class="text-fg-3">Not sure where to start? <a class="link" href="#cta">Book a free assessment</a></span></div>
+          </div>
+        </li>
+        <li><a class="nav-link" href="#demos">Demos</a></li>
+        <li><a class="nav-link" href="#examples">Results</a></li>
+        <li><a class="nav-link" href="#process">Approach</a></li>
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn btn-primary btn-sm" href="#cta"><span class="max-sm:hidden">Book a free assessment</span><span class="sm:hidden">Free assessment</span><svg class="icon btn__icon btn__icon--arrow max-sm:hidden" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      <button class="nav-menu-btn" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu"><span></span></button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a class="mobile-menu__link" href="#services">Services <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <div class="mobile-menu__sub">
+      <a href="#services"><b>AI Agents</b><span>Customer, Analyst and Executive Assistant agents.</span></a>
+      <a href="#services"><b>AI Marketing Director</b><span>Audits your ads and moves budget to what works.</span></a>
+      <a href="#services"><b>AI Sales Agent</b><span>Researched, personal outreach.</span></a>
+      <a href="consulting.html"><b>AI Consulting</b><span>A ranked plan to cut costs and grow margin.</span></a>
+    </div>
+    <a class="mobile-menu__link" href="#demos">Demos <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <a class="mobile-menu__link" href="#examples">Results <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <a class="mobile-menu__link" href="#process">Approach <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <a class="mobile-menu__link" href="#cta">Contact <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <a class="btn btn-primary btn-lg btn-block mt-6" href="#cta">Book a free AI assessment <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <p class="mt-3 text-center text-fg-3" style="font-size:.8125rem">Free 30-minute call. No cost, no obligation.</p>
+  </div>
+</header>
+
+<main id="main">
+<!-- ============ PAGE HERO (inner page, split) ============ -->
+<section class="page-hero page-hero--split" aria-labelledby="hero-title">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Home</a><span aria-hidden="true">/</span><a href="index.html#services">Services</a><span aria-hidden="true">/</span><span aria-current="page">AI Consulting</span></nav>
+    <div class="page-hero__grid">
+      <div class="page-hero__copy">
+        <p class="eyebrow">AI Consulting</p>
+        <h1 class="type-h1 mt-5" id="hero-title">A ranked plan to cut costs and grow your margin.</h1>
+        <p class="type-lead mt-5">An AI-powered review of your financials and operations finds savings, pricing gaps and process waste, then ranks every opportunity by value, effort and payback. The depth of a consulting engagement, at a fraction of the cost.</p>
+        <ul class="page-hero__chips" aria-label="What you can count on">
+          <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Every number traceable</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Opportunities ranked by payback</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>A 90-day plan</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>AI strategy included</li>
+        </ul>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 mt-8">
+          <a class="btn btn-primary btn-lg" href="index.html#cta">Book a free AI assessment <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-ghost" href="#worth"><svg class="icon btn__icon icon--fill" aria-hidden="true"><use href="#i-play"/></svg><span>Watch the demo</span></a>
+        </div>
+        <p class="mt-3 text-fg-3" style="font-size:.8125rem">Every number traces back to your data. A person reviews every recommendation.</p>
+      </div>
+      <figure class="page-hero__art">
+        <div class="app-window" role="img" aria-label="Illustration: five savings opportunities for a fictional restaurant business, ranked by counted value per year, from food cost at 19,800 dollars to energy at 5,400 dollars.">
+          <div class="aw-bar">
+            <span class="aw-dots"><i></i><i></i><i></i></span>
+            <span class="aw-crumb"><b>Opportunities</b><span class="aw-crumb__sep">/</span><span>Ranked by counted value</span></span>
+            <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+          </div>
+          <div class="aw-pane">
+            <div class="chart">
+              <div class="chart__head"><div><p class="chart__title">Counted savings a year</p><p class="chart__sub">Half of each identified amount</p></div><span class="chip chip-done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>5 found</span></div>
+              <div class="hbars">
+                <div class="hbar"><span class="hbar__label">Food cost</span><span class="hbar__track"><span class="hbar__fill" style="--v:100%"></span></span><span class="hbar__val">$19,800</span></div>
+                <div class="hbar"><span class="hbar__label">Labor</span><span class="hbar__track"><span class="hbar__fill" style="--v:72.7%"></span></span><span class="hbar__val">$14,400</span></div>
+                <div class="hbar"><span class="hbar__label">Delivery</span><span class="hbar__track"><span class="hbar__fill" style="--v:45.5%"></span></span><span class="hbar__val">$9,000</span></div>
+                <div class="hbar"><span class="hbar__label">Card fees</span><span class="hbar__track"><span class="hbar__fill" style="--v:36.4%"></span></span><span class="hbar__val">$7,200</span></div>
+                <div class="hbar"><span class="hbar__label">Energy</span><span class="hbar__track"><span class="hbar__fill" style="--v:27.3%"></span></span><span class="hbar__val">$5,400</span></div>
+              </div>
+              <p class="chart__note">Total: $55,800 counted of $111,600 identified</p>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig-caption mt-3"><b>FIG. 1</b> — Larder &amp; Flame Kitchen Co. is a fictional business. Figures are illustrative.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE COMPARISON (user request: AI consulting vs traditional consulting) ============ -->
+<section class="section band-sunken" id="compare" aria-labelledby="compare-title">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">01</span><span class="sec-rule__name">Compared with a traditional engagement</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal>
+      <h2 class="type-h2 sec-head__title" id="compare-title">The same core deliverable, in weeks <em>instead of months.</em></h2>
+      <p class="sec-head__aside">A diagnostic and a prioritized roadmap is the heart of most consulting engagements. Here is what that typically costs from each kind of firm, from public records, and what it takes with us.</p>
+    </div>
+    <div data-reveal>
+      <table class="cost-ledger">
+        <caption><span class="type-label">A diagnostic and roadmap for a 20 to 100 person business</span></caption>
+        <thead>
+          <tr>
+            <th scope="col">Who does it</th>
+            <th scope="col">Typical cost<span class="cost-ledger__axis" aria-hidden="true"><span>$0</span><span>$200K</span><span>$400K+</span></span></th>
+            <th scope="col">Time to recommendations<span class="cost-ledger__axis" aria-hidden="true"><span>0</span><span>13</span><span>26 weeks</span></span></th>
+            <th scope="col">Who does the analysis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><span class="cost-ledger__name">Global strategy firm</span><span class="cost-ledger__sub">Partner-led teams sold by the week. Rarely takes work this small.</span></th>
+            <td data-label="Typical cost"><span class="cost-ledger__fig">$285,000 and up</span><span class="cost-ledger__note">Smallest team for 4 weeks, 2021 list prices</span><span class="range-bar is-open" aria-hidden="true"><span class="range-bar__fill" style="--from:71.25%"></span></span></td>
+            <td data-label="Time to recommendations"><span class="cost-ledger__fig">8 to 15+ weeks</span><span class="range-bar" aria-hidden="true"><span class="range-bar__fill" style="--from:30.8%;--to:57.7%"></span></span></td>
+            <td data-label="Who does the analysis">A partner-led team of consultants and analysts</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="cost-ledger__name">Big Four or large advisory firm</span><span class="cost-ledger__sub">Billed by level and hour. Implementation is usually a separate contract.</span></th>
+            <td data-label="Typical cost"><span class="cost-ledger__fig">$42,000 to $245,000</span><span class="cost-ledger__note">If they take work this small</span><span class="range-bar" aria-hidden="true"><span class="range-bar__fill" style="--from:10.5%;--to:61.25%"></span></span></td>
+            <td data-label="Time to recommendations"><span class="cost-ledger__fig">Several months</span><span class="cost-ledger__na">No published range</span></td>
+            <td data-label="Who does the analysis">Analysts and managers, billed from about $230 to $1,575 an hour by level</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="cost-ledger__name">Regional boutique</span><span class="cost-ledger__sub">Small firms that review processes, staffing and costs.</span></th>
+            <td data-label="Typical cost"><span class="cost-ledger__fig">$18,000 to $75,000</span><span class="range-bar" aria-hidden="true"><span class="range-bar__fill" style="--from:4.5%;--to:18.75%"></span></span></td>
+            <td data-label="Time to recommendations"><span class="cost-ledger__fig">About 4 to 6 months</span><span class="range-bar" aria-hidden="true"><span class="range-bar__fill" style="--from:65.4%;--to:100%"></span></span></td>
+            <td data-label="Who does the analysis">A small consulting team</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="cost-ledger__name">Independent consultant or fractional executive</span><span class="cost-ledger__sub">Part-time senior help on a monthly retainer.</span></th>
+            <td data-label="Typical cost"><span class="cost-ledger__fig">$9,000 to $30,000</span><span class="cost-ledger__note">Over 3 months</span><span class="range-bar" aria-hidden="true"><span class="range-bar__fill" style="--from:2.25%;--to:7.5%"></span></span></td>
+            <td data-label="Time to recommendations"><span class="cost-ledger__fig">Ongoing</span><span class="cost-ledger__na">No set timeline</span></td>
+            <td data-label="Who does the analysis">One senior person, part time</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="cost-ledger__name">Contingency expense-reduction firm</span><span class="cost-ledger__sub">Audits vendor bills: utilities, telecom, card fees, shipping.</span></th>
+            <td data-label="Typical cost"><span class="cost-ledger__fig">$0 upfront</span><span class="cost-ledger__note">Then keeps 30 to 50% of verified savings for 3 to 5 years</span><span class="cost-ledger__na">Paid from savings</span></td>
+            <td data-label="Time to recommendations"><span class="cost-ledger__fig">An initial study over months</span></td>
+            <td data-label="Who does the analysis">Specialists in a few expense categories, not the whole business</td>
+          </tr>
+          <tr class="is-us ctx-dark">
+            <th scope="row"><span class="cost-ledger__name"><svg class="icon" viewBox="0 0 32 32" style="width:18px;height:18px;color:var(--color-on);--mark-accent:#D1AE6C" aria-hidden="true"><use href="#i-mark"/></svg><span><span data-brand>Halyard</span> AI Consulting</span></span><span class="cost-ledger__sub">AI does the reading and the math. A person checks every finding.</span></th>
+            <td data-label="Typical cost" data-price-slot><span class="cost-ledger__fig">Fixed fee, scoped after a free assessment</span><span class="cost-ledger__note" style="color:var(--color-brass-300)">A fraction of the cost of a traditional engagement</span></td>
+            <td data-label="Time to recommendations"><span class="cost-ledger__fig">Typically 3 to 5 weeks</span><span class="range-bar range-bar--us" aria-hidden="true"><span class="range-bar__fill" style="--from:11.5%;--to:19.2%"></span></span></td>
+            <td data-label="Who does the analysis">AI reads every transaction. A person reviews every recommendation before it reaches you.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="cmp-foot">
+        <span class="tag">Modeled estimate</span>
+        <p>Typical market costs from public records, 2021 to 2026: state contracts, federal rate schedules, court filings and public bids. Small-business totals are modeled as hourly rate × hours for a 20 to 100 person business. Provider categories, not firms; sources are listed in <a class="link" href="index.html#examples">how we estimate</a>. Free advice also exists: Small Business Development Centers offer no-cost consulting.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT IT'S WORTH: chart specimen on paper ============ -->
+<section class="section" id="worth" aria-labelledby="worth-title">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">02</span><span class="sec-rule__name">What it's worth</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal>
+      <h2 class="type-h2 sec-head__title" id="worth-title">See how small fixes add up.</h2>
+      <p class="sec-head__aside">Several modest fixes usually beat one big one. Here is how five of them stack for a fictional two-restaurant business, counting half of each saving.</p>
+    </div>
+    <div class="worth-grid" data-reveal>
+      <figure class="card chart" data-chart>
+        <div class="chart__head">
+          <div><p class="chart__title">EBITDA margin, counted savings</p><p class="chart__sub">Larder &amp; Flame Kitchen Co. · $3.6M revenue</p></div>
+          <button class="chart__toggle" type="button" data-chart-toggle aria-pressed="false">View as table</button>
+        </div>
+        <ul class="chart__legend" aria-label="Legend">
+          <li><span class="chart__key" style="--k:var(--viz-total)"></span>Today</li>
+          <li><span class="chart__key" style="--k:var(--viz-accent)"></span>Counted savings</li>
+          <li><span class="chart__key" style="--k:var(--viz-result)"></span>With the plan</li>
+        </ul>
+        <div class="chart__plot">
+          <div class="wf" style="--max:10" role="img" aria-label="Waterfall: EBITDA margin rises from 6.40% today to 7.95% with five counted savings: food cost plus 0.55 points, labor plus 0.40, delivery plus 0.25, card fees plus 0.20, energy plus 0.15.">
+            <div class="wf__grid" aria-hidden="true"><span style="--v:0" data-l="0%"></span><span style="--v:2" data-l="2%"></span><span style="--v:4" data-l="4%"></span><span style="--v:6" data-l="6%"></span><span style="--v:8" data-l="8%"></span><span style="--v:10" data-l="10%"></span></div>
+            <ol class="wf__bars" aria-hidden="true">
+              <li class="wf__bar wf__bar--total" style="--from:0;--to:6.40"><span class="wf__val">6.40%</span><span class="wf__lab" data-short="Now">Today</span></li>
+              <li class="wf__bar" style="--from:6.40;--to:6.95"><span class="wf__val">+0.55<small>$19,800</small></span><span class="wf__lab" data-short="Food">Food cost</span></li>
+              <li class="wf__bar" style="--from:6.95;--to:7.35"><span class="wf__val">+0.40<small>$14,400</small></span><span class="wf__lab" data-short="Labor">Labor</span></li>
+              <li class="wf__bar" style="--from:7.35;--to:7.60"><span class="wf__val">+0.25<small>$9,000</small></span><span class="wf__lab" data-short="Deliv.">Delivery</span></li>
+              <li class="wf__bar" style="--from:7.60;--to:7.80"><span class="wf__val">+0.20<small>$7,200</small></span><span class="wf__lab" data-short="Cards">Card fees</span></li>
+              <li class="wf__bar" style="--from:7.80;--to:7.95"><span class="wf__val">+0.15<small>$5,400</small></span><span class="wf__lab" data-short="Energy">Energy</span></li>
+              <li class="wf__bar wf__bar--result" style="--from:0;--to:7.95"><span class="wf__val">7.95%</span><span class="wf__lab" data-short="Plan">With the plan</span></li>
+            </ol>
+          </div>
+        </div>
+        <div class="chart__table">
+          <table class="chart-table">
+            <caption class="sr-only">EBITDA margin waterfall as a table</caption>
+            <thead><tr><th scope="col">Step</th><th scope="col">Change</th><th scope="col">Counted $ / yr</th><th scope="col">Running margin</th></tr></thead>
+            <tbody>
+              <tr><td>Today</td><td>–</td><td>–</td><td>6.40%</td></tr>
+              <tr><td>Food cost</td><td>+0.55 pts</td><td>$19,800</td><td>6.95%</td></tr>
+              <tr><td>Labor</td><td>+0.40 pts</td><td>$14,400</td><td>7.35%</td></tr>
+              <tr><td>Delivery</td><td>+0.25 pts</td><td>$9,000</td><td>7.60%</td></tr>
+              <tr><td>Card fees</td><td>+0.20 pts</td><td>$7,200</td><td>7.80%</td></tr>
+              <tr><td>Energy</td><td>+0.15 pts</td><td>$5,400</td><td>7.95%</td></tr>
+              <tr><td>With the plan</td><td>+1.55 pts</td><td>$55,800</td><td>7.95%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <figcaption class="chart__note">Counted savings only: half of each identified amount, on $3.6M revenue. If all five land in full: 9.50%.</figcaption>
+      </figure>
+      <article class="worth-side">
+        <div class="tag-row"><span class="tag">Illustrative example</span><span class="tag">Modeled estimate</span></div>
+        <p class="stat__fig mt-6">$55,800<small>a year, counted</small></p>
+        <p class="stat__desc">from $111,600 identified across five fixes, with an owner and a first step for each.</p>
+        <div class="stat__bars">
+          <div class="mbar"><span class="mbar__label">Identified</span><span class="mbar__track"><span class="mbar__fill" style="width:100%"></span></span><span class="mbar__val">$111,600</span></div>
+          <div class="mbar"><span class="mbar__label">Counted (half)</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style="width:50%"></span></span><span class="mbar__val">$55,800</span></div>
+        </div>
+        <p class="math mt-5">$111,600 × 50% = $55,800<br>$230,400 + $55,800 = $286,200 ÷ $3.6M = 7.95%</p>
+        <p class="mt-4"><a class="link-arrow" href="index.html#examples"><span>See the math</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
+      </article>
+    </div>
+  </div>
+</section>
+<!-- ============ FINAL CTA ============ -->
+<section class="section band-navy cta" id="cta" aria-labelledby="cta-title">
+  <div class="wrap">
+    <div class="cta-grid">
+      <div class="cta-grid__copy" data-reveal>
+        <span class="eyebrow">Free AI assessment</span>
+        <h2 class="type-h2" id="cta-title">Find out where AI pays off first in your business.</h2>
+        <p class="type-lead">Thirty minutes with the people who would build your agents. You get a short written plan with your top opportunities, ranked by value. No cost, no obligation.</p>
+        <div class="cta__btns">
+          <a class="btn btn-brass btn-lg" href="#cta">Book your free assessment <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-outline-dark btn-lg" href="index.html#calculator">Estimate your savings first</a>
+        </div>
+        <p class="cta__micro">Prefer email? Write to <a class="link" href="mailto:hello@halyard.example" data-email>hello@halyard.example</a>.</p>
+      </div>
+      <figure class="cta-grid__art" aria-hidden="true" data-reveal>
+        <svg class="sail" viewBox="0 0 460 430">
+          <defs><linearGradient id="sailWash" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D1AE6C" stop-opacity=".10"/><stop offset="1" stop-color="#D1AE6C" stop-opacity="0"/></linearGradient></defs>
+          <path d="M18 392 Q 236 414 450 392" fill="none" stroke="#A9B4C2" stroke-opacity=".22"/>
+          <path d="M60 404 Q 236 420 420 404" fill="none" stroke="#A9B4C2" stroke-opacity=".12"/>
+          <path d="M292 44 Q 214 214 72 356 L 292 356 Z" fill="url(#sailWash)" stroke="#D1AE6C" stroke-opacity=".5"/>
+          <g fill="none" stroke="#D1AE6C" stroke-opacity=".16"><path d="M292 44 L104 356M292 44 L136 356M292 44 L168 356M292 44 L200 356M292 44 L232 356M292 44 L262 356"/></g>
+          <path d="M300 70 L 436 372 L 312 362 Z" fill="none" stroke="#D1AE6C" stroke-opacity=".34"/>
+          <g fill="none" stroke="#D1AE6C" stroke-opacity=".12"><path d="M300 70 L 352 365M300 70 L 394 368"/></g>
+          <path d="M300 22 V 384" stroke="#A9B4C2" stroke-opacity=".5" stroke-width="1.5"/>
+          <path d="M300 356 H 58" stroke="#A9B4C2" stroke-opacity=".4" stroke-width="1.5"/>
+          <path d="M292 44 C 292 30, 296 24, 302 22 C 309 20, 312 26, 312 34 V 318" fill="none" stroke="#E0BF7F" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M306 318 h12" stroke="#E0BF7F" stroke-width="1.6" stroke-linecap="round"/>
+          <g fill="#0E2136" stroke="#E0BF7F" stroke-width="1.3"><circle cx="302" cy="21" r="4"/><circle cx="292" cy="44" r="3.4"/><circle cx="72" cy="356" r="3.4"/><circle cx="292" cy="356" r="3.4"/><circle cx="436" cy="372" r="3"/></g>
+          <g font-family="Geist Mono Variable, ui-monospace, monospace" font-size="11.5" letter-spacing="1.2" fill="#A9B4C2" fill-opacity=".75"><text x="318" y="16">MASTHEAD</text><text x="250" y="40" text-anchor="end">HEAD</text><text x="64" y="378" text-anchor="middle">CLEW</text><text x="276" y="378" text-anchor="end">TACK</text></g>
+          <text data-brand-story x="326" y="190" transform="rotate(90 326 190)" font-family="Geist Mono Variable, ui-monospace, monospace" font-size="11.5" letter-spacing="2.2" fill="#E0BF7F">HALYARD</text>
+        </svg>
+        <figcaption class="brand-def" data-brand-story><b>hal·yard</b> <i>(n.)</i> The line that raises the sail.</figcaption>
+      </figure>
+    </div>
+    <div class="leave-with" data-reveal>
+      <span class="type-label leave-with__label">What you leave with</span>
+      <ol class="leave-with__list">
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><div><b>Your top three opportunities, ranked</b><p>By estimated value and effort, specific to how your business runs.</p></div></li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><div><b>A rough savings estimate</b><p>Labeled as a modeled estimate, with the assumptions shown.</p></div></li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><div><b>A suggested first step</b><p>Yours to keep, whether or not we work together.</p></div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+</main>
+
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top" data-brand-label aria-label="Halyard, back to top"><svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true" style="--mark-accent:#D1AE6C"><use href="#i-mark"/></svg><span class="brand__word" data-brand>Halyard</span></a>
+        <p>Done-for-you AI agents and consulting for small and mid-size businesses.</p>
+        <p class="tagline">AI that earns its keep.</p>
+        <div class="foot-cta"><a class="btn btn-brass btn-sm" href="#cta">Book a free AI assessment <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a><span>30 minutes. No cost, no obligation.</span></div>
+        <p class="foot-contact"><a href="mailto:hello@halyard.example" data-email>hello@halyard.example</a></p>
+      </div>
+      <div class="foot-cols">
+        <div class="footer-col"><h3 class="footer-col__title">Services</h3><ul><li><a href="#services">AI Agents</a></li><li><a href="#services">AI Marketing Director</a></li><li><a href="#services">AI Sales Agent</a></li><li><a href="#services">AI Consulting</a></li></ul></div>
+        <div class="footer-col"><h3 class="footer-col__title">See it work</h3><ul><li><a href="#demos">Demos</a></li><li><a href="#examples">Results and examples</a></li><li><a href="#calculator">Savings calculator</a></li></ul></div>
+        <div class="footer-col"><h3 class="footer-col__title">Company</h3><ul><li><a href="#process">Approach</a></li><li><a href="#security">Security and data</a></li><li><a href="#cta">Contact</a></li></ul></div>
+      </div>
+    </div>
+    <p class="foot-story" data-brand-story>Why “Halyard”? On a sailboat, the halyard is the line that raises the sail. We help raise what your business can do.</p>
+    <div class="footer-legal">
+      <p>© <span data-year>2026</span> <span data-brand>Halyard</span>. All rights reserved.</p>
+      <p style="max-width:70ch">Figures on this site are illustrative examples or modeled estimates, not client results. <a href="#examples" style="text-decoration:underline">See how we estimate</a>. Product names are trademarks of their owners.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const site = window.SITE || { name: 'Halyard', brandStory: true };
+
+  /* Brand from one config value */
+  document.querySelectorAll('[data-brand]').forEach(el => { el.textContent = site.name; });
+  document.querySelectorAll('[data-brand-label]').forEach(el => el.setAttribute('aria-label', el.getAttribute('aria-label').replace('Halyard', site.name)));
+  if (!site.brandStory) document.querySelectorAll('[data-brand-story]').forEach(el => { el.hidden = true; el.style.display = 'none'; });
+  document.querySelectorAll('[data-email]').forEach(el => { el.textContent = site.email; el.href = 'mailto:' + site.email; });
+  const yr = document.querySelector('[data-year]'); if (yr) yr.textContent = new Date().getFullYear();
+
+  /* Header: scrolled state, Services dropdown, mobile menu */
+  const header = document.querySelector('.site-header');
+  const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  document.querySelectorAll('[data-dropdown]').forEach(dd => {
+    const btn = dd.querySelector('button');
+    const set = open => { dd.classList.toggle('is-open', open); btn.setAttribute('aria-expanded', String(open)); };
+    btn.addEventListener('click', () => set(btn.getAttribute('aria-expanded') !== 'true'));
+    document.addEventListener('click', e => { if (!dd.contains(e.target)) set(false); });
+    dd.addEventListener('keydown', e => { if (e.key === 'Escape') { set(false); btn.focus(); } });
+    dd.addEventListener('focusout', e => { if (!dd.contains(e.relatedTarget)) set(false); });
+  });
+  const menuBtn = document.querySelector('.nav-menu-btn');
+  const menu = document.getElementById('mobile-menu');
+  const setMenu = open => {
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+    menu.classList.toggle('is-open', open);
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+    if (open) { const first = menu.querySelector('a'); if (first) first.focus({ preventScroll: true }); }
+  };
+  menuBtn.addEventListener('click', () => setMenu(menuBtn.getAttribute('aria-expanded') !== 'true'));
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.classList.contains('is-open')) { setMenu(false); menuBtn.focus(); } });
+
+  /* Reveal on scroll */
+  const rv = document.querySelectorAll('[data-reveal]');
+  if ('IntersectionObserver' in window && !reduce) {
+    const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('is-visible'); io.unobserve(en.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    rv.forEach(el => io.observe(el));
+  } else rv.forEach(el => el.classList.add('is-visible'));
+
+  /* Chart table view toggle (every chart has a table twin) */
+  document.querySelectorAll('[data-chart]').forEach(ch => {
+    const btn = ch.querySelector('[data-chart-toggle]');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const table = ch.dataset.view !== 'table';
+      ch.dataset.view = table ? 'table' : 'chart';
+      btn.setAttribute('aria-pressed', String(table));
+      btn.textContent = table ? 'View as chart' : 'View as table';
+    });
+  });
+
+  /* Consulting price slot. site.consultingPrice stays null until the founder sets it (content/DECISIONS.md).
+     When set ({ min, max }), our row shows the range on the same axis and the difference against the
+     regional-boutique base ($33,000), the most comparable category. Preview here with ?price=8000-12000. */
+  const q = new URLSearchParams(location.search).get('price');
+  const price = site.consultingPrice || (q && /^\d+-\d+$/.test(q) ? { min: +q.split('-')[0], max: +q.split('-')[1] } : null);
+  const slot = document.querySelector('[data-price-slot]');
+  if (slot && price) {
+    const AXIS = 400000, BASE = 33000;
+    const money = n => '$' + Math.round(n).toLocaleString('en-US');
+    slot.innerHTML = '<span class="cost-ledger__fig"></span><span class="cost-ledger__note" style="color:var(--color-brass-300)"></span><span class="range-bar range-bar--us" aria-hidden="true"><span class="range-bar__fill"></span></span>';
+    slot.querySelector('.cost-ledger__fig').textContent = money(price.min) + ' to ' + money(price.max) + ', fixed';
+    const note = slot.querySelector('.cost-ledger__note');
+    if (price.max < BASE) note.textContent = 'At least ' + money(BASE - price.max) + ' less than a typical regional boutique review (' + money(BASE) + ')';
+    else note.remove();   /* never claim a saving the numbers don't support */
+    const fill = slot.querySelector('.range-bar__fill');
+    fill.style.setProperty('--from', (price.min / AXIS * 100) + '%');
+    fill.style.setProperty('--to', (price.max / AXIS * 100) + '%');
+  }
+})();
+</script>
+</body>
+</html>

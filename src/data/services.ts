@@ -187,7 +187,7 @@ export const services: Service[] = [
     linkLabel: 'Explore the Marketing Director',
     highlights: [
       'Google, Meta and more, tied to real leads and sales',
-      'Experiments with a hypothesis and a stopping rule',
+      'Tests one change at a time and keeps what wins',
       'A plain-English report every week',
     ],
     bullets: [
@@ -289,7 +289,7 @@ export const demos: Demo[] = [
   { id: 'analyst', anchor: 'analyst-agent', label: 'Analyst Agent', line: 'A messy export becomes a clear answer.', service: 'ai-agents', serviceName: 'AI Agents', icon: 'chart-column' },
   { id: 'assistant', anchor: 'executive-assistant', label: 'Executive Assistant', line: 'An overflowing inbox becomes a short list.', service: 'ai-agents', serviceName: 'AI Agents', icon: 'inbox' },
   { id: 'marketing', anchor: 'marketing-director', label: 'Marketing Director', line: 'An ad audit becomes a running test plan.', service: 'marketing', serviceName: 'AI Marketing Director', icon: 'target' },
-  { id: 'sales', anchor: 'sales-agent', label: 'Sales Agent', line: 'One prospect, researched and written to properly.', service: 'sales', serviceName: 'AI Sales Agent', icon: 'send' },
+  { id: 'sales', anchor: 'sales-agent', label: 'Sales Agent', line: 'A cold prospect becomes a personal email.', service: 'sales', serviceName: 'AI Sales Agent', icon: 'send' },
   { id: 'consulting', anchor: 'consulting', label: 'Consulting', line: 'A P&L becomes a ranked plan.', service: 'consulting', serviceName: 'AI Consulting', icon: 'trending-up' },
 ];
 

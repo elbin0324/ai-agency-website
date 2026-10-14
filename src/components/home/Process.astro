@@ -1,0 +1,89 @@
+---
+// OWNER: home-story
+// How it works (COPY.md §2.8, DESIGN.md §6.21): four steps on the rising halyard line, each with a
+// duration and what you get. A three-fact ledger underneath answers the questions owners ask next
+// (CRITIQUE.md: time to go live, staff time, when the benefit arrives). Durations: COPY.md Appendix A #6;
+// staff time: Appendix A #7; full benefit: CRITIQUE.md edit 14.
+// Keep id="process": it is the anchor from COPY.md and may be linked from other pages.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Steps from '@/components/blocks/Steps.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { homeNum } from './story/sections';
+import { site } from '@/config/site';
+import { url } from '@/lib/url';
+
+const steps = [
+  {
+    title: 'Assess',
+    body: 'Free. We learn how your business runs and where the hours go, then rank your best opportunities by value.',
+    time: 'A 30-minute call',
+    get: 'Your top opportunities, in writing, within about 3 business days',
+  },
+  {
+    title: 'Design',
+    body: 'We map the workflow with the people who do it today and agree what the agent may do alone and what needs your OK.',
+    time: 'Typically 1 to 2 weeks',
+    get: 'A written plan with guardrails, a baseline and a success measure',
+  },
+  {
+    title: 'Build and pilot',
+    body: 'We connect your tools and test on your past work. Then the agent goes live, and your team approves its work.',
+    time: 'Typically 3 to 6 weeks',
+    get: 'A pilot report with a clear call: go, adjust or stop',
+  },
+  {
+    title: 'Run and improve',
+    body: 'We monitor, tune and fix as part of the work. Agents take on more only when you approve it.',
+    time: 'Ongoing, with a monthly review',
+    get: 'A monthly report in hours and dollars, against the baseline',
+  },
+];
+
+const facts = [
+  { k: 'First agent live', v: 'Typically 2 to 4 weeks after kickoff' },
+  { k: 'Your team’s time', v: 'A couple of hours in week one, then a short weekly check-in' },
+  { k: 'Full benefit', v: 'Usually 2 to 3 months, as routine work runs without review' },
+];
+---
+<Section id="process" tightTop aria-labelledby="process-title">
+  <SectionHeader
+    num={homeNum.process}
+    eyebrow="How it works"
+    subtitle="The same four steps every time. We prove value on one job, with your team in control, before anything expands."
+    titleId="process-title"
+  ><span slot="title" data-motion="split">Start small. Prove it. Then scale.</span></SectionHeader>
+
+  <div data-motion="draw" data-draw-target=".steps__rope line" data-start="top 85%" data-end="top 45%"><Steps steps={steps} label={`How an engagement with ${site.name} works`} /></div>
+
+  <div class="proc-foot" data-reveal>
+    <dl class="proc-facts">
+      {facts.map((f) => (
+        <div>
+          <dt class="type-label">{f.k}</dt>
+          <dd>{f.v}</dd>
+        </div>
+      ))}
+    </dl>
+    <div class="proc-foot__row">
+      <p>Timelines depend on scope and on how quickly we can get access to your tools.</p>
+      <a class="link-arrow" href={url(site.ctas.approach.href)}><span>See our full approach</span><Icon name="arrow-right" /></a>
+    </div>
+  </div>
+</Section>
+
+<style>
+  .proc-foot { margin-top: clamp(40px, 5vw, 64px); }
+  .proc-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line); }
+  .proc-facts > div { padding: 20px 24px 22px; border-left: 1px solid var(--line); }
+  .proc-facts > div:first-child { padding-left: 0; border-left: 0; }
+  .proc-facts dd { margin-top: 8px; font-size: 1rem; font-weight: 550; line-height: 1.45; color: var(--fg); text-wrap: pretty; }
+  .proc-foot__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; margin-top: 14px; }
+  .proc-foot__row p { font-size: 0.8125rem; color: var(--fg-3); }
+  @media (width < 48rem) {
+    .proc-facts { grid-template-columns: minmax(0, 1fr); }
+    .proc-facts > div, .proc-facts > div:first-child { padding: 16px 0 18px; border-left: 0; }
+    .proc-facts > div + div { border-top: 1px solid var(--line); }
+  }
+  @media (width < 40rem) { .proc-foot__row { flex-direction: column; align-items: flex-start; } }
+</style>

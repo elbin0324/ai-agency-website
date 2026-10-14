@@ -1,0 +1,85 @@
+---
+// OWNER: pages-misc
+// /approach/ hero art: a sample one-page agent spec, the deliverable of "Design" (COPY.md §10.3).
+// A static, decorative window (DESIGN.md §6.10: role="img" with a one-sentence summary), tagged
+// "Illustrative". No business is named and no outcome figure is shown, so no provenance tag is needed
+// beyond the window badge. The approval point is sky (`user-check`), per DESIGN.md §1.2.
+import Icon from '@/components/ui/Icon.astro';
+
+const rows = [
+  { k: 'Its job', v: 'Answers routine questions from your approved answers and price book, books jobs, takes after-hours messages' },
+  { k: 'Access', v: 'Calendar (book only), price book (read-only), CRM (add leads)' },
+  { k: 'Always to a person', v: 'Complaints, refunds, safety issues and anything outside the approved answers' },
+  { k: 'Baseline', v: 'Two weeks of today’s response times, logged before launch' },
+  { k: 'Success measure', v: 'After-hours questions answered in minutes, not the next morning' },
+];
+---
+<figure class="spec-fig">
+  <div
+    class="app-window spec-win"
+    role="img"
+    aria-label="Illustrative one-page agent spec for a Customer Agent: its job, the access it gets, what always goes to a person, the baseline, the success measure, and an approval level where a person okays its work."
+  >
+    <div class="aw-bar">
+      <span class="aw-dots"><i></i><i></i><i></i></span>
+      <span class="aw-crumb"><b>Agent spec</b><span class="spec-win__view"><span class="aw-crumb__sep">/</span> Customer Agent</span></span>
+      <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+    </div>
+    <div class="spec-win__body">
+      <div class="aw-doc spec-doc">
+        <div class="spec-doc__head">
+          <span class="icon-tile icon-tile--sm"><Icon name="message-square" size={18} /></span>
+          <div class="spec-doc__name">
+            <p class="spec-doc__title">Customer Agent</p>
+            <p class="spec-doc__sub">Website chat and text · version 1</p>
+          </div>
+        </div>
+        <dl class="spec-doc__rows">
+          {rows.map((r) => (
+            <div class="spec-doc__row">
+              <dt>{r.k}</dt>
+              <dd>{r.v}</dd>
+            </div>
+          ))}
+          <div class="spec-doc__row">
+            <dt>Autonomy</dt>
+            <dd class="spec-doc__chips">
+              <span class="chip chip-attention"><Icon name="user-check" />Level 2: your OK on each booking</span>
+            </dd>
+          </div>
+        </dl>
+        <div class="spec-doc__foot">
+          <span class="spec-doc__sign"><Icon name="user-check" />Signed off by you before the build</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption class="fig-caption spec-fig__cap">
+    <b>FIG. 1</b> Illustrative one-page agent spec. You get one for every agent, before anything is built.
+  </figcaption>
+</figure>
+
+<style>
+  .spec-fig { margin: 0; }
+  .spec-win__body { padding: 18px; background: var(--color-navy-850); }
+  .spec-doc { overflow: hidden; }
+  .spec-doc__head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--color-rule); }
+  .spec-doc__title { font-size: 0.9375rem; font-weight: 600; line-height: 1.3; color: var(--color-ink); }
+  .spec-doc__sub { font-size: 0.75rem; line-height: 1.4; color: var(--color-ink-3); }
+  .spec-doc__rows { margin: 0; }
+  .spec-doc__row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; padding: 9px 16px; border-bottom: 1px solid var(--color-rule); }
+  .spec-doc__row dt { padding-top: 2px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.4; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-ink-3); }
+  .spec-doc__row dd { margin: 0; font-size: 0.8125rem; line-height: 1.5; color: var(--color-ink); }
+  .spec-doc__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .spec-doc__foot { display: flex; align-items: center; justify-content: flex-end; padding: 10px 16px; background: var(--color-paper-sunken); }
+  .spec-doc__sign { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 550; color: var(--color-attention); }
+  .spec-doc__sign :global(.icon) { width: 14px; height: 14px; }
+  .spec-fig__cap { margin-top: 14px; }
+
+  .spec-win__view { display: contents; }
+  @media (width < 40rem) {
+    .spec-win__view { display: none; }
+    .spec-win__body { padding: 12px; }
+    .spec-doc__row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  }
+</style>

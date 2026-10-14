@@ -1,0 +1,85 @@
+---
+// OWNER: pages-misc
+// /approach/ §10.5 "Security and data handling" (id "security": the footer and other pages link here).
+// The guardrails grid (DESIGN.md §6.17). Practices only, never certifications. Applies CRITIQUE.md
+// edits 2 (same-business-day incident notice), 4 (who sees the data, the provider list, "SOC 2: not yet")
+// and 15 (plain-language titles, technical term kept in the body for IT reviewers).
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import Callout from '@/components/blocks/Callout.astro';
+import Button from '@/components/ui/Button.astro';
+import type { IconName } from '@/components/ui/icons';
+import { site } from '@/config/site';
+
+const items: { icon: IconName; title: string; body: string }[] = [
+  {
+    icon: 'key-round',
+    title: 'Only the keys each job needs',
+    body: 'Each agent gets its own credentials and the minimum access its job requires (least privilege), read-only wherever possible. We review access regularly and remove it when it’s no longer needed.',
+  },
+  {
+    icon: 'database',
+    title: 'Your data doesn’t train AI',
+    body: 'We build on business-grade AI services whose terms exclude training on your data. Before anything connects, you get a list of every outside service that will touch it.',
+  },
+  {
+    icon: 'users',
+    title: 'A short list of people',
+    body: 'Only the people building and running your agents can see your data, under a signed confidentiality agreement. We review agent work inside your systems, not in copies.',
+  },
+  {
+    icon: 'sliders-horizontal',
+    title: 'Only the data a job needs',
+    body: 'We connect the minimum a workflow requires, avoid copying data out of your systems and don’t keep what we don’t need.',
+  },
+  {
+    icon: 'shield-check',
+    title: 'Rules for sensitive data',
+    body: 'Payment details, health information and personal records are masked, excluded or kept in the systems built for them. We agree the rules with whoever handles compliance for you before anything connects.',
+  },
+  {
+    icon: 'lock',
+    title: 'Passwords in a vault',
+    body: 'Passwords and keys are kept in a secure vault and never shared over email or chat.',
+  },
+  {
+    icon: 'list',
+    title: 'A record of everything',
+    body: 'Every agent action is logged: what happened, when and why. The audit log is yours to read at any time.',
+  },
+  {
+    icon: 'circle-alert',
+    title: 'Told the same day',
+    body: 'If something goes wrong, we pause the affected agent, tell you the same business day, fix the cause and give you a written account of what changed.',
+  },
+  {
+    icon: 'file-text',
+    title: 'A clean exit',
+    body: 'When an engagement ends, we remove our access, hand over the documentation and delete working copies of your data on request.',
+  },
+];
+
+const questionnaire = `mailto:${site.email}?subject=${encodeURIComponent('Security questionnaire')}`;
+---
+<Section id="security" aria-labelledby="security-title">
+  <SectionHeader
+    num="03"
+    eyebrow="Security and data"
+    subtitle="The practices we follow on every engagement, in plain words. Send your security questionnaire and we’ll answer it in writing."
+    titleId="security-title"
+  ><span slot="title" data-motion="split">How we handle access to your business.</span></SectionHeader>
+  <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="guard" cols={3} items={items} label="Security and data practices" /></div>
+  <div class="sec-foot" data-reveal>
+    <Callout variant="disclaimer" title="About certifications.">
+      We don’t have a SOC 2 report yet, and we won’t imply otherwise. What you see above are the practices we follow, not certifications or guarantees. In a regulated field, we scope data handling with whoever handles compliance for you before anything connects.
+    </Callout>
+    <Button href={questionnaire} variant="secondary" icon="mail">Send us your security questionnaire</Button>
+  </div>
+</Section>
+
+<style>
+  .sec-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 32px; margin-top: 32px; }
+  .sec-foot > :global(.callout) { flex: 1 1 34rem; max-width: 52rem; }
+  @media (width < 40rem) { .sec-foot > :global(.btn) { width: 100%; } }
+</style>

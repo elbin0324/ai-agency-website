@@ -1,0 +1,277 @@
+---
+// OWNER: results
+// How we estimate (/results/#methodology; every provenance tag on the site links here). Rows of an
+// editorial ledger, label on 3 columns and content on 9:
+//   Our rules · How we model (calculator, worked examples, scenarios) · Key assumptions with source ids ·
+//   Sources (only the ids roi.ts, worth.ts, scenarios.ts and consulting.ts use, from benchmarks.ts) ·
+//   The fine print (roiDisclaimer).
+// Renders no <section>: the page supplies it and the id.
+import Icon from '@/components/ui/Icon.astro';
+import { roiAssumptions, roiDisclaimer } from '@/data/roi';
+import { scenarios } from '@/data/scenarios';
+import { number } from '@/lib/format';
+import { url } from '@/lib/url';
+import { K } from './roi-view';
+import { sourceGroups, sourceHref } from './sources';
+
+const groups = sourceGroups();
+const total = groups.reduce((n, g) => n + g.items.length, 0);
+const smallest = Math.min(...scenarios.map((s) => s.employees));
+const largest = Math.max(...scenarios.map((s) => s.employees));
+
+const rules = [
+  { title: 'Conservative by default.', body: 'When an assumption could go either way, we take the one that makes the savings smaller.' },
+  { title: 'Specific tasks, not whole jobs.', body: 'Agents take on defined workflows, like routine replies or data entry, and people keep the judgment calls. Time spent reviewing their work comes off first.' },
+  { title: 'Fully loaded cost.', body: 'Staff time is valued at the median U.S. wage for the role plus payroll taxes and benefits, from BLS data. Nothing is added for office space or overhead.' },
+  { title: 'Hours aren’t dollars until they are.', body: 'Time back is capacity. The calculator and the worked examples value it at what it costs you; the industry scenarios count half, because not every freed hour becomes paid work.' },
+  { title: 'Gross profit, not revenue.', body: 'Extra jobs, patients or orders count only at their margin, never at their full price.' },
+  { title: 'Before our fees.', body: 'Estimates don’t subtract our fees, because fees depend on scope. Your proposal shows net savings and payback.' },
+];
+
+// The calculator's constants come straight from roiAssumptions; the scenario and example rules mirror
+// the documented rules at the top of src/data/scenarios.ts and src/data/worth.ts.
+const fmtValue = (value: number, unit: string) =>
+  unit.startsWith('%') ? `${number(value)}%${unit.slice(1)}` : unit.startsWith('$') ? `$${number(value)}${unit.slice(1)}` : `${number(value)} ${unit}`;
+const calculatorRows = roiAssumptions.map((a) => ({ label: a.label, value: [fmtValue(a.value, a.unit)], sources: a.sources }));
+const modelRows = [
+  { label: 'Loaded cost: BLS median wage for the role × payroll taxes and benefits (scenarios and worked examples)', value: ['× 1.35 for 5–50 staff', '× 1.40 for 50–500 staff', '× 1.30 for sales roles'], sources: ['lab-01', 'lab-06', 'lab-07'] },
+  { label: 'Conversations an AI agent fully resolves without staff (scenarios)', value: ['35% of chats, emails and texts', '20% of phone calls'], sources: ['cx-09', 'cx-10', 'cx-16'] },
+  { label: 'Share of freed hours counted as value (scenarios)', value: ['50% of loaded cost'], sources: ['ai-08', 'ai-35'] },
+];
+const host = (href: string) => { try { return new URL(href).hostname.replace(/^www\./, ''); } catch { return 'source'; } };
+---
+<div class="method">
+  <!-- 1. Rules -->
+  <div class="method-row" data-reveal>
+    <div class="method-row__label"><p class="type-label">Our rules</p></div>
+    <ol class="method-rules" role="list">
+      {rules.map((r, i) => (
+        <li class="method-rule">
+          <span class="method-rule__n">{String(i + 1).padStart(2, '0')}</span>
+          <div><h3 class="method-rule__t">{r.title}</h3><p class="method-rule__b">{r.body}</p></div>
+        </li>
+      ))}
+    </ol>
+  </div>
+
+  <!-- 2. How we model -->
+  <div class="method-row" data-reveal>
+    <div class="method-row__label"><p class="type-label">How we model</p></div>
+    <div class="method-models">
+      <div class="method-model">
+        <div class="method-model__text"><h3 class="type-h4">The savings calculator</h3>
+        <p>Counts two kinds of work: repetitive desk tasks handed to agents, and routine customer inquiries an agent resolves on its own. It values only the time returned, at the loaded hourly cost you enter.</p></div>
+        <p class="math method-model__math">
+          <span><b>Desk hours</b> = team × hours a week × share × {100 - K.review}% × {K.weeks} ÷ 12</span>
+          <span><b>Inquiry hours</b> = inquiries × {K.minutes} min × {K.resolved}% ÷ 60</span>
+          <span><b>Value a year</b> = hours back × 12 × hourly cost</span>
+          <span><b>Capacity</b> = hours back × 12 ÷ {number(K.fteHours)}</span>
+        </p>
+      </div>
+      <div class="method-model">
+        <div class="method-model__text"><h3 class="type-h4">Worked examples, one per service</h3>
+        <p>A fictional business for each service. Task time savings use base rates from published studies, already net of review. Work an agent completes on its own, like a customer conversation, has 20% set aside for review and handoffs.</p></div>
+        <p class="math method-model__math">
+          <span><b>Monthly value</b> = hours back × loaded cost + gross profit or savings</span>
+          <span><b>Annual value</b> = monthly value × 12, at 4 working weeks a month</span>
+        </p>
+      </div>
+      <div class="method-model">
+        <div class="method-model__text"><h3 class="type-h4">Industry scenarios</h3>
+        <p>Six fictional businesses from {smallest} to {largest} staff, with the agents each would use. Freed hours count at half their cost, and new business only at its gross margin.</p></div>
+        <p class="math method-model__math">
+          <span><b>Annual value</b> = hours back × loaded cost × 50% + gross profit + cost savings</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Key assumptions -->
+  <div class="method-row" data-reveal>
+    <div class="method-row__label">
+      <p class="type-label">Key assumptions</p>
+      <p class="method-row__note">Every value is the base case from the evidence, or the conservative one when a claim leads a page.</p>
+    </div>
+    <div class="method-table-wrap">
+      <table class="method-table">
+        <caption class="sr-only">Key assumptions, their values and sources</caption>
+        <thead><tr><th scope="col">Assumption</th><th scope="col">Value</th><th scope="col">Sources</th></tr></thead>
+        <tbody>
+          <tr class="method-table__group"><th scope="rowgroup" colspan="3">Savings calculator</th></tr>
+          {calculatorRows.map((r) => (
+            <tr>
+              <th scope="row">{r.label}</th>
+              <td class="method-table__v">{r.value.map((v) => <span>{v}</span>)}</td>
+              <td class="method-table__s">{r.sources.map((id, i) => <Fragment>{i > 0 && ' '}<a href={sourceHref(id)}>{id}</a></Fragment>)}</td>
+            </tr>
+          ))}
+          <tr class="method-table__group"><th scope="rowgroup" colspan="3">Scenarios and worked examples</th></tr>
+          {modelRows.map((r) => (
+            <tr>
+              <th scope="row">{r.label}</th>
+              <td class="method-table__v">{r.value.map((v) => <span>{v}</span>)}</td>
+              <td class="method-table__s">{r.sources.map((id, i) => <Fragment>{i > 0 && ' '}<a href={sourceHref(id)}>{id}</a></Fragment>)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="method-table__foot">Each scenario and worked example lists its own assumptions and source ids next to its math.</p>
+    </div>
+  </div>
+
+  <!-- 4. Sources -->
+  <div class="method-row" data-reveal>
+    <div class="method-row__label">
+      <p class="type-label">Sources</p>
+      <p class="method-row__note">Outside statistics appear only when we can cite them. Otherwise they stay out.</p>
+    </div>
+    <details class="method-sources" data-sources>
+      <summary class="method-sources__summary">
+        <span class="method-sources__count">{total}</span>
+        <span class="method-sources__text">
+          <b>Every source behind our numbers</b>
+          <span>{groups.map((g) => `${g.name} (${g.items.length})`).join(' · ')}</span>
+        </span>
+        <span class="method-sources__btn"><span data-sources-label>Show all</span><Icon name="chevron-down" size={16} /></span>
+      </summary>
+      <div class="method-sources__body">
+        {groups.map((g) => (
+          <div class="method-sources__group">
+            <h3 class="method-sources__h">{g.name}</h3>
+            <ol class="method-sources__list" role="list">
+              {g.items.map((s) => (
+                <li id={`src-${s.id}`} class="method-source">
+                  <span class="method-source__id">{s.id}</span>
+                  <span class="method-source__c">
+                    {s.citation}{' '}
+                    <a class="method-source__link" href={s.url} target="_blank" rel="noopener">{host(s.url)}<Icon name="arrow-up-right" size={12} /><span class="sr-only"> (opens in a new tab)</span></a>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
+    </details>
+  </div>
+
+  <!-- 5. Fine print -->
+  <div class="method-row" data-reveal>
+    <div class="method-row__label"><p class="type-label">The fine print</p></div>
+    <div class="method-fine">
+      <p>{roiDisclaimer}</p>
+      <p class="method-fine__ask">
+        Questions about a number? Ask us and we’ll walk you through it.
+        <a class="link-arrow" href={url('/contact/')}><span>Ask about the math</span><Icon name="arrow-right" /></a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .method { display: grid; }
+  .method-row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px 24px; padding: 32px 0 36px; border-top: 1px solid var(--line-strong); }
+  .method-row:last-child { padding-bottom: 0; }
+  .method-row__label { grid-column: 1 / span 3; }
+  .method-row__label .type-label { color: var(--accent); }
+  .method-row__note { margin-top: 12px; max-width: 28ch; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .method-row > :not(.method-row__label) { grid-column: 4 / span 9; min-width: 0; }
+
+  .method-rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; }
+  .method-rule { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); gap: 4px; padding: 16px 0 18px; border-bottom: 1px solid var(--line); }
+  .method-rule:nth-last-child(-n + 2) { border-bottom: 0; }
+  .method-rule__n { padding-top: 3px; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--accent); }
+  .method-rule__t { font-size: 1.0625rem; font-weight: 600; line-height: 1.35; color: var(--fg); }
+  .method-rule__b { margin-top: 6px; font-size: 0.9375rem; line-height: 1.6; color: var(--fg-2); }
+
+  .method-models { display: grid; }
+  .method-model { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 4fr); gap: 12px 40px; padding: 18px 0 20px; border-bottom: 1px solid var(--line); }
+  .method-model:first-child { padding-top: 2px; }
+  .method-model:last-child { border-bottom: 0; padding-bottom: 0; }
+  .method-model__text p { margin-top: 8px; font-size: 0.9375rem; line-height: 1.6; color: var(--fg-2); }
+  .method-model__math { display: grid; align-content: start; gap: 6px; padding: 14px 16px; border-radius: var(--radius-tile); background: var(--color-paper-raised); box-shadow: inset 0 0 0 1px var(--line); }
+  .method-model__math > span { display: block; padding-left: 1.5em; text-indent: -1.5em; }
+
+  .method-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; line-height: 1.5; }
+  .method-table thead th { padding: 0 16px 10px 0; text-align: left; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); border-bottom: 1px solid var(--line-strong); }
+  .method-table tbody th, .method-table td { padding: 11px 16px 11px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  .method-table tbody th { width: 52%; font-weight: 400; color: var(--fg-2); }
+  .method-table__v { width: 28%; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .method-table__v > span { display: block; }
+  .method-table__s { font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.7; color: var(--fg-3); }
+  .method-table__s a, .method-sources a:not(.method-source__link) { white-space: nowrap; color: var(--fg-2); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  .method-table__s a:hover { color: var(--fg); text-decoration-color: currentColor; }
+  .method-table .method-table__group th { padding-top: 20px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg); border-bottom-color: var(--line-strong); }
+  .method-table tbody tr:first-child.method-table__group th { padding-top: 14px; }
+  .method-table__foot { margin-top: 14px; font-size: 0.8125rem; color: var(--fg-3); }
+
+  .method-sources { border-radius: var(--radius-card); background: var(--color-paper-raised); box-shadow: inset 0 0 0 1px var(--line); }
+  .method-sources__summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 18px 20px; list-style: none; cursor: pointer; border-radius: var(--radius-card); }
+  .method-sources__summary::-webkit-details-marker { display: none; }
+  .method-sources__count { font-family: var(--font-serif); font-size: var(--text-figure-sm); font-weight: 340; line-height: 1; letter-spacing: -0.02em; color: var(--fg); font-variant-numeric: lining-nums proportional-nums; }
+  .method-sources__text b { display: block; font-size: 0.9375rem; font-weight: 600; color: var(--fg); }
+  .method-sources__text > span { display: block; margin-top: 4px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .method-sources__btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: var(--radius-control); font-size: 0.875rem; font-weight: 550; color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-strong); transition: box-shadow 0.2s; }
+  .method-sources__summary:hover .method-sources__btn { box-shadow: inset 0 0 0 1px var(--color-ink-2); }
+  .method-sources__btn :global(.icon) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
+  .method-sources[open] .method-sources__btn :global(.icon) { transform: rotate(180deg); }
+  .method-sources__body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 40px; padding: 8px 20px 24px; border-top: 1px solid var(--line); }
+  .method-sources__group { padding-top: 16px; }
+  .method-sources__h { padding-bottom: 8px; border-bottom: 1px solid var(--line-strong); font-size: 0.875rem; font-weight: 600; color: var(--fg); }
+  .method-source { display: grid; grid-template-columns: 4.25rem minmax(0, 1fr); gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.8125rem; line-height: 1.5; color: var(--fg-2); scroll-margin-top: calc(var(--header-h) + 24px); transition: background-color 0.6s; }
+  .method-source:target { background: rgb(184 144 74 / 0.12); }
+  .method-source__id { font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.75; color: var(--accent); }
+  .method-source__c { overflow-wrap: anywhere; }
+  .method-source__link { display: inline-flex; align-items: center; gap: 2px; color: var(--fg); font-weight: 500; text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; overflow-wrap: anywhere; }
+  .method-source__link:hover { text-decoration-color: currentColor; }
+
+  .method-fine { display: grid; gap: 16px; max-width: 72ch; font-size: 0.9375rem; line-height: 1.65; color: var(--fg-2); }
+  .method-fine__ask { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; color: var(--fg); font-weight: 500; }
+
+  @media (width < 64rem) {
+    .method-row__label, .method-row > :not(.method-row__label) { grid-column: 1 / -1; }
+    .method-row__note { max-width: 60ch; }
+    .method-model { grid-template-columns: minmax(0, 1fr); }
+    .method-sources__body { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (width < 48rem) {
+    .method-rules { grid-template-columns: minmax(0, 1fr); }
+    .method-rule:nth-last-child(2) { border-bottom: 1px solid var(--line); }
+    .method-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .method-table, .method-table tbody, .method-table tr { display: block; }
+    .method-table tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .method-table tbody th, .method-table td { display: block; width: auto; padding: 0; border: 0; }
+    .method-table__v { margin-top: 4px; }
+    .method-table__s { margin-top: 2px; }
+    .method-table .method-table__group { padding: 18px 0 8px; border-bottom-color: var(--line-strong); }
+    .method-table .method-table__group th { padding: 0; }
+    .method-sources__summary { grid-template-columns: auto minmax(0, 1fr); }
+    .method-sources__btn { grid-column: 1 / -1; justify-self: start; }
+  }
+</style>
+
+<script>
+  // Source links (#src-…) anywhere on the page open the list first, so the jump lands on a visible row.
+  function initSources() {
+    const details = document.querySelector<HTMLDetailsElement>('[data-sources]');
+    if (!details) return;
+    const label = details.querySelector('[data-sources-label]');
+    const sync = () => { if (label) label.textContent = details.open ? 'Hide' : 'Show all'; };
+    details.addEventListener('toggle', sync);
+    const openFor = (hash: string) => {
+      if (!/^#src-[\w-]+$/.test(hash)) return;
+      if (!details.open) details.open = true;
+    };
+    document.addEventListener('click', (e) => {
+      const a = (e.target as Element | null)?.closest?.('a[href^="#src-"]');
+      if (a) openFor(a.getAttribute('href') ?? '');
+    });
+    window.addEventListener('hashchange', () => openFor(window.location.hash));
+    if (window.location.hash) {
+      openFor(window.location.hash);
+      if (details.open) document.querySelector(window.location.hash)?.scrollIntoView({ block: 'start' });
+    }
+    sync();
+  }
+  initSources();
+</script>

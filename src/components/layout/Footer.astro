@@ -1,13 +1,16 @@
 ---
 // Site footer (DESIGN.md §6.15; markup and .foot-* rules ported from design-lab/reference/index.html).
 // OWNER: foundation (layout). Words come from site.footer (COPY.md §1.2); the brand name, email,
-// phone and founder name come from site config and render only when set.
+// phone and founder name come from site config and render only when set (the email only once
+// emailReady: never the example.com placeholder). The assessment CTA is an outline button, because the
+// brass CTA belongs to the navy band above it (DESIGN.md §2.3).
 import Logo from '@/components/ui/Logo.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { site } from '@/config/site';
+import { site, emailReady } from '@/config/site';
 import { url } from '@/lib/url';
 
 const { footer } = site;
+const reach = emailReady || !!site.phone;
 const year = new Date().getFullYear();
 const brandStory = site.brandStoryLine.replace(/"([^"]+)"/g, '“$1”'); // typographic quotes
 ---
@@ -19,16 +22,19 @@ const brandStory = site.brandStoryLine.replace(/"([^"]+)"/g, '“$1”'); // typ
         <p>{site.brandLine}</p>
         <p class="tagline">{site.tagline}</p>
         <div class="foot-cta">
-          <a class="btn btn-brass btn-sm" href={url(site.cta.href)}>
+          <a class="btn btn-outline-dark btn-sm" href={url(site.cta.href)}>
             <span>{site.cta.label}</span><Icon name="arrow-right" class="btn__icon btn__icon--arrow" />
           </a>
           <span>{footer.ctaMicrocopy}</span>
         </div>
-        <p class="foot-contact">
-          {footer.contactLine} <a class="foot-link" href={`mailto:${site.email}`}>{site.email}</a>
-          {site.phone && <><br /><a class="foot-link" href={`tel:${site.phone.replace(/[^\d+]/g, '')}`}>{site.phone}</a></>}
-          {site.founderName && <><br />You'll work with {site.founderName}.</>}
-        </p>
+        {(reach || site.founderName) && (
+          <p class="foot-contact">
+            {reach && <>{footer.contactLine} </>}
+            {emailReady && <a class="foot-link" href={`mailto:${site.email}`}>{site.email}</a>}
+            {site.phone && <>{emailReady && <br />}<a class="foot-link" href={`tel:${site.phone.replace(/[^\d+]/g, '')}`}>{site.phone}</a></>}
+            {site.founderName && <>{reach && <br />}You'll work with {site.founderName}.</>}
+          </p>
+        )}
       </div>
       <nav class="foot-cols" aria-label="Footer">
         {footer.columns.map((col) => (

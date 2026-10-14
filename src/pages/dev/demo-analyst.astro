@@ -1,0 +1,21 @@
+---
+// Preview page for the Analyst Agent demo (noindex; /dev/ is kept out of the sitemap). OWNER: demo-analyst.
+// The demo on a sunken band, the way /demos/ and /services/ai-agents/ show it.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import AnalystDemo from '@/components/demos/AnalystDemo.astro';
+---
+<BaseLayout title="Analyst Agent demo" noindex>
+  <Section id="analyst-agent" tone="sunken" aria-labelledby="analyst-agent-title">
+    <SectionHeader
+      num="02"
+      eyebrow="AI Agents · Analyst Agent"
+      title="A messy export becomes a clear answer."
+      subtitle="A distributor’s Q3 sales export is a mess, and the controller wants to know why margin slipped. Every fix is logged, every formula is real, and the answer comes in plain English."
+      titleId="analyst-agent-title"
+      reveal={false}
+    />
+    <AnalystDemo />
+  </Section>
+</BaseLayout>

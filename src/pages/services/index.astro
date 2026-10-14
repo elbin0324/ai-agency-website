@@ -1,0 +1,43 @@
+---
+// OWNER: services-a
+// Services overview (content/COPY.md §3, tightened; content/CRITIQUE.md applied: "Better together"
+// becomes a diagram of how every service runs, with no claim that services share what they learn).
+// Order: hero (with "Where to start") · 01 the four services · 02 how they work together (diagram +
+// included with every service) · 03 AI Consulting compared · closing CTA.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import WhereToStart from '@/components/services/overview/WhereToStart.astro';
+import ServiceCards from '@/components/services/overview/ServiceCards.astro';
+import Together from '@/components/services/overview/Together.astro';
+import ConsultingTeaser from '@/components/services/overview/ConsultingTeaser.astro';
+import { site } from '@/config/site';
+
+const title = 'Services';
+const description =
+  'AI Agents, an AI Marketing Director, an AI Sales Agent and AI Consulting. Designed, built, run and measured for you, inside the tools you already use.';
+---
+<BaseLayout title={title} description={description}>
+  <PageHero
+    crumbs={[{ label: 'Services' }]}
+    eyebrow="Services"
+    title="Start with your *biggest bottleneck*."
+    subtitle="Four services that work alone or together. We design, build, run and measure each one for you, inside the tools you already use."
+    secondary={{ label: 'Watch the demos', href: '/demos/', icon: 'play' }}
+    micro="Not sure which fits? The free assessment tells you, in writing."
+  >
+    <WhereToStart slot="art" />
+  </PageHero>
+
+  <ServiceCards />
+  <Together />
+  <ConsultingTeaser />
+
+  <CtaBand
+    eyebrow="Free AI assessment"
+    title="Not sure where to start? That’s the point of the call."
+    subtitle="In 30 minutes we’ll look at where your team’s time goes and tell you which service would pay off first, and why."
+    secondary={site.ctas.calculator}
+    micro="No cost, no obligation. You get a written summary either way."
+  />
+</BaseLayout>

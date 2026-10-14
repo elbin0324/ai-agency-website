@@ -30,6 +30,9 @@ interface Props {
   steps: StepMeta[];
   /** Centered window title ("{site.name} Sales Agent · Parkline IT"). */
   title?: string;
+  /** Title under 768px, where the full one would be cut mid-word ("Website chat"). Default: the shortest
+   *  " · " part of `title` ("Halyard Sales Agent · Parkline IT" -> "Parkline IT"). */
+  titleShort?: string;
   /** Breadcrumb style instead of a title: <b>{app}</b> / {view}. */
   app?: string;
   view?: string;
@@ -73,6 +76,7 @@ const {
   demo,
   steps,
   title,
+  titleShort,
   app,
   view,
   address,
@@ -113,6 +117,7 @@ const sceneStyle = [
   cols ? `--aw-cols:${cols}` : '',
 ].filter(Boolean).join(';');
 const name = label ?? title ?? app ?? demo;
+const shortTitle = titleShort ?? title?.split(' · ').reduce((a, b) => (b.length < a.length ? b : a));
 const lines = (t?: string | string[]) => (t ? (Array.isArray(t) ? t : [t]) : []);
 ---
 <div class:list={['aw-demo', className]} data-demo={demo} data-autoplay={autoplay ? undefined : 'off'}>
@@ -121,7 +126,13 @@ const lines = (t?: string | string[]) => (t ? (Array.isArray(t) ? t : [t]) : [])
       <span class="aw-dots" aria-hidden="true"><i></i><i></i><i></i></span>
       {app ? (
         <span class="aw-crumb"><b>{app}</b>{view && <><span class="aw-crumb__sep" aria-hidden="true">/</span><span>{view}</span></>}</span>
-      ) : title && <span class="aw-title">{title}</span>}
+      ) : title && (
+        <span class="aw-title">
+          {shortTitle && shortTitle !== title ? (
+            <Fragment><span class="max-md:hidden">{title}</span><span class="md:hidden">{shortTitle}</span></Fragment>
+          ) : title}
+        </span>
+      )}
       {address && <span class="aw-address">{address}</span>}
       <span class="aw-meta">
         {hasMeta && <span class="aw-meta__scene" data-demo-scene="meta"><slot name="meta" /></span>}
@@ -161,8 +172,9 @@ const lines = (t?: string | string[]) => (t ? (Array.isArray(t) ? t : [t]) : [])
     </div>
 
     {ticker !== undefined && (
-      <div class="aw-ticker" data-demo-scene="ticker">
-        <Icon name="check" />
+      <div class="aw-ticker is-done" data-demo-scene="ticker">
+        {/* typing dots while the agent is getting going, the sage check once it reports a finished action */}
+        <span class="aw-ticker__mark" aria-hidden="true"><span class="typing-dots"><i></i><i></i><i></i></span><Icon name="check" /></span>
         <span data-demo-ticker data-initial-text={tickerStart}>{ticker}</span>
       </div>
     )}

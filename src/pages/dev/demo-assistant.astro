@@ -1,0 +1,30 @@
+---
+// Preview page for the Executive Assistant demo (noindex; /dev/ is kept out of the sitemap). OWNER: demo-assistant.
+// The section head mirrors how /demos/ and /services/ai-agents/ introduce the demo, so it can be judged in context.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import AssistantDemo from '@/components/demos/AssistantDemo.astro';
+---
+<BaseLayout title="Executive Assistant demo (preview)" noindex>
+  <main id="main">
+    <Section id="preview-intro" size="tight">
+      <Eyebrow>Demo preview</Eyebrow>
+      <h1 class="type-h1 mt-4">Executive Assistant demo</h1>
+      <p class="type-lead mt-5">Internal test page. The demo below autoplays at 50% in view; try pause, replay, the chapters and Skip to result.</p>
+    </Section>
+
+    <Section id="executive-assistant" tone="sunken" aria-labelledby="executive-assistant-title">
+      <SectionHeader
+        num="03"
+        eyebrow="AI Agents · Executive Assistant Agent"
+        title="An overflowing inbox becomes a short list."
+        titleId="executive-assistant-title"
+        subtitle="Monday, 7:30 am: 63 unread emails. Four minutes later, six decisions, five tasks delegated, one meeting booked and the Q3 deck built."
+        reveal={false}
+      />
+      <AssistantDemo />
+    </Section>
+  </main>
+</BaseLayout>

@@ -1,0 +1,74 @@
+---
+// OWNER: services-b
+// Hero art for /services/marketing/: the Marketing Director's weekly view for the business in the
+// worked example lower on the page (@/data/worth, id 'marketing'). KPI figures are read from that
+// example's math (spend, cost per lead before and after, leads before and after), never retyped.
+// The feed shows the control point: budget moves wait for the owner's OK (sky, DESIGN.md §2.4).
+import Icon from '@/components/ui/Icon.astro';
+import StatTile from '@/components/ui/StatTile.astro';
+import { getWorth } from '@/data/worth';
+import { currency, number } from '@/lib/format';
+
+const ex = getWorth('marketing')!;
+const money = (s?: string) => (s ? Number(s.replace(/[^0-9.]/g, '')) : Number.NaN);
+const val = (re: RegExp) => ex.math.find((r) => re.test(r.label))?.value;
+const spend = money(ex.baseline.find((b) => /ad spend/i.test(b.label))?.value);
+const leadsBefore = money(val(/^leads today/i));
+const cplAfter = money(val(/^cost per lead after/i));
+const extraLeads = money(val(/^extra leads/i));
+const cplBefore = Number.isFinite(spend) && Number.isFinite(leadsBefore) ? spend / leadsBefore : Number.NaN;
+const ok = [spend, leadsBefore, cplAfter, extraLeads, cplBefore].every(Number.isFinite);
+const kind = ex.profile.split(':')[0].replace(/^Fictional\s+/i, '');
+const size = ex.profile.split(':')[1]?.split(/[(,]/)[0]?.trim() ?? '';
+const label = ok
+  ? `Illustration: weekly view for ${ex.business}, a fictional ${kind}. Same ${currency(spend)} monthly ad budget; cost per lead ${currency(cplAfter)}, down from ${currency(cplBefore)}; ${number(leadsBefore + extraLeads)} leads a month, up from ${number(leadsBefore)}. A budget shift waits for the owner's approval.`
+  : `Illustration: weekly view for ${ex.business}, a fictional ${kind}.`;
+---
+<figure class="haw">
+  <div class="app-window" role="img" aria-label={label}>
+    <div class="aw-bar">
+      <span class="aw-dots"><i></i><i></i><i></i></span>
+      <span class="aw-crumb"><b>Marketing Director</b><span class="aw-crumb__sep">/</span><span>Weekly view</span></span>
+      <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+    </div>
+    <div class="aw-pane haw__pane">
+      {ok && (
+        <div class="haw__kpis">
+          <StatTile variant="kpi" context="Ad spend a month" value={currency(spend)} class="haw__kpi"><span class="kpi__delta">Same budget</span></StatTile>
+          <StatTile variant="kpi" context="Cost per lead" value={currency(cplAfter)} delta={{ value: currency(cplBefore - cplAfter), direction: 'down', good: true, note: `vs ${currency(cplBefore)}` }} class="haw__kpi" />
+          <StatTile variant="kpi" context="Leads a month" value={number(leadsBefore + extraLeads)} delta={{ value: number(extraLeads), direction: 'up', good: true, note: `vs ${number(leadsBefore)}` }} class="haw__kpi" />
+        </div>
+      )}
+      <p class="aw-label haw__label">This week</p>
+      <ul class="haw__feed">
+        <li><span class="haw__glyph"><Icon name="search" /></span><span class="haw__t">Search terms that never convert, excluded</span><span class="chip chip-done"><Icon name="check" />Done</span></li>
+        <li><span class="haw__glyph"><Icon name="circle-check" /></span><span class="haw__t">Double-counted conversions fixed</span><span class="chip chip-done"><Icon name="check" />Done</span></li>
+        <li><span class="haw__glyph"><Icon name="chart-line" /></span><span class="haw__t">New headline vs. current, waiting for enough data</span><span class="chip chip-running"><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>Testing</span></li>
+        <li class="is-ask"><span class="haw__glyph"><Icon name="sliders-horizontal" /></span><span class="haw__t">Shift budget to the campaigns booking jobs, inside your weekly cap</span><span class="chip chip-attention"><Icon name="user-check" />Your OK</span></li>
+      </ul>
+    </div>
+  </div>
+  <figcaption class="fig-caption haw__cap"><b>FIG. 1</b> Illustrative interface. {ex.business} is a fictional {kind}{size ? `, ${size}` : ''}; the figures are the modeled example in “What it’s worth” below.</figcaption>
+</figure>
+
+<style>
+  .haw { margin: 0; }
+  .haw__pane { padding: 20px 22px 20px; }
+  .haw__kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .haw__label { margin-top: 18px; }
+  .haw__feed { display: grid; gap: 6px; margin-top: 10px; }
+  .haw__feed li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .haw__feed li.is-ask { box-shadow: inset 0 0 0 1px rgb(143 184 224 / 0.34); }
+  .haw__glyph { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: var(--color-brass-300); background: rgb(224 191 127 / 0.07); box-shadow: inset 0 0 0 1px rgb(224 191 127 / 0.18); }
+  .haw__glyph :global(.icon) { width: 12px; height: 12px; }
+  .haw__t { min-width: 0; font-size: 0.8125rem; line-height: 1.4; color: var(--color-on); }
+  .haw__cap { margin-top: 14px; max-width: 58ch; }
+  @media (width < 40rem) {
+    .haw__kpis { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .haw__kpis > :global(:first-child) { grid-column: 1 / -1; }
+    .haw__feed li { grid-template-columns: 22px minmax(0, 1fr); }
+    .haw__feed .chip { grid-column: 2; justify-self: start; }
+  }
+  /* phones: keep the window title to its first crumb rather than truncating mid-word */
+  @media (width < 40rem) { .haw .aw-crumb__sep, .haw .aw-crumb > span:last-child { display: none; } }
+</style>

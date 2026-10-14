@@ -1,0 +1,123 @@
+---
+// OWNER: services-a
+// /services/ consulting teaser (COPY.md §3.3 teaser; CRITIQUE.md edit 5: say why it costs less).
+// A compact .cost-ledger: the three provider categories a 20-100 person business actually hires,
+// with modeled costs and time to recommendations from @/data/consulting, then our row (no price while
+// site.consultingPrice is null, per content/DECISIONS.md). Compares scope and price, never outcomes.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import { providers, ours, scopeNote } from '@/data/consulting';
+import { site } from '@/config/site';
+import { currency } from '@/lib/format';
+import { url } from '@/lib/url';
+
+const pick = ['independent', 'regional-boutique', 'big-four'];
+const rows = pick
+  .map((id) => providers.find((p) => p.id === id))
+  .filter((p): p is (typeof providers)[number] => !!p);
+
+// Shared cost axis for the range bars: $0 to the next $20K above the largest figure shown.
+const axisMax = Math.ceil(Math.max(...rows.map((r) => r.costHigh)) / 20000) * 20000;
+const pct = (v: number) => `${((v / axisMax) * 100).toFixed(1)}%`;
+const k = (v: number) => (v === 0 ? '$0' : `$${Math.round(v / 1000)}K`);
+
+// "8 to 17 weeks (modeled; …)" -> fig "8 to 17 weeks", note "Modeled; …"
+const splitTime = (t: string) => {
+  const m = t.match(/^([^(]+?)\s*\((.+)\)$/);
+  if (!m) return { fig: t, note: '' };
+  const note = m[2].charAt(0).toUpperCase() + m[2].slice(1);
+  return { fig: m[1], note };
+};
+// Display overrides so the column reads in one unit (weeks); 4 to 7 months ≈ 17 to 30 weeks.
+const timeOverride: Record<string, { fig: string; note: string }> = {
+  'regional-boutique': { fig: '17 to 30 weeks', note: '4 to 7 months in public-sector operations studies' },
+};
+const subs: Record<string, string> = {
+  independent: 'One senior person, part time.',
+  'regional-boutique': 'A small team: interviews, process review, written report.',
+  'big-four': 'Billed by level and hour, if they take work this small.',
+};
+const shortName: Record<string, string> = {
+  'regional-boutique': 'Regional boutique firm',
+};
+const price = site.consultingPrice;
+const ourTime = ours.time.replace(/ from kickoff to readout$/, '');
+---
+<Section id="consulting-cost" aria-labelledby="consulting-cost-title">
+  <SectionHeader
+    num="03"
+    eyebrow="AI Consulting, compared"
+    titleId="consulting-cost-title"
+  ><span slot="title" data-motion="split">The review you’d hire a firm for, at a fraction of the bill.</span>
+    <p>Much of a traditional fee pays for analyst hours: people working through your transactions by hand. Here, AI does that reading and a person checks every finding, so you pay a fixed fee for the scope, not for the hours.</p>
+  </SectionHeader>
+
+  <div class="ct" data-reveal>
+    <table class="cost-ledger ct__table">
+      <caption><span class="type-label">A diagnostic and prioritized roadmap for a 20 to 100 person business</span></caption>
+      <thead>
+        <tr>
+          <th scope="col">Who does it</th>
+          <th scope="col">Typical cost for this scope<span class="cost-ledger__axis" aria-hidden="true"><span>{k(0)}</span><span>{k(axisMax / 2)}</span><span>{k(axisMax)}</span></span></th>
+          <th scope="col">Time to recommendations</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => {
+          const t = timeOverride[r.id] ?? splitTime(r.time);
+          return (
+            <tr>
+              <th scope="row"><span class="cost-ledger__name">{shortName[r.id] ?? r.category}</span><span class="cost-ledger__sub">{subs[r.id]}</span></th>
+              <td data-label="Typical cost for this scope">
+                <span class="cost-ledger__fig">{currency(r.costLow)} to {currency(r.costHigh)}</span>
+                <span class="range-bar" aria-hidden="true"><span class="range-bar__fill" style={`--from:${pct(r.costLow)};--to:${pct(r.costHigh)}`}></span></span>
+              </td>
+              <td data-label="Time to recommendations">
+                <span class="cost-ledger__fig">{t.fig}</span>
+                {t.note && <span class="cost-ledger__note">{t.note}</span>}
+              </td>
+            </tr>
+          );
+        })}
+        <tr class="is-us ctx-dark">
+          <th scope="row"><span class="cost-ledger__name">{site.name} AI Consulting</span><span class="cost-ledger__sub">AI reads every transaction. A person checks every finding.</span></th>
+          <td data-label="Typical cost for this scope">
+            {price ? (
+              <Fragment>
+                <span class="cost-ledger__fig">{currency(price.from)} to {currency(price.to)}</span>
+                <span class="range-bar range-bar--us" aria-hidden="true"><span class="range-bar__fill" style={`--from:${pct(price.from)};--to:${pct(price.to)}`}></span></span>
+              </Fragment>
+            ) : (
+              <Fragment>
+                <span class="cost-ledger__fig">{ours.price}</span>
+                <span class="cost-ledger__note">A fraction of a traditional engagement</span>
+              </Fragment>
+            )}
+          </td>
+          <td data-label="Time to recommendations">
+            <span class="cost-ledger__fig">{ourTime}</span>
+            <span class="cost-ledger__note">From kickoff to the readout meeting</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="cmp-foot ct__foot">
+      <IllustrativeLabel kind="Modeled estimate" href="/services/consulting/#comparison" />
+      <p>{scopeNote} Market costs from public records, 2021 to 2026, modeled as hourly rate × hours. Provider categories, not firms. Sources and the full comparison are on the AI Consulting page.</p>
+    </div>
+    <a class="link-arrow ct__more" href={url('/services/consulting/#comparison')}><span>See the full cost comparison</span><Icon name="arrow-right" /></a>
+  </div>
+</Section>
+
+<style>
+  @media (width >= 48rem) {
+    .ct__table thead th:nth-child(2) { width: 40%; }
+    .ct__table thead th:nth-child(3) { width: auto; }
+    .ct__table tbody th { width: 34%; }
+  }
+  .ct__table tr.is-us .cost-ledger__note { color: var(--color-on-2); }
+  .ct__more { margin-top: 8px; }
+</style>

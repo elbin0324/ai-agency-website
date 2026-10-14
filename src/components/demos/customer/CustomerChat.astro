@@ -1,0 +1,207 @@
+---
+// Customer Agent demo, left pane: "What the customer sees" (content/DEMOS.md §1 Layout). OWNER: demo-customer.
+// Larkfield's contact page with its chat widget open, plus the SMS that lands on Jenna's phone in step 7.
+// FINAL-state markup: data-hide / data-ghost / data-placeholder say how each piece starts (DEMO_ENGINE.md §4).
+// Wide panes show the page beside a floating widget; under 36rem of pane width (tablets in portrait,
+// phones) the widget fills the pane and the SMS docks over the widget header like a phone banner.
+import ChatBubble from '@/components/demo/ChatBubble.astro';
+import ChatComposer from '@/components/demo/ChatComposer.astro';
+import Icon from '@/components/ui/Icon.astro';
+---
+<section class="aw-pane ca-cust is-active" data-pane="chat">
+  <div class="ca-cust__head demo-hide-m">
+    <span class="aw-label">What the customer sees</span>
+  </div>
+
+  <div class="aw-doc ca-site" data-el="fade-in" data-ghost>
+    <!-- The page behind the widget: decorative, recessive, no invented claims -->
+    <div class="ca-page" aria-hidden="true">
+      <div class="ca-page__top">
+        <span class="ca-mono">LP</span><b>Larkfield Plumbing &amp; Air</b>
+      </div>
+      <div class="ca-page__nav"><span>Services</span><span>About</span><span class="is-on">Contact</span></div>
+      <p class="ca-page__h">Contact us</p>
+      <div class="skel ca-page__skel"><i></i><i></i><i></i></div>
+      <div class="ca-page__form"><i></i><i></i><i class="ca-page__area"></i><b></b></div>
+    </div>
+
+    <!-- The chat widget -->
+    <div class="ca-widget" data-el="widget" data-hide>
+      <div class="ca-widget__head">
+        <span class="ca-mono">LP</span>
+        <span class="ca-widget__id">
+          <b>Larkfield Plumbing &amp; Air</b>
+          <small><i class="ca-online" aria-hidden="true"></i>AI assistant · Replies instantly</small>
+        </span>
+        <span class="ca-widget__tools" aria-hidden="true"><Icon name="minus" /><Icon name="x" /></span>
+      </div>
+
+      <div class="chat ca-chat">
+        <div class="chat-list ca-chat__list" data-el="chat" data-autoscroll>
+          <ChatBubble el="m-greet" stream>Hi! I’m Larkfield’s AI assistant. I can answer questions, give price ranges and book service, day or night. What’s going on?</ChatBubble>
+
+          <ChatBubble from="user" el="m-jenna-1">Hi, my AC started making a loud buzzing noise this afternoon. It’s still cooling but it’s loud. How much to have someone look at it, and how soon can you come?</ChatBubble>
+
+          <ChatBubble el="m-safety" stream>
+            <p>Sorry about that. Let’s get it sorted.</p>
+            <p>First, a quick safety check: any burning smell, smoke or sparks near the unit?</p>
+            <p>Then two questions so we send the right tech with the right parts:</p>
+            <ol class="ca-list ca-list--num">
+              <li>Is the noise coming from the outdoor unit or from inside the house?</li>
+              <li>When the system kicks on, does the fan on top of the outdoor unit start spinning right away?</li>
+            </ol>
+          </ChatBubble>
+
+          <ChatBubble from="user" el="m-jenna-2">No smell or smoke. It’s the outdoor unit. It buzzes for a few seconds when it kicks on and the fan is slow to start. The system is about 9 years old.</ChatBubble>
+
+          <ChatBubble el="m-quote" stream>
+            <p>Thanks, that helps. A buzz at start-up with a slow fan usually points to a weak capacitor or contactor: a common repair, usually done in one visit.</p>
+            <p>From our price book:</p>
+            <ul class="ca-list">
+              <li>Diagnostic visit: <b>$89</b>, credited toward the repair</li>
+              <li>Capacitor or contactor replacement: <b class="ca-nw" data-cue="range">$165–$265</b> total</li>
+            </ul>
+            <p>Since it’s still cooling, a regular visit tomorrow avoids our $149 after-hours fee.</p>
+          </ChatBubble>
+
+          <ChatBubble el="m-slots" stream>I can get a technician to you tomorrow, Wednesday, July 15. Which window works best?</ChatBubble>
+
+          <!-- Quick replies: shown in step 5, gone once Jenna picks one (hidden in the final state) -->
+          <div class="ca-qr" data-el="qr-row" data-hide hidden>
+            <span class="ca-qr__chip" data-el="qr-pick" data-hide>8:00–10:00 am</span>
+            <span class="ca-qr__chip" data-hide>1:00–3:00 pm</span>
+            <span class="ca-qr__chip" data-hide>Another day</span>
+          </div>
+
+          <ChatBubble from="user" el="m-pick">8:00–10:00 am</ChatBubble>
+
+          <ChatBubble el="m-ask" stream>Perfect. What’s your full name, the service address and a mobile number for text updates?</ChatBubble>
+
+          <ChatBubble from="user" el="m-jenna-3">Jenna Morales, 418 Larkspur Lane, <span class="ca-nw">(480) 555-0148</span></ChatBubble>
+
+          <div class="chat-msg chat-msg--agent ca-booked" data-el="m-booked" data-hide>
+            <div class="ca-booking">
+              <div class="ca-booking__top">
+                <span class="chip chip-done"><Icon name="check" />You’re booked</span>
+              </div>
+              <p class="ca-booking__what">AC repair · Diagnostic visit</p>
+              <ul class="ca-booking__rows">
+                <li><Icon name="calendar" /><b>Wed, Jul 15 · 8:00–10:00 am</b></li>
+                <li><Icon name="wrench" />Technician: Marcus R.</li>
+                <li><Icon name="house" />418 Larkspur Lane</li>
+                <li><Icon name="receipt" />Capacitor or contactor: $165–$265 total, $89 diagnostic credited</li>
+              </ul>
+              <p class="ca-booking__note">Your technician confirms the price before any work starts.</p>
+            </div>
+          </div>
+
+          <ChatBubble el="m-sent" stream>I’ve texted you a confirmation, and Marcus will text when he’s on his way. Tonight, if you notice a burning smell or the buzzing won’t stop, switch the system off at the thermostat and reply here. I’ll get our on-call technician on the phone.</ChatBubble>
+
+          <ChatBubble from="user" el="m-jenna-4">Thanks! Since it’s 9 years old, do you offer financing if we end up replacing it?</ChatBubble>
+
+          <ChatBubble el="m-handoff" stream>Good question. Financing depends on the system and the plan you choose, so I’ve asked Renee, our office manager, to call you tomorrow by 10 am. She’ll have this conversation in front of her, so you won’t need to repeat anything.</ChatBubble>
+        </div>
+        <ChatComposer placeholder="Type a message…" />
+      </div>
+    </div>
+
+    <!-- Step 7: the confirmation text arrives on Jenna's phone and stays docked -->
+    <div class="ca-sms" data-el="sms" data-hide>
+      <div class="ca-sms__top">
+        <span class="ca-sms__app" aria-hidden="true"><Icon name="message-square" /></span>
+        <span class="ca-sms__src">Messages</span>
+        <span class="ca-sms__when">now</span>
+      </div>
+      <p class="ca-sms__body"><b>Larkfield Plumbing &amp; Air</b> Hi Jenna, you’re confirmed for AC repair Wed 7/15, 8–10 am with Marcus R. Your $89 diagnostic is credited to any repair. Reply R to reschedule. Reply STOP to opt out.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Tokens only (DESIGN.md §2–§4). Inside .aw-doc the light context applies: ink text, paper chat bubbles. */
+  .ca-cust { display: flex; flex-direction: column; gap: 12px; }
+  .ca-cust__head { display: flex; flex: none; align-items: center; min-height: 18px; }
+
+  /* The page (a light browser viewport). Children are absolute, so a long chat never stretches the scene. */
+  .ca-site { --ca-widget-w: min(23.75rem, 60%); position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; container-type: inline-size; background: var(--color-paper); }
+
+  .ca-mono { display: inline-grid; flex: none; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; color: var(--color-on); background: var(--color-ink); }
+
+  .ca-page { position: absolute; top: 0; bottom: 0; left: 0; display: flex; flex-direction: column; gap: 12px; width: calc(100% - var(--ca-widget-w) - 28px); padding: 16px 0 16px 18px; }
+  .ca-page__top { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; white-space: nowrap; }
+  .ca-page__top b { overflow: hidden; font-weight: 600; text-overflow: ellipsis; }
+  .ca-page__nav { display: flex; gap: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--color-rule); font-size: 0.75rem; color: var(--color-ink-3); }
+  .ca-page__nav .is-on { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-rule-strong); text-underline-offset: 4px; }
+  .ca-page__h { margin-top: 6px; font-size: var(--text-h4); font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; color: var(--color-ink); }
+  .ca-page__skel { gap: 8px; }
+  .ca-page__form { display: grid; gap: 8px; margin-top: 6px; }
+  .ca-page__form i { display: block; height: 30px; border-radius: var(--radius-control); background: var(--color-paper-raised); box-shadow: inset 0 0 0 1px var(--color-rule-strong); }
+  .ca-page__form .ca-page__area { height: 56px; }
+  .ca-page__form b { display: block; width: 44%; height: 30px; border-radius: var(--radius-control); background: var(--color-rule-strong); }
+
+  /* The widget: floats over the page's right side, nearly full height (a real website chat panel) */
+  .ca-widget { position: absolute; top: 12px; right: 12px; bottom: 12px; z-index: 1; display: flex; flex-direction: column; width: var(--ca-widget-w); overflow: hidden; border-radius: var(--radius-card); background: var(--color-paper-raised); box-shadow: var(--shadow-float), 0 0 0 1px var(--color-rule); }
+  .ca-widget__head { display: flex; flex: none; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--color-rule); }
+  .ca-widget__id { display: grid; flex: 1; min-width: 0; }
+  .ca-widget__id b { overflow: hidden; font-size: 0.8125rem; font-weight: 600; line-height: 1.35; white-space: nowrap; text-overflow: ellipsis; }
+  .ca-widget__id small { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; line-height: 1.4; color: var(--color-ink-3); white-space: nowrap; }
+  .ca-online { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--color-success); box-shadow: 0 0 0 2px var(--color-success-wash); }
+  .ca-widget__tools { display: flex; flex: none; gap: 10px; color: var(--color-ink-3); }
+  .ca-widget__tools :global(.icon) { width: 15px; height: 15px; }
+
+  .ca-widget :global(.chat) { flex: 1; min-height: 0; height: auto; padding: 12px 12px 12px; }
+  .ca-chat__list { gap: 8px; padding-bottom: 10px; -webkit-mask-image: linear-gradient(to bottom, transparent, black 12px); mask-image: linear-gradient(to bottom, transparent, black 12px); }
+  .ca-widget :global(.chat-bubble) { padding: 8px 12px; }
+  .ca-widget :global(.chat-composer) { padding-top: 10px; }
+
+  .ca-widget :global(.demo-stream--grow) :is(p, ul, ol, li):not(:has(.is-on)) { display: none; }
+  .ca-nw { white-space: nowrap; }
+  .ca-list { display: grid; gap: 2px; padding-left: 18px; list-style: disc; }
+  .ca-list--num { list-style: decimal; }
+  .ca-list li::marker { color: var(--color-ink-3); }
+  .ca-list b { font-weight: 600; }
+
+  /* Quick replies (inside the message flow, user side) */
+  .ca-qr { display: flex; flex: none; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+  .ca-qr__chip { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; font-size: 0.8125rem; font-weight: 550; white-space: nowrap; color: var(--color-ink); background: var(--color-white); box-shadow: inset 0 0 0 1px var(--color-rule-strong); }
+
+  /* Booking card inside the chat */
+  .ca-booked { width: 88%; }
+  .ca-booking { display: grid; gap: 8px; width: 100%; padding: 11px 12px 12px; border-radius: 14px 14px 14px 4px; background: var(--color-white); box-shadow: inset 0 0 0 1px var(--color-rule-strong); font-size: 0.8125rem; line-height: 1.45; }
+  .ca-booking__what { font-weight: 600; }
+  .ca-booking__rows { display: grid; gap: 5px; color: var(--color-ink-2); }
+  .ca-booking__rows li { display: grid; grid-template-columns: 15px minmax(0, 1fr); gap: 8px; align-items: start; }
+  .ca-booking__rows :global(.icon) { width: 14px; height: 14px; margin-top: 2px; color: var(--color-ink-3); }
+  .ca-booking__rows b { font-weight: 600; color: var(--color-ink); }
+  .ca-booking__note { padding-top: 8px; border-top: 1px solid var(--color-rule); font-size: 0.75rem; color: var(--color-ink-3); }
+
+  /* SMS on Jenna's phone: docked at the bottom of the page column (wide) */
+  .ca-sms { position: absolute; bottom: 14px; left: 14px; z-index: 2; width: calc(100% - var(--ca-widget-w) - 40px); padding: 10px 12px 12px; border-radius: var(--radius-card); color: var(--color-ink); background: var(--color-white); box-shadow: var(--shadow-float), 0 0 0 1px var(--color-rule); }
+  .ca-sms__top { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .ca-sms__app { display: grid; flex: none; place-items: center; width: 20px; height: 20px; border-radius: 6px; color: var(--color-on); background: var(--color-ink); }
+  .ca-sms__app :global(.icon) { width: 12px; height: 12px; }
+  .ca-sms__src { flex: 1; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink-3); }
+  .ca-sms__when { font-size: 0.75rem; color: var(--color-ink-3); }
+  .ca-sms__body { font-size: 0.8125rem; line-height: 1.45; color: var(--color-ink-2); }
+  .ca-sms__body b { display: block; font-weight: 600; color: var(--color-ink); }
+
+  /* Narrow pane (tablet portrait, phones): the widget is the page; the SMS drops in over its header */
+  @container (width < 36rem) {
+    .ca-page { display: none; }
+    .ca-widget { inset: 0; width: auto; border-radius: 0; box-shadow: none; }
+    .ca-sms { top: 8px; right: 8px; bottom: auto; left: 8px; width: auto; }
+  }
+
+  @media (width < 48rem) {
+    .ca-cust { padding: 12px; }
+    .ca-site { border-radius: var(--radius-tile); }
+  }
+  /* Phones where the scene height is auto (demo.css): give the chat pane a definite height, since its page and
+     widget are absolutely positioned. Reduced motion matches the scene's floor; without JS both panes stack. */
+  @media (width < 48rem) and (prefers-reduced-motion: reduce) {
+    .ca-cust { height: var(--aw-h); }
+  }
+  @media (width < 48rem) {
+    :global(html.no-js) .ca-cust { height: var(--aw-h-m); }
+  }
+</style>

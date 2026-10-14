@@ -1,0 +1,133 @@
+---
+// Consulting demo, step 6: the 90-day roadmap (DEMOS.md §6). OWNER: demo-consulting.
+// Wide containers draw a Gantt chart: three phase columns, one bar per workstream (grows left to right),
+// milestone diamonds at days 30, 60 and 90 on the axis. Narrow containers (phones, and the left panel of the
+// reduced-motion view) get the vertical list grouped by phase, each phase closed by its milestone.
+// The switch is a container query, so the same markup serves both.
+import { milestones, phaseOf, phases, workstreams } from './data';
+
+interface Props {
+  /** Start-state attributes and data-el handles for the engine (default true). */
+  animate?: boolean;
+}
+const { animate = true } = Astro.props;
+const start = (name: string, how: 'data-hide' | 'data-ghost' | 'data-grow' = 'data-hide') =>
+  animate ? { 'data-el': name, [how]: how === 'data-grow' ? 'x' : '' } : {};
+const span = (from: number, to: number) => `--s:${((from - 1) / 90).toFixed(4)};--w:${((to - from + 1) / 90).toFixed(4)}`;
+---
+<div class="road-wrap">
+  <div class="road">
+    <div class="road__head" aria-hidden="true">
+      <span>Workstream · owner</span>
+      <span class="road__phases">{phases.map((p) => <span><b>{p.days}</b>{p.name}</span>)}</span>
+      <span class="road__valhead">Identified value</span>
+    </div>
+    {phases.map((p, pi) => (
+      <div class="road__group">
+        <p class="road__ghead"><b>{p.days}</b> · {p.name}</p>
+        {workstreams.filter((w) => phaseOf(w) === pi).map((w) => (
+          <div class="road__row" {...start('road-row')}>
+            <div class="road__label">
+              <span class="road__name">{w.name}</span>
+              <span class="road__owner">{w.owner}<span class="road__days"> · days {w.days.split(', ')[0]}{w.ongoing && <span class="road__then">, {w.days.split(', ')[1]}</span>}</span></span>
+            </div>
+            <div class="road__track" aria-hidden="true">
+              <span class="road__bar" style={span(w.start, w.end)} {...start('road-bar', 'data-grow')}></span>
+              {w.ongoing && <span class="road__ongoing" style={`--s:${(w.end / 90).toFixed(4)}`} {...start('road-bar', 'data-grow')}></span>}
+              {w.ongoing && <span class="road__note">then ongoing</span>}
+            </div>
+            <span class="road__value">{w.value}</span>
+          </div>
+        ))}
+        <p class="road__ms road__ms--list" data-ms={pi + 1} {...start('road-ms', 'data-ghost')}>
+          <i class="road__diamond" aria-hidden="true"></i><span><b>{milestones[pi].day}:</b> {milestones[pi].text}</span>
+        </p>
+      </div>
+    ))}
+    <div class="road__axis" aria-hidden="true">
+      <ul class="road__legend">
+        {milestones.map((m, i) => (
+          <li class="road__ms" data-ms={i + 1} {...start('road-ms', 'data-ghost')}>
+            <i class="road__diamond"></i><span><b>{m.day}:</b> {m.text}</span>
+          </li>
+        ))}
+      </ul>
+      <div class="road__axis-track">
+        {milestones.map((m, i) => (
+          <span class="road__tick" style={`--x:${((i + 1) / 3).toFixed(4)}`} data-ms={i + 1} {...start('road-ms', 'data-ghost')}>
+            <i class="road__diamond"></i>{m.day}
+          </span>
+        ))}
+      </div>
+      <span></span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .road-wrap { container-type: inline-size; }
+  .road { --cols: minmax(0, 1fr) minmax(0, 1.05fr) 5.75rem; font-size: 0.8125rem; line-height: 1.35; color: var(--color-on-2); font-variant-numeric: tabular-nums lining-nums; }
+  .road__head, .road__row, .road__axis { display: grid; grid-template-columns: var(--cols); column-gap: 16px; }
+
+  /* Gantt (wide) */
+  .road__head { align-items: end; padding-bottom: 7px; border-bottom: 1px solid var(--color-rule-dark-strong); font-size: 0.75rem; font-weight: 500; line-height: 1.3; color: var(--color-on-3); }
+  .road__head { position: sticky; top: 0; z-index: 1; background: var(--color-navy-800); }   /* stays put if the views box scrolls */
+  .road__phases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .road__phases > span { display: grid; min-width: 0; padding-left: 8px; box-shadow: inset 1px 0 0 var(--viz-grid); }
+  .road__phases b { font-weight: 600; color: var(--color-on-2); }
+  .road__valhead { text-align: right; }
+  .road__row { align-items: center; border-bottom: 1px solid var(--color-rule-dark); }
+  .road__group:last-of-type .road__row:last-of-type { border-bottom: 0; }
+  .road__label { display: grid; gap: 1px; min-width: 0; padding: 5px 0; }
+  .road__name { line-height: 1.3; color: var(--color-on); }
+  .road__owner { font-size: 0.75rem; line-height: 1.3; color: var(--color-on-3); }
+  .road__days { display: none; }
+  .road__then { display: none; }   /* the Gantt says "then ongoing" on the bar itself */
+  /* Wide Gantt: the exact day range under each owner (DEMOS.md lists it); tighter Gantts leave it to the bars */
+  @container (width >= 46rem) {
+    .road__days { display: inline; }
+  }
+  .road__track {
+    position: relative; align-self: stretch; min-height: 38px;
+    background:
+      linear-gradient(var(--viz-grid), var(--viz-grid)) 0 0 / 1px 100% no-repeat,
+      linear-gradient(var(--viz-grid), var(--viz-grid)) 33.333% 0 / 1px 100% no-repeat,
+      linear-gradient(var(--viz-grid), var(--viz-grid)) 66.667% 0 / 1px 100% no-repeat;
+  }
+  .road__bar { position: absolute; top: 50%; left: calc(var(--s) * 100%); width: calc(var(--w) * 100%); height: 10px; margin-top: -5px; border-radius: var(--radius-data); background: var(--viz-1); }
+  .road__ongoing { position: absolute; top: 50%; left: calc(var(--s) * 100%); right: 0; height: 2px; margin-top: -1px; border-radius: 1px; background: var(--viz-1); }
+  .road__note { position: absolute; right: 2px; bottom: calc(50% + 5px); font-size: 0.75rem; line-height: 1; color: var(--color-on-3); }
+  .road__value { text-align: right; color: var(--color-on); }
+  .road__ghead, .road__ms--list { display: none; }
+  .road__axis { padding-top: 10px; }
+  .road__legend { display: grid; gap: 5px; padding-top: 2px; }
+  .road__legend .road__ms { display: flex; align-items: baseline; gap: 9px; font-size: 0.75rem; line-height: 1.45; color: var(--color-on-2); }
+  .road__legend b { font-weight: 600; color: var(--color-on); }
+  .road__legend .road__diamond { translate: 0 -1px; }
+  .road__axis-track { position: relative; height: 40px; margin-top: -10px; box-shadow: inset 0 1px 0 var(--viz-axis); }
+  .road__tick {
+    position: absolute; top: 0; left: calc(var(--x) * 100%); translate: -50% 0;
+    display: grid; justify-items: center; gap: 7px; font-size: 0.75rem; line-height: 1; white-space: nowrap; color: var(--color-on-3);
+  }
+  .road__tick .road__diamond { translate: 0 -50%; }
+  .road__diamond { display: block; flex: none; width: 9px; height: 9px; border-radius: 1px; rotate: 45deg; background: var(--viz-accent); box-shadow: 0 0 0 2px var(--color-navy-800); }
+
+  /* List (narrow): phase groups, each closed by its milestone */
+  @container (width < 34rem) {
+    .road__head, .road__axis, .road__track, .road__note { display: none; }
+    .road__row { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: start; }
+    .road__label { padding: 7px 0; }
+    .road__value { padding-top: 7px; font-size: 0.75rem; color: var(--color-on-2); }
+    .road__days, .road__then { display: inline; }
+    .road__group + .road__group { margin-top: 14px; }
+    .road__group:last-of-type .road__row:last-of-type { border-bottom: 1px solid var(--color-rule-dark); }
+    .road__ghead {
+      display: block; padding-bottom: 6px; border-bottom: 1px solid var(--color-rule-dark-strong);
+      font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-on-3);
+    }
+    .road__ghead b { font-weight: 500; color: var(--color-on-2); }
+    .road__ms--list { display: flex; align-items: baseline; gap: 9px; padding: 8px 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--color-on-2); }
+    .road__ms--list b { font-weight: 600; color: var(--color-on); }
+    .road__ms--list .road__diamond { translate: 0 -1px; }
+  }
+</style>

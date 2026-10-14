@@ -1,0 +1,78 @@
+---
+// OWNER: theater. /demos/ chapter nav: the six demos as pill links (the demo switcher look, DESIGN.md §6.12).
+// From 1024px it sticks under the site header and marks the demo in view (aria-current) as the visitor
+// scrolls. Under 1024px it hides: the hero's "Agents on shift" poster (HeroPoster) is the index there.
+// Render it as the FIRST child of the wrapper that holds the six demo sections, so it stays stuck through
+// all of them and lets go before "What's real here".
+import Icon from '@/components/ui/Icon.astro';
+import { demoCopy } from './demo-copy';
+---
+<nav class="chapter-nav" id="index" aria-label="Demos on this page" data-chapter-nav>
+  <div class="wrap chapter-nav__in">
+    <p class="chapter-nav__label type-label" aria-hidden="true">Six demos</p>
+    <ol class="chapter-nav__list">
+      {demoCopy.map((d) => (
+        <li>
+          <a class="demo-tab chapter-nav__link" href={`#${d.anchor}`} data-chapter={d.anchor}>
+            <Icon name={d.icon} /><span>{d.label}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </div>
+</nav>
+
+<style>
+  .chapter-nav { border-block: 1px solid var(--line); }
+  .chapter-nav__in { display: flex; align-items: center; gap: 12px 28px; padding-block: 8px; }
+  .chapter-nav__label { flex: none; color: var(--fg-3); }
+  .chapter-nav__list { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+  .chapter-nav__link:focus-visible { outline-offset: 1px; }
+  /* The current demo takes the selected-tab look (.demo-tab[aria-selected="true"] in global.css). */
+  .chapter-nav__link[aria-current] { color: var(--color-on); background: var(--color-ink); }
+  .chapter-nav__link[aria-current] :global(.icon) { color: var(--color-brass-300); }
+
+  /* Desktop: stick under the header, with the header's own surface (DESIGN.md §6.14) so the two read as one. */
+  @media (width >= 64rem) {
+    .chapter-nav {
+      position: sticky; top: var(--header-h); z-index: var(--z-sticky);
+      border-top-color: transparent;
+      background: rgb(245 240 230 / 0.82);
+      -webkit-backdrop-filter: saturate(1.25) blur(14px); backdrop-filter: saturate(1.25) blur(14px);
+    }
+  }
+  /* Tablets and phones: the hero poster already lists the six demos, so the index would repeat it. */
+  @media (width < 64rem) {
+    .chapter-nav { display: none; }
+  }
+</style>
+
+<script>
+  // Scroll spy: the demo crossing a line 45% down the viewport is current. None in the hero or after the six.
+  function initChapterNav(nav: HTMLElement) {
+    const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[data-chapter]'));
+    const byTarget = new Map<Element, HTMLAnchorElement>();
+    links.forEach((a) => {
+      const target = document.getElementById(a.dataset.chapter ?? '');
+      if (target) byTarget.set(target, a);
+    });
+    if (!byTarget.size || !('IntersectionObserver' in window)) return;
+    const inBand = new Set<Element>();
+    const paint = () => {
+      const current = links.find((a) => {
+        const t = document.getElementById(a.dataset.chapter ?? '');
+        return t ? inBand.has(t) : false;
+      });
+      links.forEach((a) => (a === current ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => (e.isIntersecting ? inBand.add(e.target) : inBand.delete(e.target)));
+        paint();
+      },
+      { rootMargin: '-45% 0px -54% 0px' },
+    );
+    byTarget.forEach((_, target) => io.observe(target));
+  }
+  document.querySelectorAll<HTMLElement>('[data-chapter-nav]').forEach(initChapterNav);
+</script>

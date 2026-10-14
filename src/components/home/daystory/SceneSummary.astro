@@ -1,0 +1,101 @@
+---
+// Day story, 6:00 pm: the end-of-day summary. OWNER: home-daystory.
+// KPI tiles (DESIGN.md §6.7 .kpi), a 7 am to 7 pm day track whose fill reaches 6 pm, and the day's
+// log with status chips (sky for the one decision still waiting). Numbers: see day-data.ts.
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { moments, hoursTotal, hoursToday, jobsBooked, approvals, inbox, sales, dayPos, dayName } from './day-data';
+
+const log: { time: string; icon: IconName; text: string; status: 'done' | 'you'; chip: string }[] = [
+  { time: moments[0].time, icon: 'inbox', text: `Inbox sorted, ${inbox.drafts} replies approved`, status: 'done', chip: 'Done' },
+  { time: moments[1].time, icon: 'message-square', text: 'AC repair booked for 1 pm', status: 'done', chip: 'Booked' },
+  { time: moments[2].time, icon: 'chart-column', text: 'Water-heater prices flagged', status: 'you', chip: 'Your OK' },
+  { time: moments[3].time, icon: 'send', text: `${sales.ready} first emails approved and sent`, status: 'done', chip: 'Sent' },
+  { time: moments[4].time, icon: 'clock', text: 'Summary sent to the owner', status: 'done', chip: 'Done' },
+];
+const fillTo = dayPos(moments[4].minutes);
+---
+<div class="sc">
+  <div class="sc-head">
+    <p class="aw-label">End of day · {dayName}</p>
+    <span class="chip chip-done"><Icon name="mail" />Summary sent</span>
+  </div>
+
+  <div class="sc-kpis">
+    <div class="kpi">
+      <span class="kpi__label">Hours back today</span>
+      <span class="kpi__value"><span data-ds-count={hoursTotal.toFixed(1)}>{hoursTotal.toFixed(1)}</span><small>h</small></span>
+      <span class="kpi__delta">Across {hoursToday.length} agents</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi__label">Jobs booked</span>
+      <span class="kpi__value"><span data-ds-count={jobsBooked}>{jobsBooked}</span></span>
+      <span class="kpi__delta">By the Customer Agent</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi__label">Approvals given</span>
+      <span class="kpi__value"><span data-ds-count={approvals.given}>{approvals.given}</span></span>
+      <span class="kpi__delta sc-wait"><Icon name="user-check" />{approvals.waiting} waiting on you</span>
+    </div>
+  </div>
+
+  <div class="sc-day" aria-hidden="true">
+    <div class="sc-day__track">
+      <span class="sc-day__fill" data-ds="dayfill" style={`--to:${fillTo.toFixed(4)}`}></span>
+      {moments.map((m) => (
+        <span class:list={['sc-day__mark', m.id === 'margin' && 'is-you']} data-ds="mark" style={`left:${(dayPos(m.minutes) * 100).toFixed(2)}%`}></span>
+      ))}
+    </div>
+    <div class="sc-day__ticks"><span>7 am</span><span>1 pm</span><span>7 pm</span></div>
+  </div>
+
+  <ol class="sc-log" role="list">
+    {log.map((r) => (
+      <li data-ds="log">
+        <time class="num-tab">{r.time}</time>
+        <Icon name={r.icon} />
+        <span class="sc-log__text">{r.text}</span>
+        <span class:list={['chip', r.status === 'you' ? 'chip-attention' : 'chip-done']}><Icon name={r.status === 'you' ? 'user-check' : 'check'} />{r.chip}</span>
+      </li>
+    ))}
+  </ol>
+
+  <div class="sc-next" data-ds="next">
+    <span class="sc-next__label"><Icon name="user-check" />Still waiting on you: the water-heater price update</span>
+    <span class="app-btn">Review</span>
+  </div>
+</div>
+
+<style>
+  .sc { display: flex; flex-direction: column; gap: 14px; height: 100%; min-height: 0; }
+  .sc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .sc-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .sc-wait { color: var(--color-sky); }
+  .sc-wait .icon { width: 12px; height: 12px; stroke-width: 2; }
+
+  .sc-day { display: grid; gap: 8px; padding: 2px 4px 0; }
+  .sc-day__track { position: relative; height: 3px; border-radius: 3px; background: rgb(255 255 255 / 0.1); }
+  /* The fill covers 7 am to 6 pm; the scroll timeline grows it with scaleX. */
+  .sc-day__fill { position: absolute; inset: 0 auto 0 0; width: calc(var(--to) * 100%); border-radius: 3px; background: var(--color-brass-300); transform-origin: 0 50%; }
+  .sc-day__mark { position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%; background: var(--color-navy-800); box-shadow: inset 0 0 0 1.5px var(--color-brass-300); transform: translate(-50%, -50%); }
+  .sc-day__mark.is-you { box-shadow: inset 0 0 0 1.5px var(--color-sky); }
+  .sc-day__ticks { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1; color: var(--color-on-3); }
+
+  .sc-log { display: grid; min-height: 0; overflow: hidden; }
+  .sc-log li { display: grid; grid-template-columns: 58px 16px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 0; }
+  .sc-log li + li { border-top: 1px solid var(--color-rule-dark); }
+  .sc-log time { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-on-3); }
+  .sc-log li > .icon { color: var(--color-on-2); }
+  .sc-log__text { overflow: hidden; font-size: 0.8125rem; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+
+  .sc-next { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding: 10px 12px; border-radius: var(--radius-tile); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .sc-next__label { display: inline-flex; align-items: center; gap: 8px; min-width: 0; font-size: 0.8125rem; font-weight: 550; color: var(--color-sky); }
+  .sc-next__label .icon { flex: none; width: 14px; height: 14px; }
+
+  @container (width < 520px) {
+    .sc-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sc-kpis .kpi:last-child { grid-column: 1 / -1; }
+    .sc-log li { grid-template-columns: 52px minmax(0, 1fr) auto; }
+    .sc-log li > .icon { display: none; }
+  }
+</style>

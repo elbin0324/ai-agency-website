@@ -1,0 +1,62 @@
+---
+// Integrations ledger. OWNER: home-hero.
+// The 16 tools from src/data/integrations.ts as plain-text names with a mono category, never logos
+// (DESIGN.md §6.19, BRIEF.md honesty rules): label on 3 columns, list on 9, ported from the reference
+// .integ row. Copy: COPY.md §2.2, tightened; the strip stays quiet (no CTA).
+// Keep id="integrations": it is the anchor from COPY.md.
+import Marquee from '@/components/blocks/Marquee.astro';
+import { integrations, integrationsCopy } from '@/data/integrations';
+
+// Same 16 tools, shown so each category pair sits side by side in the 4-up grid and in the 2-up
+// grid on phones (email, spreadsheets, accounting, CRM, ads, commerce, chat, then calendar and decks).
+// Any tool not listed here keeps its data order at the end.
+const ORDER = [
+  'Gmail', 'Outlook', 'Excel', 'Google Sheets',
+  'QuickBooks', 'Xero', 'HubSpot', 'Salesforce',
+  'Google Ads', 'Meta Ads', 'Shopify', 'Stripe',
+  'Slack', 'Microsoft Teams', 'Google Calendar', 'PowerPoint',
+];
+const rank = (name: string) => {
+  const i = ORDER.indexOf(name);
+  return i === -1 ? ORDER.length : i;
+};
+const tools = [...integrations].sort((a, b) => rank(a.name) - rank(b.name));
+---
+<section id="integrations" data-section="integrations" class="section-tight integ-section" aria-labelledby="integrations-title">
+  <div class="wrap">
+    <div class="integ" data-reveal>
+      <div class="integ__label">
+        <h2 class="integ__title" id="integrations-title">{integrationsCopy.headline}</h2>
+        <p>No new system to learn. Agents do the work where it already happens.</p>
+      </div>
+      <Marquee mode="grid" items={tools} reveal={false} label="Tools we connect to" />
+      <p class="integ__micro">
+        Plus most other software with an API or a clean export, including many field-service,
+        practice-management and ERP systems. Product names are trademarks of their owners, listed to
+        show what we connect to, not a partnership or endorsement.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Sits right under the hero: the trust strip's bottom rule is this ledger's top rule. */
+  /* Bottom padding is short because Outcomes follows on the same paper with its own tight top
+     (keeps the gap under DESIGN.md §5's ~120px of empty paper). */
+  .integ-section { padding-top: 0; padding-bottom: clamp(24px, 3vw, 40px); }
+  .integ { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; padding: 32px 0; border-bottom: 1px solid var(--color-rule); }
+  .integ__label { grid-column: 1 / span 3; font-size: .9375rem; line-height: 1.5; color: var(--color-ink-2); }
+  .integ__title { margin-bottom: 4px; font-size: .9375rem; font-weight: 600; line-height: 1.5; letter-spacing: 0; color: var(--color-ink); }
+  /* Fixed 4-up (2-up under 768px) instead of auto-fill, which drops to 3 columns between 640 and
+     1080px and leaves 16 tools as 3+3+3+3+3+1. The longest name needs about 150px; 4-up columns
+     stay at 157px or wider from 768px. */
+  .integ :global(.integrations) { grid-column: 4 / span 9; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (width < 48rem) {
+    .integ :global(.integrations) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .integ__micro { grid-column: 4 / span 9; max-width: 92ch; font-size: .8125rem; line-height: 1.55; color: var(--color-ink-3); }
+  @media (width < 64rem) {
+    .integ__label, .integ :global(.integrations), .integ__micro { grid-column: 1 / -1; }
+    .integ__label { max-width: 46ch; }
+  }
+</style>

@@ -1,0 +1,55 @@
+---
+// OWNER: home-story
+// Security and control (COPY.md §2.10, DESIGN.md §6.17): the guardrails grid beside an illustrative
+// audit-log window that shows the same controls at work. Titles say the plain meaning first and keep the
+// technical term in the body (CRITIQUE.md edit 15); no badge language (CRITIQUE.md edit 4).
+// Practices only, never certifications (BRIEF.md honesty rules).
+// Keep id="security": it is the anchor from COPY.md and may be linked from other pages.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import Icon from '@/components/ui/Icon.astro';
+import AuditLog from './story/AuditLog.astro';
+import { homeNum } from './story/sections';
+import { url } from '@/lib/url';
+
+const guards = [
+  { icon: 'key-round', title: 'Only the keys each job needs', body: 'The minimum access a job requires (least privilege), read-only by default, and removed when it’s no longer needed.' },
+  { icon: 'user-check', title: 'You approve what matters', body: 'Payments, refunds, price changes, bulk sends and anything else you choose wait for a person to say yes.' },
+  { icon: 'list', title: 'A record of everything', body: 'Every action an agent takes is logged: what it did, when and why. You can read the log at any time.' },
+  { icon: 'database', title: 'Your data doesn’t train AI', body: 'Business-grade AI services whose terms exclude training on your data, and a list of every outside service that touches it.' },
+  { icon: 'shield-check', title: 'Only the data a job needs', body: 'We connect what a workflow requires and nothing more, and we don’t keep copies we don’t need.' },
+  { icon: 'power', title: 'An off switch you control', body: 'Pause or turn off any agent at any time. Your team picks up right where it left off.' },
+] as const;
+---
+<Section id="security" aria-labelledby="security-title">
+  <SectionHeader
+    num={homeNum.security}
+    eyebrow="Security and control"
+    subtitle="Giving an agent access to your business is like handing over a key. Here’s how we handle it."
+    titleId="security-title"
+  ><span slot="title" data-motion="split">Your data stays yours. Your people stay in charge.</span></SectionHeader>
+
+  <div class="sec-grid" data-motion="stagger" data-stagger-target=".guard, .sec-grid__art">
+    <FeatureGrid variant="guard" cols={2} items={[...guards]} label="Guardrails that come standard" class="sec-grid__list" />
+    <div class="sec-grid__art" data-reveal data-reveal-delay="80"><AuditLog /></div>
+  </div>
+
+  <div class="sec-foot" data-reveal>
+    <p>Have a security questionnaire? Send it over and we’ll answer in writing.</p>
+    <a class="link-arrow" href={url('/approach/#security')}><span>Read how we handle data</span><Icon name="arrow-right" /></a>
+  </div>
+</Section>
+
+<style>
+  .sec-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; align-items: start; }
+  .sec-grid > :global(.sec-grid__list) { grid-column: 1 / span 7; }
+  .sec-grid__art { grid-column: 8 / span 5; }
+  .sec-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; margin-top: 18px; }
+  .sec-foot p { font-size: 0.8125rem; color: var(--fg-3); }
+  @media (width < 64rem) {
+    .sec-grid > :global(.sec-grid__list), .sec-grid__art { grid-column: 1 / -1; }
+    .sec-grid__art { max-width: 560px; }
+  }
+  @media (width < 40rem) { .sec-foot { flex-direction: column; align-items: flex-start; } }
+</style>

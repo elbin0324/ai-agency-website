@@ -1,0 +1,171 @@
+---
+// OWNER: services-a
+// /services/ "How they work together" (replaces COPY.md §3.4 per CRITIQUE.md: no vague cross-sell,
+// no "they share what they learn"). A diagram of how every service runs: 1 your tools → 2 agents
+// inside one set of guardrails → 3 you approve anything sensitive. Below it, "Included with every
+// service" (COPY.md §3.5). Tool names come from @/data/integrations (plain text, no logos).
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Badge from '@/components/ui/Badge.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import { integrations, type IntegrationCategory } from '@/data/integrations';
+import { agentRoles, getService } from '@/data/services';
+import { url } from '@/lib/url';
+
+const toolRows: { label: string; cats: IntegrationCategory[] }[] = [
+  { label: 'Email and calendar', cats: ['Email', 'Calendar'] },
+  { label: 'Spreadsheets and decks', cats: ['Spreadsheets', 'Documents'] },
+  { label: 'Accounting', cats: ['Accounting'] },
+  { label: 'CRM and store', cats: ['CRM', 'E-commerce'] },
+  { label: 'Ad accounts', cats: ['Advertising'] },
+  { label: 'Team chat', cats: ['Chat'] },
+];
+const tools = toolRows.map((r) => ({
+  label: r.label,
+  names: integrations.filter((t) => r.cats.includes(t.category)).map((t) => t.name).join(', '),
+}));
+
+const marketing = getService('marketing')!;
+const sales = getService('sales')!;
+const agents: { icon: IconName; name: string; job: string }[] = [
+  { icon: agentRoles[0].icon, name: agentRoles[0].name, job: 'Answers and books' },
+  { icon: agentRoles[1].icon, name: agentRoles[1].name, job: 'Works the numbers' },
+  { icon: agentRoles[2].icon, name: 'Executive Assistant', job: 'Runs the inbox' },
+  { icon: marketing.icon, name: 'Marketing Director', job: 'Tests and moves budget' },
+  { icon: sales.icon, name: 'Sales Agent', job: 'Researches and writes' },
+];
+const rails: { icon: IconName; label: string }[] = [
+  { icon: 'key-round', label: 'Only the access each job needs' },
+  { icon: 'sliders-horizontal', label: 'Hard limits you set' },
+  { icon: 'list', label: 'Every action logged' },
+  { icon: 'power', label: 'An off switch' },
+];
+const approvals = ['Refunds and discounts', 'Budget changes', 'First emails to new contacts', 'Replies in your name'];
+
+const included: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'search', title: 'Discovery and design', body: 'We map your workflow with the people who do it before we build anything.' },
+  { icon: 'plug', title: 'Integration', body: 'Connected to the tools you already use, read-only wherever possible.' },
+  { icon: 'list-checks', title: 'Testing on your past work', body: 'Agents prove themselves on recent work before they go live.' },
+  { icon: 'shield-check', title: 'Guardrails', body: 'Approval rules, hard limits and handoff rules you set.' },
+  { icon: 'eye', title: 'Monitoring and upkeep', body: 'We watch, tune and fix as part of the work, not as a separate ticket.' },
+  { icon: 'chart-line', title: 'Monthly reporting', body: 'Results in hours and dollars, against a baseline agreed up front.' },
+  { icon: 'users', title: 'A named lead', body: 'One person who knows your business and answers your questions.' },
+  { icon: 'file-text', title: 'Documentation you keep', body: 'How each agent works, what it can access and the rules it follows.' },
+];
+---
+<Section id="together" tone="sunken" aria-labelledby="together-title">
+  <SectionHeader
+    num="02"
+    eyebrow="How they work together"
+    subtitle="Every agent works inside the tools you already use, follows the same guardrails and brings anything sensitive to you. A second service adds capacity, not a second system to manage."
+    titleId="together-title"
+  ><span slot="title" data-motion="split">One set of rules, however many agents you run.</span></SectionHeader>
+
+  <figure class="sys" data-reveal>
+    <div class="sys__grid">
+      <div class="sys__col">
+        <p class="sys__k"><span class="sys__n">1</span>Your tools</p>
+        <ul class="sys__tools" role="list">
+          {tools.map((t) => (
+            <li><span class="sys__tool-k">{t.label}</span><span class="sys__tool-v">{t.names}</span></li>
+          ))}
+        </ul>
+        <p class="sys__more">Plus phone and text lines, and most tools with an API or a clean export.</p>
+      </div>
+
+      <div class="sys__link" aria-hidden="true"><span class="sys__link-t">Read-only by default</span></div>
+
+      <div class="sys__col">
+        <p class="sys__k"><span class="sys__n">2</span>Agents, under one set of guardrails</p>
+        <div class="sys__frame">
+          <ul class="sys__rails" role="list" aria-label="Shared guardrails">
+            {rails.map((r) => <li><Icon name={r.icon} size={16} />{r.label}</li>)}
+          </ul>
+          <div class="app-window sys__win">
+            <div class="aw-bar"><span class="aw-crumb"><b>Your agents</b></span><span class="aw-meta"><span class="aw-tag">Illustrative</span></span></div>
+            <ul class="sys__agents" role="list" aria-label="Agents">
+              {agents.map((a) => (
+                <li class="vg-row"><span class="vg-glyph"><Icon name={a.icon} /></span><span class="vg-row__text"><b>{a.name}</b><small>{a.job}</small></span></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="sys__link" aria-hidden="true"><span class="sys__link-t">Anything sensitive</span></div>
+
+      <div class="sys__col">
+        <p class="sys__k"><span class="sys__n">3</span>You approve</p>
+        <ul class="sys__you" role="list">
+          {approvals.map((a) => <li><span>{a}</span><Badge variant="attention">Your OK</Badge></li>)}
+        </ul>
+        <p class="sys__more">You choose when routine work can go without review, one category at a time.</p>
+        <p class="sys__report"><Icon name="chart-line" size={18} /><span><b>One monthly report.</b> What each agent did and what it was worth, in hours and dollars, against the baseline we agreed.</span></p>
+      </div>
+    </div>
+    <figcaption class="sys__cap">
+      <b>Where to begin.</b> AI Consulting sets the order: its roadmap shows which agents pay off first.{' '}
+      <a class="link" href={url('/approach/#controls')}>How human approval works</a>
+    </figcaption>
+  </figure>
+
+  <div class="incl">
+    <h3 class="type-label incl__k" data-reveal>Included with every service</h3>
+    <FeatureGrid variant="cells" cols={4} level={4} items={included} label="Included with every service" />
+  </div>
+</Section>
+
+<style>
+  .sys { margin: 0; }
+  .sys__grid { display: grid; grid-template-columns: minmax(0, 3fr) 88px minmax(0, 4.2fr) 88px minmax(0, 3fr); align-items: stretch; }
+  .sys__col { display: flex; flex-direction: column; min-width: 0; }
+  .sys__k { display: flex; align-items: center; gap: 10px; min-height: 28px; margin-bottom: 14px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg); }
+  .sys__n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-size: 0.75rem; letter-spacing: 0; color: var(--color-brass-300); background: var(--color-navy-800); box-shadow: 0 0 0 1px var(--color-brass-400) inset; }
+
+  /* 1 · tools: the client's own systems, on paper */
+  .sys__tools { display: grid; border-top: 1px solid var(--line-strong); }
+  .sys__tools > li { display: grid; gap: 2px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .sys__tool-k { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); }
+  .sys__tool-v { font-size: 0.9375rem; font-weight: 550; color: var(--fg); }
+  .sys__more { margin-top: 12px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+
+  /* connectors: a hairline that ends in a knot, label above */
+  /* Desktop: the line sits level with the top of the agents window (--link-y below the column heads). */
+  .sys__link { --link-y: 168px; position: relative; display: flex; align-items: flex-start; justify-content: center; }
+  .sys__link::before { content: ""; position: absolute; left: 10px; right: 14px; top: var(--link-y); height: 1px; background: var(--line-strong); }
+  .sys__link::after { content: ""; position: absolute; right: 6px; top: calc(var(--link-y) - 4px); width: 9px; height: 9px; border-radius: 50%; background: var(--color-paper-sunken); box-shadow: inset 0 0 0 1.25px var(--accent-line); }
+  .sys__link-t { position: relative; margin-top: calc(var(--link-y) - 40px); padding: 0 4px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.3; letter-spacing: 0.04em; text-align: center; color: var(--fg-3); }
+
+  /* 2 · agents inside the guardrail frame */
+  .sys__frame { display: grid; align-content: start; gap: 12px; padding: 12px; border-radius: var(--radius-card); background: rgb(251 248 242 / 0.6); box-shadow: inset 0 0 0 1px var(--color-rule-strong); }
+  .sys__rails { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; padding: 4px 4px 0; }
+  .sys__rails > li { display: flex; align-items: flex-start; gap: 8px; font-size: 0.8125rem; line-height: 1.4; font-weight: 500; color: var(--fg); }
+  .sys__rails :global(.icon) { flex: none; margin-top: 1px; color: var(--accent); }
+  .sys__win { border-radius: var(--radius-tile); }
+  .sys__win .aw-bar { height: 34px; padding: 0 12px; }
+  .sys__agents { display: grid; gap: 6px; padding: 10px; }
+
+  /* 3 · you approve: sky = a human decides */
+  .sys__you { display: grid; border-top: 1px solid var(--line-strong); }
+  .sys__you > li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 0.9375rem; font-weight: 550; color: var(--fg); }
+
+  .sys__report { display: flex; gap: 12px; margin-top: auto; padding: 16px; border-radius: var(--radius-tile); background: var(--raised); box-shadow: var(--card-shadow); font-size: 0.875rem; line-height: 1.5; color: var(--fg-2); }
+  .sys__report b { font-weight: 600; color: var(--fg); }
+  .sys__report :global(.icon) { flex: none; margin-top: 1px; color: var(--accent); }
+  .sys__cap { max-width: 92ch; margin-top: 28px; font-size: 0.875rem; line-height: 1.6; color: var(--fg-2); }
+  .sys__cap b { font-weight: 600; color: var(--fg); }
+
+  .incl { margin-top: clamp(56px, 6vw, 88px); }
+  .incl__k { margin-bottom: 20px; color: var(--fg); }
+
+  @media (width < 64rem) {
+    .sys__grid { grid-template-columns: minmax(0, 1fr); max-width: 560px; }
+    .sys__link { height: 64px; align-items: center; justify-content: flex-start; }
+    .sys__link::before { left: 11px; right: auto; top: 6px; bottom: 14px; width: 1px; height: auto; }
+    .sys__link::after { left: 7px; right: auto; top: auto; bottom: 6px; }
+    .sys__link-t { margin: 0 0 0 36px; text-align: left; }
+    .sys__report { margin-top: 20px; }
+  }
+</style>

@@ -1,0 +1,196 @@
+---
+// "A day with your AI workforce": the home page's pinned scroll story. OWNER: home-daystory.
+// One fictional business day (Larkfield Plumbing & Air, the hero console's company) in five moments:
+// 7:30 inbox triage, 9:40 a chat becomes a booked job, 1:15 a margin leak, 3:30 researched emails
+// waiting for approval, 6:00 the day's summary. Numbers and their derivations: daystory/day-data.ts.
+//
+// Layout
+// - Pinned (JS, motion allowed, >= 1024 x 640 or >= 768 x 880): the stage pins for ~4.8 screens;
+//   copy and progress rail on the left, the five windows stacked on the right (daystory/day-motion.ts).
+// - Static sequence (no JS, reduced motion, phones, short screens): each moment's copy beside (or
+//   above) its own window, all in their final state. Phones get simple reveals.
+// The inline script below sets .is-pinned before first paint so switching layouts never shifts the page.
+// Unnumbered on purpose (home/story/sections.ts owns the 01-09 sequence); pass num to show one.
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import SceneInbox from './daystory/SceneInbox.astro';
+import SceneChat from './daystory/SceneChat.astro';
+import SceneMargin from './daystory/SceneMargin.astro';
+import SceneOutreach from './daystory/SceneOutreach.astro';
+import SceneSummary from './daystory/SceneSummary.astro';
+import { number } from '@/lib/format';
+import {
+  business, moments, clockText, hoursToday, hoursTotal, jobsBooked, approvals, inbox, inboxTotal, sales,
+  leak, leakMonthly,
+} from './daystory/day-data';
+import { PIN_QUERY } from './daystory/pin-query';
+
+interface Props {
+  /** Section number for the rule ("02"); omitted = unnumbered. */
+  num?: string;
+  id?: string;
+}
+const { num, id = 'day' } = Astro.props;
+
+const scenes = { inbox: SceneInbox, chat: SceneChat, margin: SceneMargin, outreach: SceneOutreach, summary: SceneSummary };
+const summaries: Record<string, string> = {
+  inbox: `Illustrative inbox: ${inboxTotal} overnight emails sorted into ${inbox.needYou} that need the owner, ${inbox.drafts} drafts for approval, ${inbox.tasks} assigned tasks and ${inbox.filed} filed.`,
+  chat: 'Illustrative website chat: a homeowner’s AC question is safety-checked, quoted from the price book at $89 for the diagnostic visit and booked for today, 1 to 3 pm.',
+  margin: `Illustrative chart: water-heater install margin fell from ${leak.from}% to ${leak.to}% over eight weeks while all jobs held near 40%, about $${number(leakMonthly)} a month.`,
+  outreach: `Illustrative sales queue: ${sales.researched} property managers researched, ${sales.ready} personal first emails waiting for approval, ${sales.skipped} skipped.`,
+  summary: `Illustrative end-of-day summary: ${hoursTotal.toFixed(1)} hours back, ${jobsBooked} jobs booked, ${approvals.given} approvals given and ${approvals.waiting} waiting.`,
+};
+const hoursMath = hoursToday.map((h) => h.hours.toFixed(1)).join(' + ');
+// Same media query as day-motion.ts, inlined for the pre-paint class switch.
+const preflight = `(function(){var s=document.currentScript&&document.currentScript.parentElement;if(!s||!window.matchMedia||!matchMedia(${JSON.stringify(PIN_QUERY)}).matches)return;s.classList.add('is-pinned');addEventListener('load',function(){if(!s.hasAttribute('data-ds-ready'))s.classList.remove('is-pinned');});})();`;
+---
+<section id={id} data-section="day" class="ds section band-sunken" aria-labelledby={`${id}-title`} data-daystory data-ds-day={business.day}>
+  <script is:inline set:html={preflight}></script>
+
+  <div class="wrap ds-intro">
+    <div class="sec-rule" data-reveal>
+      {num && <span class="sec-rule__num">{num}</span>}
+      <span class="sec-rule__name">A day with your AI workforce</span>
+      <span class="sec-rule__line"></span><span class="sec-rule__knot"></span>
+    </div>
+    <div class="sec-head ds-head" data-reveal>
+      <h2 class="sec-head__title type-h2" id={`${id}-title`}>One business day, start to finish.</h2>
+      <div class="sec-head__aside ds-aside">
+        <p>Follow a fictional {business.employees}-person plumbing and heating company from the first email to the end-of-day summary.<span class="ds-hint"> Scroll to move the clock.</span></p>
+        <div class="tag-row"><IllustrativeLabel /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ds-pin" data-ds-pin>
+    <div class="wrap ds-grid">
+      <div class="ds-narr" data-ds-narr>
+        <div class="ds-railwrap" data-ds-railwrap aria-hidden="true">
+          <ol class="ds-rail" role="list">
+            <span class="ds-rail__track"><span class="ds-rail__fill" data-ds-fill></span></span>
+            {moments.map((m, i) => (
+              <li class="ds-rail__item" data-ds-rail data-i={i}>
+                <span class="ds-rail__knot"><i data-ds-dot></i></span>
+                <span class="ds-rail__time num-tab">{m.time}</span>
+                <span class="ds-rail__name">{m.rail}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div class="ds-copies">
+          {moments.map((m, i) => (
+            <article class="ds-copy" data-ds-copy data-i={i} style={`order:${i * 2}`}>
+              <p class="ds-copy__meta"><span class="ds-copy__time num-tab">{m.time}</span><span class="ds-copy__agent"><Icon name={m.icon} />{m.agent}</span></p>
+              <h3 class="type-h2 ds-copy__line" data-ds-line>{m.line}</h3>
+              <p class="type-lead ds-copy__body">{m.body}</p>
+              {m.id === 'summary' && <p class="math ds-copy__math"><b>{hoursMath}</b> = <b>{hoursTotal.toFixed(1)} h</b> across five agents</p>}
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <div class="ds-win" data-ds-win>
+        {moments.map((m, i) => {
+          const Scene = scenes[m.id];
+          return (
+            <div class="ds-scene app-window" data-ds-scene={m.id} data-ds-minutes={m.minutes} data-ds-tick={m.tick} data-i={i}
+              style={`order:${i * 2 + 1}`} role="img" aria-label={summaries[m.id]}>
+              <div class="aw-bar">
+                <span class="aw-dots"><i></i><i></i><i></i></span>
+                <span class="aw-crumb"><b>{business.name}</b><span class="aw-crumb__sep">/</span><span class="ds-view" data-ds-view>{m.view}</span></span>
+                <span class="aw-meta"><span class="aw-status ds-clock" data-ds-clock>{clockText(m.minutes)}</span><span class="aw-tag">Illustrative</span></span>
+              </div>
+              <div class="ds-stage" data-ds-stage><Scene /></div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initDayStory } from './daystory/day-motion';
+  document.querySelectorAll<HTMLElement>('[data-daystory]').forEach((el) => initDayStory(el));
+</script>
+
+<style>
+  .ds { --ds-win-h: clamp(480px, calc(100svh - var(--header-h) - 104px), 580px); }
+  .ds-head { margin-bottom: clamp(40px, 5vw, 72px); }
+  .ds-aside { display: grid; gap: 14px; }
+  .ds-hint { display: none; }
+
+  /* ---- Static sequence: no JS, reduced motion, phones and short screens. Final states, readable. */
+  .ds-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: clamp(56px, 7vw, 104px); }
+  .ds-narr, .ds-copies, .ds-win { display: contents; }
+  .ds-railwrap { display: none; }
+  .ds-copy { grid-column: 1 / span 5; align-self: center; }
+  .ds-scene { grid-column: 6 / -1; align-self: center; }
+  .ds-stage { container-type: inline-size; padding: 18px 20px 20px; }
+
+  .ds-copy__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.2; letter-spacing: 0.14em; text-transform: uppercase; }
+  .ds-copy__time { color: var(--accent); }
+  .ds-copy__agent { display: inline-flex; align-items: center; gap: 8px; color: var(--fg-2); }
+  .ds-copy__agent :global(.icon) { color: var(--accent-display); }
+  .ds-copy__line { margin-top: 18px; max-width: 15ch; }
+  .ds-copy__body { margin-top: 18px; max-width: 42ch; }
+  .ds-copy__math { margin-top: 14px; }
+
+  .ds-clock { justify-content: center; min-width: 7.25rem; }
+  .ds-view { display: inline-block; }
+
+  @media (width < 64rem) {
+    .ds-grid { grid-template-columns: minmax(0, 1fr); row-gap: 22px; }
+    .ds-copy, .ds-scene { grid-column: 1; }
+    .ds-copy:not([data-i="0"]) { margin-top: clamp(32px, 7vw, 56px); }
+    .ds-copy__line { max-width: 18ch; }
+  }
+  @media (width < 40rem) {
+    .ds-stage { padding: 14px; }
+    .ds-scene :global(.aw-dots), .ds-scene .aw-crumb > b, .ds-scene .aw-crumb__sep { display: none; }
+  }
+
+  /* ---- Pinned stage (set by the inline script and day-motion.ts). */
+  .ds:global(.is-pinned) { padding-bottom: 0; }
+  .ds:global(.is-pinned) .ds-hint { display: inline; }
+  .ds:global(.is-pinned) .ds-head { margin-bottom: 0; }
+  /* The pinned stage centres itself in the viewport; tuck its empty top padding under the head so the
+     paper between the head and the stage stays near the 120px rhythm limit (DESIGN.md §5). */
+  .ds:global(.is-pinned) .ds-intro { margin-bottom: -88px; }
+  .ds:global(.is-pinned) .ds-pin { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; height: 100vh; height: 100svh; padding-top: var(--header-h); }
+  .ds:global(.is-pinned) .ds-grid { row-gap: 0; align-items: stretch; }
+  .ds:global(.is-pinned) .ds-narr { display: grid; grid-column: 1 / span 5; grid-template-rows: auto minmax(0, 1fr); height: var(--ds-win-h); padding-right: clamp(0px, 2vw, 32px); }
+  .ds:global(.is-pinned) .ds-railwrap { display: block; padding-top: 6px; }
+  /* One track as tall as the longest copy, centred; every copy starts on the same line. */
+  .ds:global(.is-pinned) .ds-copies { display: grid; align-content: center; align-items: start; }
+  .ds:global(.is-pinned) .ds-copies > * { grid-area: 1 / 1; align-self: start; margin: 0; }
+  .ds:global(.is-pinned) .ds-copy:not([data-i="0"]) { opacity: 0; }
+  .ds:global(.is-pinned) .ds-win { display: grid; grid-column: 6 / -1; height: var(--ds-win-h); }
+  .ds:global(.is-pinned) .ds-win > * { grid-area: 1 / 1; }
+  .ds:global(.is-pinned) .ds-scene { display: flex; flex-direction: column; height: 100%; }
+  .ds:global(.is-pinned) .ds-scene:not([data-i="0"]) { opacity: 0; visibility: hidden; }
+  .ds:global(.is-pinned) .ds-stage { flex: 1; min-height: 0; }
+  .ds:global(.is-pinned) .ds-rail__item:not([data-i="0"]) { opacity: 0.42; }
+  .ds:global(.is-pinned) .ds-rail__item:not([data-i="0"]) .ds-rail__knot i { transform: scale(0); }
+  .ds:global(.is-pinned) .ds-rail__fill { transform: scaleX(0); }
+
+  /* Progress rail: five stops on a brass line that fills as the day goes. */
+  .ds-rail { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .ds-rail__track { position: absolute; top: 3px; left: 3px; width: 80%; height: 1px; background: var(--line-strong); }
+  .ds-rail__fill { position: absolute; inset: 0; background: var(--accent-line); transform-origin: 0 50%; }
+  .ds-rail__item { position: relative; display: grid; gap: 6px; padding-top: 20px; }
+  .ds-rail__knot { position: absolute; top: 0; left: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--color-paper-sunken); box-shadow: inset 0 0 0 1.25px var(--accent-line); }
+  .ds-rail__knot i { position: absolute; inset: 1.5px; border-radius: 50%; background: var(--accent-line); }
+  .ds-rail__time { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.2; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg); white-space: nowrap; }
+  .ds-rail__name { font-size: 0.8125rem; line-height: 1.3; color: var(--fg-3); }
+
+  @media (width < 80rem) { .ds-rail__name { display: none; } }
+
+  @media (width < 64rem) {
+    .ds:global(.is-pinned) { --ds-win-h: clamp(440px, calc(100svh - var(--header-h) - 400px), 560px); }
+    .ds:global(.is-pinned) .ds-grid { grid-template-columns: minmax(0, 1fr); row-gap: 28px; }
+    .ds:global(.is-pinned) .ds-narr { grid-column: 1; row-gap: 22px; height: auto; padding-right: 0; }
+    .ds:global(.is-pinned) .ds-win { grid-column: 1; }
+    .ds:global(.is-pinned) .ds-rail__name { display: block; }
+  }
+</style>

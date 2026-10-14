@@ -1,0 +1,71 @@
+---
+// OWNER: pages-misc
+// /approach/ §10.3 "The process in detail" (id "process"): five phases on the rising line, each with a
+// duration and a "You get" deliverable, then a "Time to value" row (CRITIQUE.md edit 14) reusing the
+// .leave-with label-and-list motif. Durations are the COPY.md Appendix A #6 commitments.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Steps from '@/components/blocks/Steps.astro';
+import Icon from '@/components/ui/Icon.astro';
+
+const steps = [
+  {
+    title: 'Assess',
+    body: 'We learn how your business runs, where the hours go and which tools you use.',
+    time: 'A 30-minute call, free',
+    get: 'A written plan in about 3 business days: your top opportunities, ranked by value',
+  },
+  {
+    title: 'Design',
+    body: 'We map the workflow with the people who do it, and agree the agent’s rules and limits.',
+    time: 'Typically 1 to 2 weeks',
+    get: 'A one-page agent spec: its job, its access, its limits and the success measure',
+  },
+  {
+    title: 'Build and test',
+    body: 'We connect your tools, build the agent and test it on your real past work.',
+    time: 'Typically 1 to 2 weeks',
+    get: 'A test report: the agent’s work next to your team’s, on real past cases',
+  },
+  {
+    title: 'Live pilot',
+    body: 'The agent goes live with your team approving its work. We review it daily, then weekly.',
+    time: 'Typically 2 to 4 weeks',
+    get: 'A pilot report against the success measure, with a go, adjust or stop call',
+  },
+  {
+    title: 'Run and improve',
+    body: 'We monitor, tune and maintain the agent, and expand what it does only when you approve.',
+    time: 'Ongoing, reviewed monthly',
+    get: 'A monthly report in hours and dollars, and a quarterly roadmap review',
+  },
+];
+
+const timeToValue = [
+  { title: 'Live in 2 to 4 weeks', body: 'A first agent typically goes live 2 to 4 weeks after kickoff, with your team approving its work.' },
+  { title: 'Some gains from day one', body: 'Inquiries that arrive after hours get answered the day the agent goes live.' },
+  { title: 'Full benefit in 2 to 3 months', body: 'Savings grow as routine work goes through without review. Practice-management, field-service and ERP projects take longer.' },
+];
+---
+<Section id="process" tightTop aria-labelledby="process-title">
+  <SectionHeader
+    num="01"
+    eyebrow="The process"
+    subtitle="Each phase ends with something in writing and a decision you make, so you always know what’s next and why."
+    titleId="process-title"
+  ><span slot="title" data-motion="split">What happens, step by step.</span></SectionHeader>
+  <div data-motion="draw stagger" data-draw-target=".steps__rope line" data-stagger-target=".step" data-end="top 45%"><Steps steps={steps} label="The five phases of an engagement" /></div>
+  <div class="leave-with" data-reveal>
+    <p class="type-label leave-with__label">Time to value</p>
+    <ul class="leave-with__list" role="list">
+      {timeToValue.map((t) => (
+        <li><Icon name="clock" /><div><b>{t.title}</b><p>{t.body}</p></div></li>
+      ))}
+    </ul>
+  </div>
+  <p class="process__micro">Timelines depend on scope and access. You get a dated plan before work starts.</p>
+</Section>
+
+<style>
+  .process__micro { margin-top: 28px; font-size: 0.8125rem; line-height: 1.45; color: var(--fg-3); }
+</style>

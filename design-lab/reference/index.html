@@ -1,0 +1,1272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halyard | Done-for-you AI for small and mid-size businesses</title>
+<meta name="description" content="Design reference for the Halyard website. Layout and styling follow DESIGN.md; copy and numbers come from content/*.md.">
+<meta name="theme-color" content="#F5F0E6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E2136'/%3E%3Crect x='8' y='11' width='3.4' height='14' rx='.5' fill='%23F3EDE1'/%3E%3Crect x='20.6' y='6.5' width='3.4' height='18.5' rx='.5' fill='%23F3EDE1'/%3E%3Cpath d='M11.4 18.9 20.6 12.7v3.7l-9.2 6.2z' fill='%23D1AE6C'/%3E%3C/svg%3E">
+<!-- The production build self-hosts these exact files through @fontsource-variable (DESIGN.md §4). -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5.3.0/opsz.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5.3.0/opsz-italic.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5.3.0/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-mono@5.3.0/index.css">
+<!-- reference.css = global.css (this folder) compiled by Tailwind 4.3.3 with the utilities these pages use. -->
+<link rel="stylesheet" href="reference.css">
+<script>
+  /* One config value controls the brand everywhere (src/config/site.ts in the build). */
+  window.SITE = { name: 'Halyard', brandStory: true, email: 'hello@halyard.example' };
+  document.documentElement.classList.add('js');
+</script>
+<style>
+/* ------------------------------------------------------------------------
+   Page-level patterns (in the build these live in the Home section components).
+   Everything shared lives in reference.css.
+   ------------------------------------------------------------------------ */
+#sprite * { vector-effect: non-scaling-stroke; }
+.ref-note { display: flex; justify-content: center; gap: 10px; padding: 7px 16px; background: var(--color-navy-900); color: var(--color-on-2); font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; text-align: center; }
+.ref-note b { color: var(--color-brass-300); font-weight: 500; }
+.ref-note__links { display: inline-flex; gap: 14px; margin-left: 10px; }
+.ref-note__links a { color: var(--color-on); text-decoration: underline; text-decoration-color: rgb(209 174 108 / .5); text-underline-offset: 3px; }
+.ref-note__links a[aria-current="page"] { color: var(--color-brass-300); text-decoration: none; }
+@media (width < 40rem) { .ref-note { flex-wrap: wrap; gap: 4px 10px; } .ref-note > span:not(.ref-note__links) { display: none; } .ref-note__links { margin-left: 0; } }
+
+/* Hero */
+.hero { position: relative; isolation: isolate; padding-top: clamp(32px, 4vw, 56px); }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(900px 520px at 80% 6%, rgb(255 255 255 / .62), transparent 70%), radial-gradient(760px 460px at 8% 0%, rgb(255 255 255 / .4), transparent 70%); }
+.hero__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+.hero__title { grid-column: 1 / span 7; }
+.hero__title .type-display { margin-top: 20px; max-width: 12ch; }
+.hero__lead { grid-column: 8 / span 5; align-self: end; padding-bottom: 6px; }
+.hero__actions { grid-column: 1 / span 7; margin-top: 30px; }
+.hero__ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.hero__micro { margin-top: 12px; font-size: .8125rem; color: var(--color-ink-3); }
+.hero__chips { grid-column: 8 / span 5; align-self: start; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; margin-top: 34px; font-size: .875rem; color: var(--color-ink-2); }
+.hero__chips li { display: flex; align-items: center; gap: 8px; }
+.hero__chips .icon { color: var(--color-brass-600); }
+@media (width < 64rem) {
+  .hero__title, .hero__lead, .hero__actions, .hero__chips { grid-column: 1 / -1; }
+  .hero__lead { margin-top: 20px; }
+  .hero__chips { margin-top: 22px; }
+}
+@media (width < 40rem) {
+  .hero__ctas .btn-primary { width: 100%; }
+  .hero__chips { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+}
+
+/* Hero console (annotated FIG. 1) */
+.con-figure { position: relative; margin-top: clamp(36px, 4vw, 48px); }
+.con-figure::before { content: ""; position: absolute; left: 12%; right: 12%; top: -40px; height: 160px; z-index: -1; background: radial-gradient(closest-side, rgb(209 174 108 / .22), transparent); filter: blur(24px); pointer-events: none; }
+.con-body { display: grid; grid-template-columns: 212px minmax(0, 1fr) 300px; }
+.con-side { display: flex; flex-direction: column; padding: 18px 12px 14px; background: var(--color-navy-850); border-right: 1px solid var(--color-rule-dark); }
+.con-side__head { display: flex; justify-content: space-between; align-items: center; padding: 0 8px 12px; font-size: 12px; color: var(--color-on-3); }
+.con-agents { display: grid; gap: 2px; }
+.con-agent { display: grid; grid-template-columns: 28px minmax(0, 1fr) 8px; align-items: center; gap: 10px; padding: 8px; border-radius: 9px; }
+.con-agent.is-sel { background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+.con-agent b { display: block; font-size: 12.5px; font-weight: 550; color: var(--color-on); white-space: nowrap; }
+.con-agent small { display: block; overflow: hidden; font-size: 12px; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
+.con-state { width: 7px; height: 7px; border-radius: 50%; background: var(--color-sage); box-shadow: 0 0 0 3px rgb(140 197 166 / .12); }
+.con-state--you { background: var(--color-sky); box-shadow: 0 0 0 3px rgb(143 184 224 / .16); }
+.con-guard { margin-top: auto; padding: 14px 8px 2px; border-top: 1px solid var(--color-rule-dark); }
+.con-guard p { display: flex; gap: 10px; font-size: 12px; line-height: 1.45; color: var(--color-on-3); }
+.con-guard b { display: block; font-size: 12.5px; font-weight: 550; color: var(--color-on); }
+.con-guard .icon { color: var(--color-brass-300); margin-top: 1px; }
+.con-main { min-width: 0; padding: 18px 18px 18px; }
+.con-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.con-head h3 { font-family: var(--font-serif); font-size: 22px; font-weight: 420; letter-spacing: -.015em; line-height: 1.1; color: var(--color-on); }
+.con-head p { margin-top: 5px; font-size: 12.5px; color: var(--color-on-3); }
+.con-head p b { color: var(--color-on-2); font-weight: 550; }
+.con-head p .you { color: var(--color-sky); font-weight: 550; }
+.con-strip { display: none; gap: 6px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.con-strip span { display: inline-flex; align-items: center; gap: 6px; flex: none; height: 28px; padding: 0 10px 0 8px; border-radius: 999px; font-size: 12px; color: var(--color-on-2); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+.con-strip .icon { width: 13px; height: 13px; color: var(--color-brass-300); }
+.con-kpis { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi__spark { position: absolute; right: 12px; bottom: 12px; width: 56px; height: 20px; }
+.con-card { position: relative; min-width: 0; border-radius: 12px; background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark), inset 0 1px 0 rgb(255 255 255 / .03); }
+.con-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 42px; padding: 0 14px; border-bottom: 1px solid var(--color-rule-dark); }
+.con-feed { position: relative; overflow: hidden; }
+.con-row { display: grid; grid-template-columns: 56px 28px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-rule-dark); }
+.con-row:last-child { border-bottom: 0; }
+.con-row__time { font-family: var(--font-mono); font-size: 12px; color: var(--color-on-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.con-row__body { min-width: 0; }
+.con-row__meta { display: block; font-size: 12px; color: var(--color-on-3); white-space: nowrap; }
+.con-row__meta b { color: var(--color-on-2); font-weight: 550; }
+.con-row__text { display: block; margin-top: 1px; overflow: hidden; font-size: 13px; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+.con-row.is-new { animation: var(--animate-row-in); }
+.con-rail { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 18px 18px 18px 0; }
+.con-appr { display: grid; gap: 8px; padding: 10px; }
+.con-appr__item { padding: 11px 12px; border-radius: 10px; background: var(--color-navy-800); box-shadow: inset 0 0 0 1px rgb(143 184 224 / .22); }
+.con-appr__who { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--color-on-3); }
+.con-appr__what { margin: 6px 0 10px; font-size: 13px; line-height: 1.4; color: var(--color-on); }
+.con-appr__what span { display: block; margin-top: 2px; font-size: 12px; color: var(--color-on-3); }
+.con-appr__act { display: flex; gap: 6px; }
+.con-hours { padding: 12px 14px 14px; }
+.con-hbar { display: grid; gap: 4px; }
+.con-hbar + .con-hbar { margin-top: 9px; }
+.con-hbar__top { display: flex; justify-content: space-between; font-size: 12px; color: var(--color-on-2); }
+.con-hbar__top b { font-weight: 600; color: var(--color-on); font-variant-numeric: tabular-nums; }
+.con-hbar__track { height: 6px; }
+.con-hbar__fill { display: block; height: 100%; border-radius: 0 var(--radius-data) var(--radius-data) 0; background: var(--viz-accent); }
+.con-knot-1 { top: -12px; left: -10px; }
+.con-knot-2 { top: -12px; left: -10px; }
+.con-knot-3 { top: -12px; left: -10px; }
+.con-legend { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; margin-top: 18px; }
+.con-figure figcaption .fig-caption { margin-top: 10px; }
+@media (width < 80rem) {
+  .con-body { grid-template-columns: minmax(0, 1fr) 280px; }
+  .con-side { display: none; }
+  .con-strip { display: flex; }
+}
+@media (width < 64rem) {
+  .con-body { grid-template-columns: minmax(0, 1fr); }
+  .con-main { display: flex; flex-direction: column; padding: 14px 12px; }
+  .con-rail { order: 2; padding: 0 12px 4px; }
+  .con-rail .con-card--hours { display: none; }
+  .con-main .con-feed-card { order: 3; }
+}
+@media (width < 48rem) {
+  .con-body { display: flex; flex-direction: column; }
+  .con-main { display: contents; }
+  .con-main > * { margin-inline: 12px; }
+  .con-strip { order: 1; margin-top: 14px; }
+  .con-head { order: 2; }
+  .con-rail { order: 3; padding: 0 12px; margin: 0 0 12px; }
+  .con-kpis { order: 4; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .con-feed-card { order: 5; margin-bottom: 12px; }
+  .kpi__spark, .con-head .chip-running, .aw-meta .aw-seg, .aw-meta .aw-status { display: none; }
+  .con-row { grid-template-columns: 28px minmax(0, 1fr) auto; align-items: start; }
+  .con-row__time { display: none; }
+  .con-row__text { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .con-row:nth-child(n + 4) { display: none; }
+  .con-legend .fig-legend { flex-direction: column; gap: 10px; }
+}
+
+/* Integrations */
+.integ { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; padding: 30px 0; border-top: 1px solid var(--color-rule); border-bottom: 1px solid var(--color-rule); }
+.integ__label { grid-column: 1 / span 3; font-size: .9375rem; line-height: 1.5; color: var(--color-ink-2); }
+.integ__label b { display: block; margin-bottom: 4px; font-weight: 600; color: var(--color-ink); }
+.integ .integrations { grid-column: 4 / span 9; }
+.integ__micro { grid-column: 4 / span 9; font-size: .8125rem; color: var(--color-ink-3); }
+@media (width < 64rem) { .integ__label, .integ .integrations, .integ__micro { grid-column: 1 / -1; } }
+
+/* Services vignettes */
+.vg-wf { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; align-items: end; height: 118px; }
+.vg-wf__col { position: relative; height: 100%; }
+.vg-wf__bar { position: absolute; left: 3px; right: 3px; border-radius: 3px 3px 0 0; background: var(--viz-accent); }
+.vg-wf__bar--total { background: var(--viz-total); }
+.vg-wf__bar--end { background: var(--viz-result); }
+.vg-wf__v { position: absolute; left: -6px; right: -6px; text-align: center; font-size: 12px; font-weight: 600; color: var(--color-on); font-variant-numeric: tabular-nums; }
+.vg-wf__l { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--viz-axis); font-size: 12px; text-align: center; color: var(--color-on-3); }
+
+/* Demo section */
+.demo-tabs { display: flex; align-items: center; gap: 6px; margin-bottom: 18px; overflow-x: auto; scrollbar-width: none; }
+.demo-tab { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; font-size: .875rem; font-weight: 500; color: var(--color-ink-2); white-space: nowrap; transition: background-color .2s, color .2s; }
+.demo-tab:hover { color: var(--color-ink); background: rgb(14 33 54 / .05); }
+.demo-tab[aria-selected="true"] { color: var(--color-on); background: var(--color-ink); }
+.demo-tab[aria-selected="true"] .icon { color: var(--color-brass-300); }
+.dw-body { display: grid; grid-template-columns: minmax(0, 40fr) minmax(0, 60fr); grid-template-rows: auto 1fr; min-height: 560px; }
+.dw-dossier { grid-row: 1 / span 2; }
+.dw-draft { padding-bottom: 0; }
+.dw-check { padding-top: 12px; }
+.dossier-person { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--color-rule-dark); transition: opacity .4s; }
+.dossier-av { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-family: var(--font-serif); font-size: 16px; color: var(--color-navy-900); background: linear-gradient(140deg, var(--color-brass-200), var(--color-brass-400)); }
+.dossier-person__text b { display: block; font-size: 14.5px; font-weight: 600; color: var(--color-on); }
+.dossier-person__text span { display: block; font-size: 12.5px; color: var(--color-on-2); }
+.dossier-person__text small { display: block; font-size: 12px; color: var(--color-on-3); }
+.fit { position: relative; width: 52px; height: 52px; }
+.fit svg { width: 52px; height: 52px; transform: rotate(-90deg); }
+.fit__track { fill: none; stroke: rgb(255 255 255 / .07); stroke-width: 3; }
+.fit__val { fill: none; stroke: var(--color-brass-300); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 94.5 100.5; transition: stroke-dasharray .9s var(--ease-out-soft); }
+.fit__n { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.fit__n b { font-size: 15px; font-weight: 600; color: var(--color-on); }
+.fit__n small { margin-top: 2px; font-size: 12px; color: var(--color-on-3); }
+.icp { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 14px; border-bottom: 1px solid var(--color-rule-dark); }
+.icp span { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 6px; font-size: 12px; color: var(--color-on-2); background: rgb(255 255 255 / .04); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); transition: opacity .35s, transform .35s var(--ease-out-soft); }
+.facts { padding-top: 12px; }
+.facts__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.facts__head span:last-child { font-size: 12px; color: var(--color-sage); }
+.fact { display: grid; grid-template-columns: 22px minmax(0, 1fr) 18px; gap: 10px; align-items: start; padding: 9px 0; border-bottom: 1px dashed rgb(169 180 194 / .14); transition: opacity .35s; }
+.fact:last-child { border-bottom: 0; }
+.fact .marker { margin: 1px 0 0; }
+.fact__t { font-size: 13px; line-height: 1.4; color: var(--color-on); }
+.fact__t small { display: block; margin-top: 2px; font-size: 12px; color: var(--color-on-3); }
+.fact__ok { display: grid; place-items: center; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; color: var(--color-sage); background: rgb(140 197 166 / .1); }
+.fact__ok .icon { width: 11px; height: 11px; stroke-width: 2.2; }
+.fact__spin { display: none; width: 14px; height: 14px; margin: 2px; border-radius: 50%; border: 1.5px solid rgb(224 191 127 / .25); border-top-color: var(--color-brass-300); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.fact.is-checking .fact__ok { display: none; }
+.fact.is-checking .fact__spin { display: block; }
+.fact--skip { color: var(--color-on-3); }
+.fact--skip .fact__t { color: var(--color-on-3); }
+.fact--skip .fact__x { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); color: var(--color-on-3); }
+.fact--skip .fact__x .icon { width: 11px; height: 11px; }
+.draft-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.draft-head span:last-child { font-size: 12px; color: var(--color-on-3); }
+.mail-body { position: relative; font-size: 14px; line-height: 1.62; color: var(--color-ink); }
+.mail-body > .skel { position: absolute; inset: 14px 16px auto; display: none; }
+.mail-body.is-waiting > .skel { display: grid; }
+.mail-body .sig { color: var(--color-ink-2); }
+.mail-body .sig small { display: block; font-size: 12.5px; color: var(--color-ink-3); }
+.w { transition: opacity .08s; }
+.is-typing .w:not(.on) { opacity: 0; }
+.is-typing .marker:not(.on) { opacity: 0; }
+.is-typing mark:not(.lit) { background: none; }
+mark { color: inherit; background: none; }
+mark.mark-ok { transition: background-color .3s; }
+.caret { display: none; width: 1.5px; height: 15px; margin-left: 1px; vertical-align: -2px; background: var(--color-ink); animation: blink 1s steps(2) infinite; }
+.is-typing .caret { display: inline-block; }
+.is-waiting .caret { display: none; }
+.qc { padding: 12px 14px; border-radius: 10px; background: var(--color-navy-850); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+.qc__head { display: flex; justify-content: space-between; align-items: center; }
+.qc__score { font-size: 12px; color: var(--color-on-2); }
+.qc__score b { color: var(--color-on); font-weight: 600; }
+.qc__list { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 18px; margin-top: 10px; }
+.qc__list li { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; line-height: 1.4; color: var(--color-on-3); transition: color .3s; }
+.qc__mk { position: relative; display: grid; place-items: center; flex: none; width: 15px; height: 15px; margin-top: 1px; border-radius: 50%; color: var(--color-navy-900); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); transition: background-color .3s, box-shadow .3s; }
+.qc__mk .icon { width: 10px; height: 10px; stroke-width: 2.4; opacity: 0; transition: opacity .2s; }
+.qc__list li.is-pass { color: var(--color-on); }
+.qc__list li.is-pass .qc__mk { background: var(--color-sage); box-shadow: none; }
+.qc__list li.is-pass .qc__mk .icon { opacity: 1; }
+.qc__list li.is-run .qc__mk { box-shadow: none; border: 1.5px solid rgb(224 191 127 / .3); border-top-color: var(--color-brass-300); animation: spin .8s linear infinite; }
+.qc__foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-rule-dark); }
+.qc__btns { display: flex; gap: 6px; margin-left: auto; }
+.qc__foot p { font-size: 12px; color: var(--color-on-3); }
+.qc__foot .chip-attention .icon { stroke-width: 2; }
+.app-btn.is-pressed { transform: scale(.96); filter: brightness(1.1); }
+.is-off { opacity: 0 !important; }
+.icp span.is-off { transform: translateY(4px); }
+.demo-under { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; margin-top: 14px; }
+.demo-under .fig-caption { max-width: 70ch; }
+@media (width < 64rem) { .dw-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; min-height: 0; } .dw-dossier { grid-row: auto; } .qc__list { grid-template-columns: minmax(0, 1fr); } }
+@media (width < 48rem) { .dw-body { display: block; } .dw-draft { padding-bottom: 16px; } .dw-check { padding-top: 16px; } .dw-body .aw-pane { min-height: 430px; } }
+
+/* Examples */
+.ex-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--color-rule-strong); }
+.ex-grid .stat { padding: 30px 32px 32px; border-bottom: 1px solid var(--color-rule); }
+.ex-grid .stat:nth-child(odd) { padding-left: 0; border-left: 0; }
+.ex-grid .stat:nth-child(even) { padding-right: 0; }
+.ex-grid .stat__fig { font-size: clamp(3rem, 2.4rem + 2vw, 4.25rem); }
+@media (width < 64rem) {
+  .ex-grid { grid-template-columns: minmax(0, 1fr); }
+  .ex-grid .stat, .ex-grid .stat:nth-child(odd), .ex-grid .stat:nth-child(even) { padding: 28px 0; border-left: 0; }
+}
+
+/* Calculator band */
+.calc { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; align-items: stretch; }
+.calc__intro { grid-column: 1 / span 4; display: flex; flex-direction: column; }
+.calc__intro .type-h2 { margin-top: 18px; }
+.calc__intro .type-lead { margin-top: 16px; }
+.calc__intro .note { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--color-rule-dark); font-size: .8125rem; line-height: 1.55; color: var(--color-on-3); }
+.calc .calc-sheet { grid-column: 5 / span 8; }
+.calc-sheet__in .field__hint { margin-top: 2px; }
+.calc-out__fte { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--color-rule-dark-strong); font-size: .875rem; color: var(--color-on-2); }
+.calc-out__fte b { color: var(--color-on); font-weight: 600; }
+.calc-sheet__out .math { margin-top: 16px; color: var(--color-on-3); }
+.calc-sheet__out .btn { align-self: flex-start; margin-top: auto; }
+.calc-sheet__out .math + .btn { margin-top: 22px; }
+@media (width < 64rem) { .calc__intro, .calc .calc-sheet { grid-column: 1 / -1; } .calc__intro .note { margin-top: 18px; } }
+
+/* Why us */
+.why-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: clamp(40px, 5vw, 64px); }
+.why-cards .card .icon { width: 20px; height: 20px; color: var(--color-brass-700); }
+.why-cards .type-h4 { margin-top: 14px; }
+.why-cards p { margin-top: 8px; font-size: .9375rem; line-height: 1.55; color: var(--color-ink-2); }
+@media (width < 64rem) { .why-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (width < 40rem) { .why-cards { grid-template-columns: minmax(0, 1fr); } }
+
+/* Final CTA */
+.cta .type-h2 { margin-top: 20px; max-width: 15ch; font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.75rem); }
+.cta .type-lead { margin-top: 20px; max-width: 52ch; }
+.cta__btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.cta__micro { margin-top: 14px; font-size: .8125rem; color: var(--color-on-3); }
+.sail { display: block; width: 100%; height: auto; overflow: visible; }
+@media (width < 40rem) { .cta__btns .btn { width: 100%; } }
+
+/* Footer */
+.foot-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; }
+.foot-brand { grid-column: 1 / span 5; }
+.foot-brand .brand { color: var(--color-on); }
+.foot-brand p { margin-top: 14px; max-width: 34ch; font-size: .9375rem; line-height: 1.6; color: var(--color-on-3); }
+.foot-brand .tagline { margin-top: 18px; font-family: var(--font-serif); font-size: 1.375rem; font-weight: 380; letter-spacing: -.01em; color: var(--color-on); }
+.foot-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 22px; }
+.foot-cta span { font-size: .8125rem; color: var(--color-on-3); }
+.foot-cols { grid-column: 7 / span 6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.foot-contact { margin-top: 18px; font-size: .9375rem; }
+.foot-story { margin-top: 20px; max-width: 46ch; font-family: var(--font-serif); font-size: 1rem; line-height: 1.5; color: var(--color-on-2); }
+@media (width < 64rem) { .foot-brand, .foot-cols { grid-column: 1 / -1; } }
+@media (width < 40rem) { .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 32px; } }
+</style>
+</head>
+<body>
+<svg id="sprite" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></symbol>
+    <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-message-square" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-chart-column" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
+    <symbol id="i-trending-up" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-user-check" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></symbol>
+    <symbol id="i-key-round" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></symbol>
+    <symbol id="i-house" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>
+    <symbol id="i-shopping-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/></symbol>
+    <symbol id="i-briefcase" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+    <symbol id="i-mark" viewBox="0 0 32 32"><rect x="6" y="10" width="4" height="17" rx=".6" fill="currentColor" stroke="none"/><rect x="22" y="4" width="4" height="23" rx=".6" fill="currentColor" stroke="none"/><path d="M10 19.2 22 11.2v4.4l-12 8z" fill="var(--mark-accent, #B8904A)" stroke="none"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+<div class="ref-note"><b>Design reference</b><span>Styling follows DESIGN.md. Copy and numbers come from content/*.md.</span><span class="ref-note__links"><a href="index.html" aria-current="page">Home</a><a href="consulting.html">AI Consulting</a><a href="components.html">Components</a></span></div>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header" id="top">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="#top" data-brand-label aria-label="Halyard, home">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-mark"/></svg>
+      <span class="brand__word" data-brand>Halyard</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul class="nav-links">
+        <li class="nav-dropdown" data-dropdown>
+          <button class="nav-link" type="button" aria-expanded="false" aria-controls="services-panel">Services <svg class="icon" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+          <div class="nav-panel" id="services-panel">
+            <div class="nav-panel__grid">
+              <a class="nav-panel__item" href="#services"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-message-square"/></svg></span><span><b>AI Agents</b><span>Customer, Analyst and Executive Assistant agents for your customers and your team.</span></span></a>
+              <a class="nav-panel__item" href="#services"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg></span><span><b>AI Marketing Director</b><span>Audits your ads, runs the tests and moves budget to what works.</span></span></a>
+              <a class="nav-panel__item" href="#services"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg></span><span><b>AI Sales Agent</b><span>Researched, personal outreach that starts real conversations.</span></span></a>
+              <a class="nav-panel__item" href="consulting.html"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-trending-up"/></svg></span><span><b>AI Consulting</b><span>A ranked plan to cut costs and grow margin.</span></span></a>
+            </div>
+            <div class="nav-panel__foot"><a class="link-arrow" href="#services"><span>All services</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a><span class="text-fg-3">Not sure where to start? <a class="link" href="#cta">Book a free assessment</a></span></div>
+          </div>
+        </li>
+        <li><a class="nav-link" href="#demos">Demos</a></li>
+        <li><a class="nav-link" href="#examples">Results</a></li>
+        <li><a class="nav-link" href="#process">Approach</a></li>
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn btn-primary btn-sm" href="#cta"><span class="max-sm:hidden">Book a free assessment</span><span class="sm:hidden">Free assessment</span><svg class="icon btn__icon btn__icon--arrow max-sm:hidden" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      <button class="nav-menu-btn" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu"><span></span></button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a class="mobile-menu__link" href="#services">Services <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <div class="mobile-menu__sub">
+      <a href="#services"><b>AI Agents</b><span>Customer, Analyst and Executive Assistant agents.</span></a>
+      <a href="#services"><b>AI Marketing Director</b><span>Audits your ads and moves budget to what works.</span></a>
+      <a href="#services"><b>AI Sales Agent</b><span>Researched, personal outreach.</span></a>
+      <a href="consulting.html"><b>AI Consulting</b><span>A ranked plan to cut costs and grow margin.</span></a>
+    </div>
+    <a class="mobile-menu__link" href="#demos">Demos <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <a class="mobile-menu__link" href="#examples">Results <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <a class="mobile-menu__link" href="#process">Approach <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <a class="mobile-menu__link" href="#cta">Contact <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <a class="btn btn-primary btn-lg btn-block mt-6" href="#cta">Book a free AI assessment <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    <p class="mt-3 text-center text-fg-3" style="font-size:.8125rem">Free 30-minute call. No cost, no obligation.</p>
+  </div>
+</header>
+
+<main id="main">
+<!-- ============ HERO ============ -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+    <div class="hero__grid">
+      <div class="hero__title">
+        <p class="eyebrow">AI agents and consulting for small and mid-size businesses</p>
+        <h1 class="type-display" id="hero-title">AI that earns <em>its keep.</em></h1>
+      </div>
+      <p class="hero__lead type-lead"><span data-brand>Halyard</span> builds and runs AI agents that answer your customers, work your numbers, clear your inbox, tune your ads and find your next clients. They work inside the tools you already use, and your people stay in control.</p>
+      <div class="hero__actions">
+        <div class="hero__ctas">
+          <a class="btn btn-primary btn-lg" href="#cta">Book a free AI assessment <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-ghost" href="#demos"><svg class="icon btn__icon icon--fill" aria-hidden="true"><use href="#i-play"/></svg><span>Watch the agents work</span></a>
+        </div>
+        <p class="hero__micro">Free 30-minute call. You get a written plan, whether or not you work with us.</p>
+      </div>
+      <ul class="hero__chips" aria-label="What you can count on">
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Built and run for you</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Works with the tools you have</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Human approval where it matters</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Measured in hours and dollars</li>
+      </ul>
+    </div>
+
+    <figure class="con-figure">
+      <div class="app-window" role="img" aria-label="Illustration: the agent console of a fictional 18-person heating and air company. Five agents are working, recent actions are logged with times, two items wait for the owner's approval, and results are tracked in hours and dollars.">
+        <div class="aw-bar">
+          <span class="aw-dots"><i></i><i></i><i></i></span>
+          <span class="aw-crumb"><svg class="icon" viewBox="0 0 32 32" style="width:18px;height:18px;color:var(--color-on);--mark-accent:#D1AE6C" aria-hidden="true"><use href="#i-mark"/></svg><b>Fernhill Heating &amp; Air</b><span class="aw-crumb__sep max-sm:hidden">/</span><span class="max-sm:hidden">Agent activity</span></span>
+          <span class="aw-meta">
+            <span class="aw-seg"><span class="is-on">Today</span><span>Week</span><span>Month</span></span>
+            <span class="live"><i></i>Live</span>
+            <span class="aw-status" data-clock>Tue 9:42 am</span>
+            <span class="aw-tag">Illustrative</span>
+          </span>
+        </div>
+        <div class="con-body">
+          <div class="con-side">
+            <div class="con-side__head"><span class="aw-label">Agents</span><span>5 working</span></div>
+            <ul class="con-agents">
+              <li class="con-agent is-sel"><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-message-square"/></svg></span><span><b>Customer Agent</b><small>In 3 conversations</small></span><span class="con-state"></span></li>
+              <li class="con-agent"><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-chart-column"/></svg></span><span><b>Analyst Agent</b><small>Building the weekly numbers</small></span><span class="con-state"></span></li>
+              <li class="con-agent"><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-inbox"/></svg></span><span><b>Executive Assistant</b><small>Inbox: 6 need you</small></span><span class="con-state con-state--you"></span></li>
+              <li class="con-agent"><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg></span><span><b>Marketing Director</b><small>Running ad test #14</small></span><span class="con-state"></span></li>
+              <li class="con-agent"><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg></span><span><b>Sales Agent</b><small>9 emails ready for review</small></span><span class="con-state con-state--you"></span></li>
+            </ul>
+            <div class="con-guard"><p><svg class="icon" aria-hidden="true"><use href="#i-shield-check"/></svg><span><b>Guardrails on</b>Sends, refunds and budget moves wait for your approval.</span></p></div>
+          </div>
+          <div class="con-main">
+            <div class="con-strip" aria-hidden="true">
+              <span><svg class="icon"><use href="#i-message-square"/></svg>Customer</span><span><svg class="icon"><use href="#i-chart-column"/></svg>Analyst</span><span><svg class="icon"><use href="#i-inbox"/></svg>Assistant</span><span><svg class="icon"><use href="#i-target"/></svg>Marketing</span><span><svg class="icon"><use href="#i-send"/></svg>Sales</span>
+            </div>
+            <div class="con-head">
+              <div><h3>Agent activity</h3><p><b data-tasks>41</b> tasks since 7:00 am · <span class="you">2 waiting on you</span></p></div>
+              <span class="chip chip-running"><svg class="icon" aria-hidden="true"><use href="#i-refresh-cw"/></svg>Connected to 9 tools</span>
+            </div>
+            <div class="con-kpis">
+              <span class="fig-knot con-knot-3" aria-hidden="true">3</span>
+              <div class="kpi"><span class="kpi__label">Hours back this week</span><span class="kpi__value"><span data-hours>27.5</span><small>h</small></span><span class="kpi__delta"><b class="is-good">▲ 3.0 h</b>vs last week</span>
+                <svg class="kpi__spark" viewBox="-3 -3 66 28" aria-hidden="true"><path d="M0 22 L6 19.4 L12 18.6 L18 16 L24 16.9 L30 13.5 L36 11.8 L42 10.9 L48 9.2 L54 7.1" fill="none" stroke="var(--viz-context)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M54 7.1 L60 2" fill="none" stroke="var(--viz-accent)" stroke-width="2" stroke-linecap="round"/><circle cx="60" cy="2" r="3" fill="var(--viz-accent)" stroke="var(--color-navy-700)" stroke-width="2"/></svg></div>
+              <div class="kpi"><span class="kpi__label">First reply, median</span><span class="kpi__value">38<small>sec</small></span><span class="kpi__delta">Chat, text and email</span></div>
+              <div class="kpi"><span class="kpi__label">Jobs booked by agents</span><span class="kpi__value">12</span><span class="kpi__delta"><b class="is-good">▲ 3</b>vs last week</span></div>
+              <div class="kpi"><span class="kpi__label">Ad spend moved</span><span class="kpi__value">$840</span><span class="kpi__delta">Within your 15% cap</span></div>
+            </div>
+            <div class="con-card con-feed-card">
+              <span class="fig-knot con-knot-1" aria-hidden="true">1</span>
+              <div class="con-card__head"><span class="aw-label">Activity log</span><span class="aw-seg max-sm:hidden"><span class="is-on">All</span><span>Needs you</span><span>Handoffs</span></span></div>
+              <ol class="con-feed" data-feed>
+                <li class="con-row"><span class="con-row__time">9:47 pm</span><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-message-square"/></svg></span><span class="con-row__body"><span class="con-row__meta"><b>Customer Agent</b> · Website chat</span><span class="con-row__text">Booked a furnace inspection for Thu, 8 to 10 am. Confirmation sent by text.</span></span><span class="chip chip-done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Done</span></li>
+                <li class="con-row"><span class="con-row__time">10:05 am</span><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg></span><span class="con-row__body"><span class="con-row__meta"><b>Sales Agent</b> · Gmail</span><span class="con-row__text">Researched 12 prospects. 9 emails ready for review. 3 skipped: no clear reason to reach out.</span></span><span class="chip chip-attention"><svg class="icon" aria-hidden="true"><use href="#i-user-check"/></svg>Needs your OK</span></li>
+                <li class="con-row"><span class="con-row__time">7:30 am</span><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-chart-column"/></svg></span><span class="con-row__body"><span class="con-row__meta"><b>Analyst Agent</b> · QuickBooks</span><span class="con-row__text">Weekly numbers are ready. Freight costs rose on 3 product lines. Summary is in your inbox.</span></span><span class="chip chip-done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Done</span></li>
+                <li class="con-row"><span class="con-row__time">7:15 am</span><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-inbox"/></svg></span><span class="con-row__body"><span class="con-row__meta"><b>Executive Assistant</b> · Outlook</span><span class="con-row__text">Inbox sorted: 6 need you, 3 tasks assigned, 11 replies drafted for approval.</span></span><span class="chip chip-handoff"><svg class="icon" aria-hidden="true"><use href="#i-user-check"/></svg>6 for you</span></li>
+                <li class="con-row"><span class="con-row__time">Mon</span><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg></span><span class="con-row__body"><span class="con-row__meta"><b>Marketing Director</b> · Google Ads</span><span class="con-row__text">Paused 14 search terms with no conversions. Moved budget to your best campaign, within your cap.</span></span><span class="chip chip-done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Done</span></li>
+                <li class="con-row"><span class="con-row__time">Fri</span><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon" aria-hidden="true"><use href="#i-trending-up"/></svg></span><span class="con-row__body"><span class="con-row__meta"><b>Consulting</b> · Margin review</span><span class="con-row__text">Savings roadmap updated: 3 opportunities ranked by payback.</span></span><span class="chip chip-done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Done</span></li>
+              </ol>
+            </div>
+          </div>
+          <div class="con-rail">
+            <div class="con-card">
+              <span class="fig-knot con-knot-2" aria-hidden="true">2</span>
+              <div class="con-card__head"><span class="aw-label">Waiting on you</span><span class="count">2</span></div>
+              <div class="con-appr">
+                <div class="con-appr__item">
+                  <span class="con-appr__who"><span>Sales Agent · first email</span><span class="chip chip-attention"><svg class="icon" aria-hidden="true"><use href="#i-user-check"/></svg>Your OK</span></span>
+                  <p class="con-appr__what">To Dana Whitaker, Hollis &amp; Grant<span>“Congratulations on opening the Riverside office…”</span></p>
+                  <span class="con-appr__act"><span class="app-btn">Review</span><span class="app-btn app-btn--primary">Approve</span></span>
+                </div>
+                <div class="con-appr__item">
+                  <span class="con-appr__who"><span>Marketing Director · budget</span><span class="chip chip-attention"><svg class="icon" aria-hidden="true"><use href="#i-user-check"/></svg>Your OK</span></span>
+                  <p class="con-appr__what">Move $300 a week from Meta to search<span>Search leads cost less over the last 30 days</span></p>
+                  <span class="con-appr__act"><span class="app-btn">Review</span><span class="app-btn app-btn--primary">Approve</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="con-card con-card--hours">
+              <div class="con-card__head"><span class="aw-label">Hours back by agent</span><span style="font-size:12px;color:var(--color-on-3)">This week</span></div>
+              <ul class="con-hours">
+                <li class="con-hbar"><span class="con-hbar__top"><span>Customer Agent</span><b>9.5 h</b></span><span class="con-hbar__track"><span class="con-hbar__fill" style="width:100%"></span></span></li>
+                <li class="con-hbar"><span class="con-hbar__top"><span>Executive Assistant</span><b>7.5 h</b></span><span class="con-hbar__track"><span class="con-hbar__fill" style="width:78.9%"></span></span></li>
+                <li class="con-hbar"><span class="con-hbar__top"><span>Analyst Agent</span><b>6.0 h</b></span><span class="con-hbar__track"><span class="con-hbar__fill" style="width:63.2%"></span></span></li>
+                <li class="con-hbar"><span class="con-hbar__top"><span>Marketing Director</span><b>2.5 h</b></span><span class="con-hbar__track"><span class="con-hbar__fill" style="width:26.3%"></span></span></li>
+                <li class="con-hbar"><span class="con-hbar__top"><span>Sales Agent</span><b>2.0 h</b></span><span class="con-hbar__track"><span class="con-hbar__fill" style="width:21.1%"></span></span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        <div class="con-legend">
+          <ol class="fig-legend" aria-label="What the console shows">
+            <li><span class="fig-legend__n" aria-hidden="true">1</span>Every agent action, logged as it happens</li>
+            <li><span class="fig-legend__n" aria-hidden="true">2</span>Anything sensitive waits for your OK</li>
+            <li><span class="fig-legend__n" aria-hidden="true">3</span>Results tracked in hours and dollars</li>
+          </ol>
+          <span class="tag">Illustrative example</span>
+        </div>
+        <p class="fig-caption"><b>FIG. 1</b> — The agent console, shown with sample data from a fictional 18-person heating and air company.</p>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ INTEGRATIONS ============ -->
+<section class="section-tight" aria-labelledby="integ-title">
+  <div class="wrap">
+    <div class="integ" data-reveal>
+      <p class="integ__label"><b id="integ-title">Works inside the tools your team already uses.</b>No new system to learn. Agents do the work where it already happens.</p>
+      <ul class="integrations">
+        <li class="integration"><span><b>Gmail</b><small>Email</small></span></li>
+        <li class="integration"><span><b>Outlook</b><small>Email</small></span></li>
+        <li class="integration"><span><b>Excel</b><small>Spreadsheets</small></span></li>
+        <li class="integration"><span><b>Google Sheets</b><small>Spreadsheets</small></span></li>
+        <li class="integration"><span><b>QuickBooks</b><small>Accounting</small></span></li>
+        <li class="integration"><span><b>Xero</b><small>Accounting</small></span></li>
+        <li class="integration"><span><b>HubSpot</b><small>CRM</small></span></li>
+        <li class="integration"><span><b>Salesforce</b><small>CRM</small></span></li>
+        <li class="integration"><span><b>Google Ads</b><small>Advertising</small></span></li>
+        <li class="integration"><span><b>Meta Ads</b><small>Advertising</small></span></li>
+        <li class="integration"><span><b>Shopify</b><small>E-commerce</small></span></li>
+        <li class="integration"><span><b>Stripe</b><small>Payments</small></span></li>
+        <li class="integration"><span><b>PowerPoint</b><small>Decks</small></span></li>
+        <li class="integration"><span><b>Google Calendar</b><small>Calendar</small></span></li>
+        <li class="integration"><span><b>Slack</b><small>Team chat</small></span></li>
+        <li class="integration"><span><b>Microsoft Teams</b><small>Team chat</small></span></li>
+      </ul>
+      <p class="integ__micro">Plus most tools with an API or a clean export. Product names are trademarks of their owners, listed to show what we connect to.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SERVICES ============ -->
+<section class="section" id="services" aria-labelledby="services-title" style="padding-top:clamp(40px,5vw,72px)">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">01</span><span class="sec-rule__name">Services</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal>
+      <h2 class="type-h2 sec-head__title" id="services-title">Four ways to put AI to work.</h2>
+      <p class="sec-head__aside">Start with the one that pays off fastest and add the next when you're ready. One team designs, builds, runs and measures all of it.</p>
+    </div>
+    <div class="svc-ledger" data-reveal>
+      <article class="svc-col">
+        <div class="app-window app-window--mini" aria-hidden="true">
+          <div class="aw-bar"><span class="aw-dots"><i></i><i></i><i></i></span><span class="aw-crumb"><b>Agents on shift</b></span><span class="aw-meta"><span class="aw-tag">Illustrative</span></span></div>
+          <div class="vg"><div class="vg-rows">
+            <div class="vg-row"><span class="vg-glyph"><svg class="icon"><use href="#i-message-square"/></svg></span><span class="vg-row__text"><b>Customer Agent</b><small>Booked a 9:47 pm chat</small></span><span class="chip chip-done"><svg class="icon"><use href="#i-check"/></svg>Booked</span></div>
+            <div class="vg-row"><span class="vg-glyph"><svg class="icon"><use href="#i-chart-column"/></svg></span><span class="vg-row__text"><b>Analyst Agent</b><small>Weekly numbers ready</small></span><span class="chip chip-done"><svg class="icon"><use href="#i-check"/></svg>Ready</span></div>
+            <div class="vg-row"><span class="vg-glyph"><svg class="icon"><use href="#i-inbox"/></svg></span><span class="vg-row__text"><b>Executive Assistant</b><small>11 replies drafted</small></span><span class="chip chip-attention"><svg class="icon"><use href="#i-user-check"/></svg>Your OK</span></div>
+          </div></div>
+        </div>
+        <div class="svc-col__head"><span class="icon-tile"><svg viewBox="0 0 44 44" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M22 12.5 12.5 30M22 12.5 31.5 30M12.5 30h19" stroke-opacity=".55"/><circle cx="22" cy="11" r="4.25" fill="#D1AE6C" stroke="#EBD6AC"/><circle cx="11.5" cy="31.5" r="4.25" fill="#10243B"/><circle cx="32.5" cy="31.5" r="4.25" fill="#10243B"/></svg></span><span class="svc-col__num">01</span></div>
+        <h3 class="type-h3 svc-col__title">AI Agents</h3>
+        <p class="svc-col__value">An AI staff for your customers and your team.</p>
+        <ul class="ledger-list"><li>Answers chat, text, email and calls</li><li>Cleans data and builds workbooks, charts and dashboards</li><li>Triages email, assigns tasks and builds decks</li></ul>
+        <a class="link-arrow" href="#demos"><span>Explore AI Agents</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      </article>
+      <article class="svc-col">
+        <div class="app-window app-window--mini" aria-hidden="true">
+          <div class="aw-bar"><span class="aw-dots"><i></i><i></i><i></i></span><span class="aw-crumb"><b>Cost per lead</b></span><span class="aw-meta"><span class="aw-tag">Illustrative</span></span></div>
+          <div class="vg"><div class="vg-bars">
+            <div class="vg-bar"><span>Search A</span><span class="vg-bar__track"><span class="vg-bar__fill vg-bar__fill--accent" style="width:46%"></span></span><span class="vg-bar__val">$44</span></div>
+            <div class="vg-bar"><span>Search B</span><span class="vg-bar__track"><span class="vg-bar__fill" style="width:62%"></span></span><span class="vg-bar__val">$58</span></div>
+            <div class="vg-bar"><span>Meta A</span><span class="vg-bar__track"><span class="vg-bar__fill" style="width:78%"></span></span><span class="vg-bar__val">$71</span></div>
+            <div class="vg-bar"><span>Meta B</span><span class="vg-bar__track"><span class="vg-bar__fill" style="width:0"></span></span><span class="vg-bar__val" style="color:var(--color-on-3);font-weight:500">Paused</span></div>
+          </div>
+          <p class="vg-note"><span><span class="chart__key" style="--k:var(--viz-accent);display:inline-block;margin-right:6px"></span>Winner of a 2-week test</span><span>Moves capped at 15% a week</span></p></div>
+        </div>
+        <div class="svc-col__head"><span class="icon-tile"><svg viewBox="0 0 44 44" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M7 36.5h30" stroke-opacity=".4"/><path d="M8 30.5 16 23l6 4.5 12-14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="23" r="2.25" fill="#10243B"/><circle cx="22" cy="27.5" r="2.25" fill="#10243B"/><circle cx="34.5" cy="12.5" r="3.75" fill="#D1AE6C" stroke="#EBD6AC"/></svg></span><span class="svc-col__num">02</span></div>
+        <h3 class="type-h3 svc-col__title">AI Marketing Director</h3>
+        <p class="svc-col__value">Audits every ad you run, tests new ideas and moves budget to what works.</p>
+        <ul class="ledger-list"><li>Google, Meta and more, tied to real leads and sales</li><li>Experiments with a hypothesis and a stopping rule</li><li>A plain-English report every week</li></ul>
+        <a class="link-arrow" href="#demos"><span>Explore the Marketing Director</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      </article>
+      <article class="svc-col">
+        <div class="app-window app-window--mini" aria-hidden="true">
+          <div class="aw-bar"><span class="aw-dots"><i></i><i></i><i></i></span><span class="aw-crumb"><b>First email</b></span><span class="aw-meta"><span class="aw-tag">Illustrative</span></span></div>
+          <div class="vg"><div class="aw-doc" style="padding:10px 12px;font-size:12.5px;line-height:1.5">Congratulations on opening the <mark class="mark-ok">Riverside office</mark><span class="marker">1</span> last month. Your new posting mentions <mark class="mark-ok">“handling IT.”</mark><span class="marker">2</span></div>
+          <p class="vg-note" style="gap:6px"><span class="chip chip-done"><svg class="icon"><use href="#i-check"/></svg>2 facts, sourced</span><span class="chip chip-attention"><svg class="icon"><use href="#i-user-check"/></svg>Your OK</span></p></div>
+        </div>
+        <div class="svc-col__head"><span class="icon-tile"><svg viewBox="0 0 44 44" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="7" y="11.5" width="30" height="21" rx="2.5"/><path d="M7.8 12.6 22 23.5l14.2-10.9" stroke-linejoin="round"/><circle cx="22" cy="24.5" r="4.5" fill="#D1AE6C" stroke="#EBD6AC"/><path d="M20.2 24.6l1.3 1.3 2.4-2.6" stroke="#0E2136" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="svc-col__num">03</span></div>
+        <h3 class="type-h3 svc-col__title">AI Sales Agent</h3>
+        <p class="svc-col__value">Researches each prospect and writes the email a thoughtful person would send.</p>
+        <ul class="ledger-list"><li>Real research on every prospect</li><li>A quality check before anything sends</li><li>Deliverability and opt-outs built in</li></ul>
+        <a class="link-arrow" href="#demos"><span>Explore the Sales Agent</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      </article>
+      <article class="svc-col">
+        <div class="app-window app-window--mini" aria-hidden="true">
+          <div class="aw-bar"><span class="aw-dots"><i></i><i></i><i></i></span><span class="aw-crumb"><b>Margin, pts</b></span><span class="aw-meta"><span class="aw-tag">Illustrative</span></span></div>
+          <div class="vg">
+            <div class="vg-wf">
+              <div class="vg-wf__col"><span class="vg-wf__bar vg-wf__bar--total" style="bottom:0;height:60%"></span><span class="vg-wf__v" style="bottom:calc(60% + 4px)">8.0</span></div>
+              <div class="vg-wf__col"><span class="vg-wf__bar" style="bottom:60%;height:9%"></span><span class="vg-wf__v" style="bottom:calc(69% + 4px)">+.3</span></div>
+              <div class="vg-wf__col"><span class="vg-wf__bar" style="bottom:69%;height:9%"></span><span class="vg-wf__v" style="bottom:calc(78% + 4px)">+.3</span></div>
+              <div class="vg-wf__col"><span class="vg-wf__bar" style="bottom:66%;height:0"></span><span class="vg-wf__bar" style="bottom:78%;height:6%"></span><span class="vg-wf__v" style="bottom:calc(84% + 4px)">+.2</span></div>
+              <div class="vg-wf__col"><span class="vg-wf__bar" style="bottom:84%;height:4.8%"></span><span class="vg-wf__v" style="bottom:calc(88.8% + 4px)">+.16</span></div>
+              <div class="vg-wf__col"><span class="vg-wf__bar" style="bottom:88.8%;height:3%"></span><span class="vg-wf__v" style="bottom:calc(91.8% + 4px)">+.1</span></div>
+              <div class="vg-wf__col"><span class="vg-wf__bar vg-wf__bar--end" style="bottom:0;height:91.8%"></span><span class="vg-wf__v" style="bottom:calc(91.8% + 4px)">9.06</span></div>
+            </div>
+            <div class="vg-wf__l"><span>Now</span><span>Price</span><span>OT</span><span>Mat.</span><span>Frt.</span><span>SW</span><span>Plan</span></div>
+          </div>
+        </div>
+        <div class="svc-col__head"><span class="icon-tile"><svg viewBox="0 0 44 44" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M7 36.5h30" stroke-opacity=".4"/><rect x="8.5" y="22" width="5" height="14.5" rx="1"/><rect x="15.5" y="17.5" width="5" height="4.5" rx="1"/><rect x="22.5" y="13" width="5" height="4.5" rx="1"/><path d="M13.5 22h2M20.5 17.5h2M27.5 13h2" stroke-opacity=".55"/><rect x="29.5" y="13" width="5" height="23.5" rx="1" fill="#D1AE6C" stroke="#EBD6AC"/></svg></span><span class="svc-col__num">04</span></div>
+        <h3 class="type-h3 svc-col__title">AI Consulting</h3>
+        <p class="svc-col__value">A review of your financials and operations that ranks where to cut costs and fix pricing.</p>
+        <ul class="ledger-list"><li>Margin by job, product and customer</li><li>Opportunities ranked by value and effort</li><li>A 90-day plan you can act on</li></ul>
+        <a class="link-arrow" href="consulting.html"><span>Explore AI Consulting</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEMOS ============ -->
+<section class="section band-sunken" id="demos" aria-labelledby="demos-title">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">02</span><span class="sec-rule__name">See it work</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal>
+      <h2 class="type-h2 sec-head__title" id="demos-title">Don't take our word for it. Watch the work.</h2>
+      <p class="sec-head__aside">Six short simulations, one per job. Each follows an agent from the first message to the finished result, including the checks and handoffs we build in.</p>
+    </div>
+    <div class="demo-tabs" role="tablist" aria-label="Demos" data-reveal>
+      <button class="demo-tab" role="tab" aria-selected="false" type="button"><svg class="icon" aria-hidden="true"><use href="#i-message-square"/></svg>Customer Agent</button>
+      <button class="demo-tab" role="tab" aria-selected="false" type="button"><svg class="icon" aria-hidden="true"><use href="#i-chart-column"/></svg>Analyst Agent</button>
+      <button class="demo-tab" role="tab" aria-selected="false" type="button"><svg class="icon" aria-hidden="true"><use href="#i-inbox"/></svg>Executive Assistant</button>
+      <button class="demo-tab" role="tab" aria-selected="false" type="button"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg>Marketing Director</button>
+      <button class="demo-tab" role="tab" aria-selected="true" type="button"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg>Sales Agent</button>
+      <button class="demo-tab" role="tab" aria-selected="false" type="button"><svg class="icon" aria-hidden="true"><use href="#i-trending-up"/></svg>Consulting</button>
+    </div>
+
+    <div class="app-window app-window--demo" data-demo tabindex="-1" role="group" aria-label="Simulated demo: Sales Agent">
+      <div class="aw-bar">
+        <span class="aw-dots"><i></i><i></i><i></i></span>
+        <span class="aw-title"><span data-brand>Halyard</span> Sales Agent · Parkline IT</span>
+        <span class="aw-meta"><span class="chip chip-running" data-status><span class="typing-dots"><i></i><i></i><i></i></span><span data-status-text>Quality check</span></span><span class="aw-tag max-sm:hidden">Simulated demo</span></span>
+      </div>
+      <div class="aw-panetabs" role="group" aria-label="Show pane">
+        <button class="aw-panetab" type="button" aria-pressed="false" data-pane-tab="research"><span class="dot" aria-hidden="true"></span>Research</button>
+        <button class="aw-panetab" type="button" aria-pressed="true" data-pane-tab="draft"><span class="dot" aria-hidden="true"></span>Draft</button>
+        <button class="aw-panetab" type="button" aria-pressed="false" data-pane-tab="check"><span class="dot" aria-hidden="true"></span>Check</button>
+      </div>
+      <div class="aw-stage" data-stage>
+        <div class="dw-body" data-panes>
+          <div class="aw-pane aw-pane--sunk dw-dossier" data-pane="research">
+            <div class="flex items-center justify-between mb-3"><span class="aw-label">Dossier · Hollis &amp; Grant</span><span style="font-size:12px;color:var(--color-on-3)">10 of 10 checks</span></div>
+            <div class="icp" data-icp-wrap><span data-icp>Law firm</span><span data-icp>10–50 staff</span><span data-icp>Within 40 miles</span><span data-icp>Recently expanded</span></div>
+            <div class="dossier-person" data-person>
+              <span class="dossier-av">DW</span>
+              <div class="dossier-person__text"><b>Dana Whitaker</b><span>Managing partner, Hollis &amp; Grant</span><small>22 staff · 2 offices · 6 miles away</small></div>
+              <div class="fit" aria-label="Fit score 94 out of 100"><svg viewBox="0 0 36 36"><circle class="fit__track" cx="18" cy="18" r="16"/><circle class="fit__val" data-fit cx="18" cy="18" r="16"/></svg><span class="fit__n"><b>94</b><small>fit</small></span></div>
+            </div>
+            <div class="facts">
+              <div class="facts__head"><span class="aw-label">Why now</span><span data-verified>2 of 2 used, verified</span></div>
+              <ol>
+                <li class="fact" data-fact><span class="marker">1</span><span class="fact__t">Opened a second office in Riverside on Sep 8<small>Company website · News page</small></span><span class="fact__ok"><svg class="icon"><use href="#i-check"/></svg></span><span class="fact__spin"></span></li>
+                <li class="fact" data-fact><span class="marker">2</span><span class="fact__t">Office manager role includes “handling IT and vendor relationships”<small>Firm careers page · posted Sep 29</small></span><span class="fact__ok"><svg class="icon"><use href="#i-check"/></svg></span><span class="fact__spin"></span></li>
+                <li class="fact fact--skip" data-fact><span class="fact__x"><svg class="icon"><use href="#i-x"/></svg></span><span class="fact__t">Current IT provider: not found<small>Unverified, so it stays out of the email</small></span><span></span></li>
+              </ol>
+            </div>
+            <div class="aw-note mt-3" data-angle><span class="aw-label" style="color:var(--color-brass-300)">Reason to write now</span><p class="mt-1" style="font-size:13px">A new office, and IT just landed in an office manager's job. Offer the checklist. No meeting request.</p></div>
+          </div>
+          <div class="aw-pane dw-draft is-active" data-pane="draft">
+            <div class="draft-head"><span class="aw-label">Draft · written for Dana</span><span>89 words · plain and specific</span></div>
+            <div class="aw-doc">
+              <div class="aw-doc__row"><span>To</span><b style="font-weight:600">Dana Whitaker</b><span class="text-fg-3 max-sm:hidden">dana@hollisgrant.example</span></div>
+              <div class="aw-doc__row"><span>Subject</span><b style="font-weight:600">IT for the new Riverside office</b></div>
+              <div class="aw-doc__body mail-body" data-mail>
+                <div class="skel" aria-hidden="true"><span class="skel__label">Waiting for research</span><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <p>Hi Dana,</p>
+                <p>Congratulations on <mark class="mark-ok">opening the Riverside office last month.</mark><span class="marker">1</span></p>
+                <p>I noticed the office manager role you posted includes <mark class="mark-ok">“handling IT and vendor relationships.”</mark><span class="marker">2</span> At a two-office firm, that usually turns into password resets, laptop setups and quietly wondering whether last night's backup ran.</p>
+                <p>Would it help if I sent the one-page checklist we use when a firm opens a second office? No call needed.</p>
+                <p class="sig">Sam Ortiz<small>Parkline IT · Reply “no thanks” and I won't email again.</small><span class="caret"></span></p>
+              </div>
+            </div>
+          </div>
+          <div class="aw-pane dw-check" data-pane="check">
+            <div class="qc">
+              <div class="qc__head"><span class="aw-label">Quality check</span><span class="qc__score"><b data-qc-count>6</b> of 6 passed</span></div>
+              <ul class="qc__list">
+                <li class="is-pass" data-qc><span class="qc__mk"><svg class="icon"><use href="#i-check"/></svg></span>Every claim traces to a source</li>
+                <li class="is-pass" data-qc><span class="qc__mk"><svg class="icon"><use href="#i-check"/></svg></span>No filler, flattery or buzzwords</li>
+                <li class="is-pass" data-qc><span class="qc__mk"><svg class="icon"><use href="#i-check"/></svg></span>89 words, one clear ask</li>
+                <li class="is-pass" data-qc><span class="qc__mk"><svg class="icon"><use href="#i-check"/></svg></span>Postal address and opt-out added</li>
+                <li class="is-pass" data-qc><span class="qc__mk"><svg class="icon"><use href="#i-check"/></svg></span>Daily limit: 18 of 40 used</li>
+                <li class="is-pass" data-qc><span class="qc__mk"><svg class="icon"><use href="#i-check"/></svg></span>Not a client, no open deal, no opt-out</li>
+              </ul>
+              <div class="qc__foot"><span class="chip chip-attention"><svg class="icon" aria-hidden="true"><use href="#i-user-check"/></svg>First emails wait for Sam's OK</span><span class="qc__btns"><span class="app-btn">Edit</span><span class="app-btn app-btn--primary" data-approve>Approve &amp; send</span></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="aw-toast" data-toast role="status">
+          <span class="grid place-items-center rounded-full" style="width:30px;height:30px;background:var(--color-ink);color:var(--color-brass-300)"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+          <span><b style="display:block;font-size:13px;font-weight:600">Sent 9:52 am · logged to HubSpot</b><span style="display:block;font-size:12px;color:var(--color-ink-2)">Follow-up set for Oct 19 if there's no reply</span></span>
+        </div>
+        <div class="aw-result" data-result>
+          <article class="result-card">
+            <div class="result-card__top"><h3 class="type-h4" style="color:var(--color-ink)">Result</h3><span class="tag ctx-light">Illustrative example</span></div>
+            <div class="result-tiles">
+              <div class="result-tile"><span class="result-tile__v">4<small>min</small></span><span class="result-tile__k">Research, draft and checks</span><span class="result-tile__basis">Agent run time for one prospect.</span></div>
+              <div class="result-tile"><span class="result-tile__v">2<small>min</small></span><span class="result-tile__k">Sam's review</span><span class="result-tile__basis">He reads, approves and sends.</span></div>
+              <div class="result-tile"><span class="result-tile__v">0</span><span class="result-tile__k">Emails sent without approval</span><span class="result-tile__basis">First emails always wait for a person.</span></div>
+            </div>
+            <div class="result-card__foot"><a class="link" href="#examples" style="font-size:.875rem">See the math</a><button class="btn btn-secondary btn-sm" type="button" data-replay-2><svg class="icon btn__icon" aria-hidden="true"><use href="#i-rotate-ccw"/></svg>Replay</button><a class="btn btn-primary btn-sm" href="#cta">Book a free AI assessment <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></div>
+          </article>
+        </div>
+      </div>
+      <div class="aw-ticker" data-ticker><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-ticker-text>Passed 6 of 6 checks</span></div>
+      <p class="aw-caption" data-caption aria-live="polite" aria-label="Demo captions"><b>Step 4 of 5</b><span>Every fact is checked against its source, then tone, length, opt-out and send limits.</span></p>
+      <div class="aw-player">
+        <div class="aw-ctrl">
+          <button class="aw-btn aw-btn--main" type="button" data-play aria-label="Play demo"><svg class="icon i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="icon i-pause" aria-hidden="true"><use href="#i-pause"/></svg></button>
+          <button class="aw-btn" type="button" data-replay aria-label="Replay"><svg class="icon" aria-hidden="true"><use href="#i-rotate-ccw"/></svg></button>
+        </div>
+        <div class="aw-chapters" data-chapters></div>
+        <div class="flex items-center gap-3"><span class="aw-paused" data-paused hidden>Paused</span><span class="aw-time" data-time>0:20 / 0:23</span><button class="aw-skip" type="button" data-skip>Skip to result</button></div>
+      </div>
+    </div>
+    <div class="demo-under">
+      <details class="aw-transcript"><summary>Read the step-by-step <svg class="icon" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary><ol class="aw-steplist mt-2" data-steplist></ol></details>
+      <p class="fig-caption">Simulated demo. Parkline IT and Hollis &amp; Grant are fictional businesses. Figures are illustrative.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EXAMPLES ============ -->
+<section class="section" id="examples" aria-labelledby="examples-title">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">03</span><span class="sec-rule__name">Illustrative examples</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal>
+      <h2 class="type-h2 sec-head__title" id="examples-title">What it could be worth, with the math shown.</h2>
+      <p class="sec-head__aside">Four worked examples, one per service. Each uses a fictional business and conservative assumptions, and every line of math is on the page.</p>
+    </div>
+    <div class="ex-grid" data-reveal>
+      <article class="stat">
+        <div class="stat__top"><span class="tag">Illustrative example</span><span class="stat__svc">AI Agents · plumbing and HVAC, 18 staff</span></div>
+        <p class="stat__fig">$38,664<small>a year</small></p>
+        <p class="stat__desc">in modeled value from 36 hours back a month and 10 more booked jobs.</p>
+        <div class="stat__bars">
+          <div class="mbar"><span class="mbar__label">Office time on calls</span><span class="mbar__track"><span class="mbar__fill" style="width:100%"></span></span><span class="mbar__val">Before</span></div>
+          <div class="mbar"><span class="mbar__label">With the agent</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style="width:58%"></span></span><span class="mbar__val">−36 hrs</span></div>
+        </div>
+        <div class="stat__math"><p class="math">36 hrs back + 10 jobs a month, valued at loaded cost and gross profit</p><p><a class="link-arrow" href="#examples"><span>See the math</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p></div>
+      </article>
+      <article class="stat">
+        <div class="stat__top"><span class="tag">Illustrative example</span><span class="stat__svc">Marketing Director · kitchen and bath</span></div>
+        <p class="stat__fig">$60 → $50<small>per lead</small></p>
+        <p class="stat__desc">for the same spend: 30 more leads a month, $136,656 a year in modeled value.</p>
+        <div class="stat__bars">
+          <div class="mbar"><span class="mbar__label">Cost per lead before</span><span class="mbar__track"><span class="mbar__fill" style="width:100%"></span></span><span class="mbar__val">$60</span></div>
+          <div class="mbar"><span class="mbar__label">After 8 weeks</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style="width:83.3%"></span></span><span class="mbar__val">$50</span></div>
+        </div>
+        <div class="stat__math"><p class="math">Same monthly budget ÷ $50 instead of $60 per lead = +30 leads</p><p><a class="link-arrow" href="#examples"><span>See the math</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p></div>
+      </article>
+      <article class="stat">
+        <div class="stat__top"><span class="tag">Illustrative example</span><span class="stat__svc">Sales Agent · commercial cleaning</span></div>
+        <p class="stat__fig">6<small>meetings a month</small></p>
+        <p class="stat__desc">up from 3, about one new contract a month, $88,464 a year in modeled value.</p>
+        <div class="stat__bars">
+          <div class="mbar"><span class="mbar__label">Meetings before</span><span class="mbar__track"><span class="mbar__fill" style="width:50%"></span></span><span class="mbar__val">3</span></div>
+          <div class="mbar"><span class="mbar__label">With the agent</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style="width:100%"></span></span><span class="mbar__val">6</span></div>
+        </div>
+        <div class="stat__math"><p class="math">New business counted as gross profit, not revenue</p><p><a class="link-arrow" href="#examples"><span>See the math</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p></div>
+      </article>
+      <article class="stat">
+        <div class="stat__top"><span class="tag">Modeled estimate</span><span class="stat__svc">AI Consulting · metal fabrication, 85 staff</span></div>
+        <p class="stat__fig">$318,000<small>identified</small></p>
+        <p class="stat__desc">in yearly savings. We count half in year one: EBITDA margin 8.0% → 9.06%.</p>
+        <div class="stat__bars">
+          <div class="mbar"><span class="mbar__label">Pricing</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style="width:100%"></span></span><span class="mbar__val">$45K</span></div>
+          <div class="mbar"><span class="mbar__label">Overtime</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style="width:100%"></span></span><span class="mbar__val">$45K</span></div>
+          <div class="mbar"><span class="mbar__label">Materials</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style="width:66.7%"></span></span><span class="mbar__val">$30K</span></div>
+          <div class="mbar"><span class="mbar__label">Freight</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style="width:53.3%"></span></span><span class="mbar__val">$24K</span></div>
+          <div class="mbar"><span class="mbar__label">Software</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style="width:33.3%"></span></span><span class="mbar__val">$15K</span></div>
+        </div>
+        <div class="stat__math"><p class="math">$318,000 × 50% = $159,000 counted · $1.359M ÷ $15M = 9.06%</p><p><a class="link-arrow" href="#examples"><span>See the math</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CALCULATOR ============ -->
+<section class="section band-navy" id="calculator" aria-labelledby="calc-title">
+  <div class="wrap">
+    <div class="calc">
+      <div class="calc__intro" data-reveal>
+        <span class="eyebrow">Estimate your savings</span>
+        <h2 class="type-h2" id="calc-title">What are your team's hours worth?</h2>
+        <p class="type-lead">Five quick inputs with conservative defaults. Change anything and the estimate updates.</p>
+        <p class="note">Modeled estimate, before our fees. Not a quote, a guarantee or a client result. <a class="link" href="#examples">How we estimate</a></p>
+      </div>
+      <div class="calc-sheet" data-calc data-reveal>
+        <div class="calc-sheet__in ctx-light">
+          <div class="flex items-center justify-between gap-3"><span class="type-label">Your team</span><span class="tag">Modeled estimate</span></div>
+          <div class="calc-field"><div class="calc-field__top"><label for="c-team">Team members in desk or customer-facing roles</label><output for="c-team" data-out="team">15</output></div><input class="range" type="range" id="c-team" min="1" max="100" step="1" value="15"></div>
+          <div class="calc-field"><div class="calc-field__top"><label for="c-cost">Average loaded cost per hour</label><output for="c-cost" data-out="cost">$40</output></div><input class="range" type="range" id="c-cost" min="20" max="150" step="1" value="40"></div>
+          <div class="calc-field"><div class="calc-field__top"><label for="c-hours">Hours per person each week on repetitive tasks</label><output for="c-hours" data-out="hours">8 hrs</output></div><input class="range" type="range" id="c-hours" min="1" max="30" step="1" value="8"></div>
+          <div class="calc-field"><div class="calc-field__top"><label for="c-share">Share of that work AI agents take on</label><output for="c-share" data-out="share">35%</output></div><input class="range" type="range" id="c-share" min="20" max="60" step="5" value="35"></div>
+          <div class="calc-field"><div class="calc-field__top"><label for="c-inq">Customer inquiries per month</label><output for="c-inq" data-out="inq">200</output></div><input class="range" type="range" id="c-inq" min="0" max="2000" step="50" value="200"></div>
+        </div>
+        <div class="calc-sheet__out" aria-live="polite">
+          <span class="type-label">Hours back each month</span>
+          <p class="calc-out__fig"><span data-o="hrs">140</span><small>hrs</small></p>
+          <div class="calc-out__pair"><div><b data-o="year">$67,200</b><span>value of that time each year</span></div><div><b data-o="be">$5,600</b><span>break-even budget a month</span></div></div>
+          <p class="calc-out__fte">Capacity added: <b data-o="fte">0.8 FTE</b>, without hiring.</p>
+          <p class="math" data-o="math">500 hrs in scope × 35% − 20% review = 140 hrs<br>140 hrs × $40 × 12 = $67,200 a year</p>
+          <a class="btn btn-brass" href="#cta">Get a tailored estimate <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROCESS ============ -->
+<section class="section" id="process" aria-labelledby="process-title">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">04</span><span class="sec-rule__name">How it works</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal>
+      <h2 class="type-h2 sec-head__title" id="process-title">Start small. Prove it. Then scale.</h2>
+      <p class="sec-head__aside">Every engagement follows the same four steps. We prove value on one job, with your team in control, before anything expands.</p>
+    </div>
+    <div class="steps" style="--n:4" data-reveal>
+      <svg class="steps__rope" aria-hidden="true"><line x1="0" y1="54" x2="100%" y2="18" stroke-opacity=".25" style="stroke:var(--color-ink)"/><line x1="0" y1="52" x2="100%" y2="16"/></svg>
+      <div class="step" style="--k:0"><span class="step__knot"></span><span class="step__n">01</span><h3 class="step__title">Assess</h3><p class="step__body">Free. We learn how your business runs and where the hours go, then send your top opportunities, ranked by value.</p><span class="step__time"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Typically a 30-minute call</span><p class="step__get"><span>You get</span>Your top opportunities, ranked, in writing</p></div>
+      <div class="step" style="--k:1"><span class="step__knot"></span><span class="step__n">02</span><h3 class="step__title">Design</h3><p class="step__body">We map the workflow, set the guardrails and agree on a baseline and a success measure.</p><span class="step__time"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Typically 1 to 2 weeks</span><p class="step__get"><span>You get</span>A written plan with guardrails and a baseline</p></div>
+      <div class="step" style="--k:2"><span class="step__knot"></span><span class="step__n">03</span><h3 class="step__title">Build and pilot</h3><p class="step__body">We connect your tools, test on your past work, then go live with approvals switched on.</p><span class="step__time"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Typically 3 to 6 weeks</span><p class="step__get"><span>You get</span>An agent working on your real work, with approvals on</p></div>
+      <div class="step" style="--k:3"><span class="step__knot"></span><span class="step__n">04</span><h3 class="step__title">Run and improve</h3><p class="step__body">We monitor, tune and report in hours and dollars. Agents take on more only when you approve it.</p><span class="step__time"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Ongoing, monthly review</span><p class="step__get"><span>You get</span>A monthly report in hours and dollars</p></div>
+    </div>
+    <p class="mt-8 text-fg-3" style="font-size:.8125rem">Timelines depend on scope and on how quickly we can get access to your tools.</p>
+  </div>
+</section>
+
+<!-- ============ WHY US + COMPARISON ============ -->
+<section class="section band-sunken" id="why-us" aria-labelledby="why-title">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">05</span><span class="sec-rule__name">Why <span data-brand>Halyard</span></span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal>
+      <h2 class="type-h2 sec-head__title" id="why-title">The difference is who does the work.</h2>
+      <p class="sec-head__aside">AI tools give you capability. Agencies give you a workflow. We give you a working result, and we stay accountable for it.</p>
+    </div>
+    <div class="why-cards" data-reveal>
+      <div class="card"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><h3 class="type-h4">Outcomes, not logins</h3><p>Finished work inside the tools you already use. No new system to learn.</p></div>
+      <div class="card"><svg class="icon" aria-hidden="true"><use href="#i-wrench"/></svg><h3 class="type-h4">Built for your business</h3><p>Agents learn your services, prices and voice, and prove themselves on past work first.</p></div>
+      <div class="card"><svg class="icon" aria-hidden="true"><use href="#i-user-check"/></svg><h3 class="type-h4">People in control</h3><p>You set the approval rules and hard limits. Autonomy grows only when results justify it.</p></div>
+      <div class="card"><svg class="icon" aria-hidden="true"><use href="#i-chart-column"/></svg><h3 class="type-h4">Accountable for results</h3><p>A baseline agreed up front and a monthly report against it, in hours and dollars.</p></div>
+    </div>
+    <div data-reveal>
+      <table class="cmp" id="comparison" role="table">
+        <caption>How the options compare</caption>
+        <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col"><span class="sr-only">Question</span></th><th role="columnheader" scope="col">DIY AI tools</th><th role="columnheader" scope="col">Generic automation agency</th><th role="columnheader" scope="col" class="is-us"><span class="inline-flex items-center gap-2"><svg class="icon" viewBox="0 0 32 32" style="width:18px;height:18px;color:var(--color-on);--mark-accent:#D1AE6C" aria-hidden="true"><use href="#i-mark"/></svg><span data-brand>Halyard</span></span></th></tr></thead>
+        <tbody role="rowgroup">
+          <tr role="row"><th role="rowheader" scope="row">Who does the work</th><td role="cell" data-label="DIY AI tools">You and your team, in spare moments</td><td role="cell" data-label="Generic agency">They build it, then hand it over</td><td role="cell" class="is-us" data-label="Halyard">We build it, run it and keep it working</td></tr>
+          <tr role="row"><th role="rowheader" scope="row">Fit to your business</th><td role="cell" data-label="DIY AI tools">Generic prompts and templates</td><td role="cell" data-label="Generic agency">Prebuilt workflows, lightly adapted</td><td role="cell" class="is-us" data-label="Halyard">Designed around your process, data, prices and voice</td></tr>
+          <tr role="row"><th role="rowheader" scope="row">Human approval</th><td role="cell" data-label="DIY AI tools">Up to you</td><td role="cell" data-label="Generic agency">Varies by project</td><td role="cell" class="is-us" data-label="Halyard">Built in for every sensitive action</td></tr>
+          <tr role="row"><th role="rowheader" scope="row">What gets measured</th><td role="cell" data-label="DIY AI tools">Hard to say</td><td role="cell" data-label="Generic agency">Activity: tasks run, emails sent</td><td role="cell" class="is-us" data-label="Halyard">Hours and dollars against an agreed baseline</td></tr>
+          <tr role="row"><th role="rowheader" scope="row">When something breaks</th><td role="cell" data-label="DIY AI tools">You troubleshoot</td><td role="cell" data-label="Generic agency">A new ticket or change order</td><td role="cell" class="is-us" data-label="Halyard">We monitor and fix it as part of the work</td></tr>
+        </tbody>
+      </table>
+      <p class="mt-5 text-fg-3" style="font-size:.8125rem;max-width:70ch">DIY tools are a good fit for one person's tasks. They get harder when the work spans systems, people and customers. That's where we come in.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECURITY ============ -->
+<section class="section" id="security" aria-labelledby="security-title">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">06</span><span class="sec-rule__name">Security and control</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal>
+      <h2 class="type-h2 sec-head__title" id="security-title">Your data stays yours. Your people stay in charge.</h2>
+      <p class="sec-head__aside">Giving an agent access to your business is like handing over a key. Here's how we handle it.</p>
+    </div>
+    <div class="guard-grid" data-reveal>
+      <div class="guard"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-key-round"/></svg></span><p class="guard__title">Least-privilege access</p><p class="guard__body">Agents get only the access a job needs, read-only by default.</p></div>
+      <div class="guard"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-user-check"/></svg></span><p class="guard__title">Human approval for sensitive actions</p><p class="guard__body">Payments, refunds, price changes and bulk sends wait for a person to say yes.</p></div>
+      <div class="guard"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-list"/></svg></span><p class="guard__title">Audit logs</p><p class="guard__body">Every action an agent takes is recorded: what it did, when and why.</p></div>
+      <div class="guard"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></span><p class="guard__title">Business-grade AI providers</p><p class="guard__body">Built on business-grade AI services whose terms exclude training on your data.</p></div>
+      <div class="guard"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-database"/></svg></span><p class="guard__title">Only the data a job needs</p><p class="guard__body">We connect what a workflow requires and nothing more.</p></div>
+      <div class="guard"><span class="icon-tile icon-tile--sm"><svg class="icon" aria-hidden="true"><use href="#i-power"/></svg></span><p class="guard__title">An off switch you control</p><p class="guard__body">Pause or turn off any agent at any time. Your team picks up where it left off.</p></div>
+    </div>
+    <p class="mt-6 text-fg-3" style="font-size:.8125rem">We describe our practices plainly instead of pointing to badges. Have a security questionnaire? Send it over and we'll answer in writing.</p>
+  </div>
+</section>
+
+<!-- ============ INDUSTRIES ============ -->
+<section class="section band-sunken" id="industries" aria-labelledby="ind-title">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">07</span><span class="sec-rule__name">Industries</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal>
+      <h2 class="type-h2 sec-head__title" id="ind-title">Made for local businesses and growing mid-size companies.</h2>
+      <p class="sec-head__aside">If your team juggles customers, paperwork and numbers, there's work an agent can take on.</p>
+    </div>
+    <div class="cell-grid" data-reveal>
+      <div class="cell"><p class="cell__title"><svg class="icon" aria-hidden="true"><use href="#i-wrench"/></svg>Home services</p><p class="cell__body">HVAC, plumbing, roofing and electrical. Every call answered, jobs booked after hours.</p></div>
+      <div class="cell"><p class="cell__title"><svg class="icon" aria-hidden="true"><use href="#i-stethoscope"/></svg>Dental, medical and vet</p><p class="cell__body">Routine questions answered, appointments booked, cancellations filled.</p></div>
+      <div class="cell"><p class="cell__title"><svg class="icon" aria-hidden="true"><use href="#i-scale"/></svg>Law and accounting</p><p class="cell__body">Intake, document prep, inbox triage and deadline tracking.</p></div>
+      <div class="cell"><p class="cell__title"><svg class="icon" aria-hidden="true"><use href="#i-house"/></svg>Real estate teams</p><p class="cell__body">Every inquiry answered in minutes, showings and follow-ups on track.</p></div>
+      <div class="cell"><p class="cell__title"><svg class="icon" aria-hidden="true"><use href="#i-utensils"/></svg>Restaurants and hospitality</p><p class="cell__body">Reservations, catering inquiries and weekly food and labor costs.</p></div>
+      <div class="cell"><p class="cell__title"><svg class="icon" aria-hidden="true"><use href="#i-shopping-bag"/></svg>Retail and e-commerce</p><p class="cell__body">Order questions, product data cleanup and ad testing.</p></div>
+      <div class="cell"><p class="cell__title"><svg class="icon" aria-hidden="true"><use href="#i-package"/></svg>Distribution and manufacturing</p><p class="cell__body">Quotes and orders from email, margin by product and customer.</p></div>
+      <div class="cell"><p class="cell__title"><svg class="icon" aria-hidden="true"><use href="#i-briefcase"/></svg>Agencies and professional services</p><p class="cell__body">Proposals, client reporting and new-business outreach.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section" id="faq" aria-labelledby="faq-title">
+  <div class="wrap">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">08</span><span class="sec-rule__name">FAQ</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="grid gap-6 lg:grid-cols-12">
+      <div class="lg:col-span-4" data-reveal><h2 class="type-h2" id="faq-title">Straight answers to common questions.</h2><p class="type-lead mt-4">Don't see yours? Ask us on the free assessment call.</p></div>
+      <div class="faq lg:col-span-7 lg:col-start-6" data-reveal>
+        <details class="faq__item"><summary class="faq__q">How is this different from using ChatGPT ourselves?</summary><div class="faq__a"><p>Chat tools are good at helping one person with one question. An agent does a job. It's connected to your systems, follows your rules, takes action and knows when to hand off to a person.</p></div></details>
+        <details class="faq__item"><summary class="faq__q">Do we need technical staff or new software?</summary><div class="faq__a"><p>No. We do the technical work, and agents work inside the tools you already use. What we need is a decision-maker who can arrange access and review the agent's early work.</p></div></details>
+        <details class="faq__item"><summary class="faq__q">Is our data safe?</summary><div class="faq__a"><p>Least-privilege access that's read-only by default, human approval for sensitive actions, audit logs of everything agents do, and business-grade AI providers whose terms exclude training on your data.</p></div></details>
+        <details class="faq__item"><summary class="faq__q">Do you have case studies or references?</summary><div class="faq__a"><p>Not yet, and we won't invent them. Instead we show working demos, worked examples with the math visible, and a pilot with a success measure agreed in writing.</p></div></details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="section band-navy cta" id="cta" aria-labelledby="cta-title">
+  <div class="wrap">
+    <div class="cta-grid">
+      <div class="cta-grid__copy" data-reveal>
+        <span class="eyebrow">Free AI assessment</span>
+        <h2 class="type-h2" id="cta-title">Find out where AI pays off first in your business.</h2>
+        <p class="type-lead">Thirty minutes with the people who would build your agents. You get a short written plan with your top opportunities, ranked by value. No cost, no obligation.</p>
+        <div class="cta__btns">
+          <a class="btn btn-brass btn-lg" href="#cta">Book your free assessment <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-outline-dark btn-lg" href="#calculator">Estimate your savings first</a>
+        </div>
+        <p class="cta__micro">Prefer email? Write to <a class="link" href="mailto:hello@halyard.example" data-email>hello@halyard.example</a>.</p>
+      </div>
+      <figure class="cta-grid__art" aria-hidden="true" data-reveal>
+        <svg class="sail" viewBox="0 0 460 430">
+          <defs><linearGradient id="sailWash" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D1AE6C" stop-opacity=".10"/><stop offset="1" stop-color="#D1AE6C" stop-opacity="0"/></linearGradient></defs>
+          <path d="M18 392 Q 236 414 450 392" fill="none" stroke="#A9B4C2" stroke-opacity=".22"/>
+          <path d="M60 404 Q 236 420 420 404" fill="none" stroke="#A9B4C2" stroke-opacity=".12"/>
+          <path d="M292 44 Q 214 214 72 356 L 292 356 Z" fill="url(#sailWash)" stroke="#D1AE6C" stroke-opacity=".5"/>
+          <g fill="none" stroke="#D1AE6C" stroke-opacity=".16"><path d="M292 44 L104 356M292 44 L136 356M292 44 L168 356M292 44 L200 356M292 44 L232 356M292 44 L262 356"/></g>
+          <path d="M300 70 L 436 372 L 312 362 Z" fill="none" stroke="#D1AE6C" stroke-opacity=".34"/>
+          <g fill="none" stroke="#D1AE6C" stroke-opacity=".12"><path d="M300 70 L 352 365M300 70 L 394 368"/></g>
+          <path d="M300 22 V 384" stroke="#A9B4C2" stroke-opacity=".5" stroke-width="1.5"/>
+          <path d="M300 356 H 58" stroke="#A9B4C2" stroke-opacity=".4" stroke-width="1.5"/>
+          <path d="M292 44 C 292 30, 296 24, 302 22 C 309 20, 312 26, 312 34 V 318" fill="none" stroke="#E0BF7F" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M306 318 h12" stroke="#E0BF7F" stroke-width="1.6" stroke-linecap="round"/>
+          <g fill="#0E2136" stroke="#E0BF7F" stroke-width="1.3"><circle cx="302" cy="21" r="4"/><circle cx="292" cy="44" r="3.4"/><circle cx="72" cy="356" r="3.4"/><circle cx="292" cy="356" r="3.4"/><circle cx="436" cy="372" r="3"/></g>
+          <g font-family="Geist Mono Variable, ui-monospace, monospace" font-size="11.5" letter-spacing="1.2" fill="#A9B4C2" fill-opacity=".75"><text x="318" y="16">MASTHEAD</text><text x="250" y="40" text-anchor="end">HEAD</text><text x="64" y="378" text-anchor="middle">CLEW</text><text x="276" y="378" text-anchor="end">TACK</text></g>
+          <text data-brand-story x="326" y="190" transform="rotate(90 326 190)" font-family="Geist Mono Variable, ui-monospace, monospace" font-size="11.5" letter-spacing="2.2" fill="#E0BF7F">HALYARD</text>
+        </svg>
+        <figcaption class="brand-def" data-brand-story><b>hal·yard</b> <i>(n.)</i> The line that raises the sail.</figcaption>
+      </figure>
+    </div>
+    <div class="leave-with" data-reveal>
+      <span class="type-label leave-with__label">What you leave with</span>
+      <ol class="leave-with__list">
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><div><b>Your top three opportunities, ranked</b><p>By estimated value and effort, specific to how your business runs.</p></div></li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><div><b>A rough savings estimate</b><p>Labeled as a modeled estimate, with the assumptions shown.</p></div></li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><div><b>A suggested first step</b><p>Yours to keep, whether or not we work together.</p></div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top" data-brand-label aria-label="Halyard, back to top"><svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true" style="--mark-accent:#D1AE6C"><use href="#i-mark"/></svg><span class="brand__word" data-brand>Halyard</span></a>
+        <p>Done-for-you AI agents and consulting for small and mid-size businesses.</p>
+        <p class="tagline">AI that earns its keep.</p>
+        <div class="foot-cta"><a class="btn btn-brass btn-sm" href="#cta">Book a free AI assessment <svg class="icon btn__icon btn__icon--arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg></a><span>30 minutes. No cost, no obligation.</span></div>
+        <p class="foot-contact"><a href="mailto:hello@halyard.example" data-email>hello@halyard.example</a></p>
+      </div>
+      <div class="foot-cols">
+        <div class="footer-col"><h3 class="footer-col__title">Services</h3><ul><li><a href="#services">AI Agents</a></li><li><a href="#services">AI Marketing Director</a></li><li><a href="#services">AI Sales Agent</a></li><li><a href="#services">AI Consulting</a></li></ul></div>
+        <div class="footer-col"><h3 class="footer-col__title">See it work</h3><ul><li><a href="#demos">Demos</a></li><li><a href="#examples">Results and examples</a></li><li><a href="#calculator">Savings calculator</a></li></ul></div>
+        <div class="footer-col"><h3 class="footer-col__title">Company</h3><ul><li><a href="#process">Approach</a></li><li><a href="#security">Security and data</a></li><li><a href="#cta">Contact</a></li></ul></div>
+      </div>
+    </div>
+    <p class="foot-story" data-brand-story>Why “Halyard”? On a sailboat, the halyard is the line that raises the sail. We help raise what your business can do.</p>
+    <div class="footer-legal">
+      <p>© <span data-year>2026</span> <span data-brand>Halyard</span>. All rights reserved.</p>
+      <p style="max-width:70ch">Figures on this site are illustrative examples or modeled estimates, not client results. <a href="#examples" style="text-decoration:underline">See how we estimate</a>. Product names are trademarks of their owners.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const site = window.SITE || { name: 'Halyard', brandStory: true };
+
+  /* Brand from one config value */
+  document.querySelectorAll('[data-brand]').forEach(el => { el.textContent = site.name; });
+  document.querySelectorAll('[data-brand-label]').forEach(el => el.setAttribute('aria-label', el.getAttribute('aria-label').replace('Halyard', site.name)));
+  if (!site.brandStory) document.querySelectorAll('[data-brand-story]').forEach(el => { el.hidden = true; el.style.display = 'none'; });
+  document.querySelectorAll('[data-email]').forEach(el => { el.textContent = site.email; el.href = 'mailto:' + site.email; });
+  const yr = document.querySelector('[data-year]'); if (yr) yr.textContent = new Date().getFullYear();
+
+  /* Header: scrolled state, Services dropdown, mobile menu */
+  const header = document.querySelector('.site-header');
+  const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  document.querySelectorAll('[data-dropdown]').forEach(dd => {
+    const btn = dd.querySelector('button');
+    const set = open => { dd.classList.toggle('is-open', open); btn.setAttribute('aria-expanded', String(open)); };
+    btn.addEventListener('click', () => set(btn.getAttribute('aria-expanded') !== 'true'));
+    document.addEventListener('click', e => { if (!dd.contains(e.target)) set(false); });
+    dd.addEventListener('keydown', e => { if (e.key === 'Escape') { set(false); btn.focus(); } });
+    dd.addEventListener('focusout', e => { if (!dd.contains(e.relatedTarget)) set(false); });
+  });
+  const menuBtn = document.querySelector('.nav-menu-btn');
+  const menu = document.getElementById('mobile-menu');
+  const setMenu = open => {
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+    menu.classList.toggle('is-open', open);
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+    if (open) { const first = menu.querySelector('a'); if (first) first.focus({ preventScroll: true }); }
+  };
+  menuBtn.addEventListener('click', () => setMenu(menuBtn.getAttribute('aria-expanded') !== 'true'));
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.classList.contains('is-open')) { setMenu(false); menuBtn.focus(); } });
+
+  /* Reveal on scroll */
+  const rv = document.querySelectorAll('[data-reveal]');
+  if ('IntersectionObserver' in window && !reduce) {
+    const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('is-visible'); io.unobserve(en.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    rv.forEach(el => io.observe(el));
+  } else rv.forEach(el => el.classList.add('is-visible'));
+
+  /* Hero console: a new log row every 4.6 s while visible */
+  const feed = document.querySelector('[data-feed]');
+  const hoursEl = document.querySelector('[data-hours]');
+  const tasksEl = document.querySelector('[data-tasks]');
+  const icons = { C: 'i-message-square', A: 'i-chart-column', E: 'i-inbox', M: 'i-target', S: 'i-send' };
+  const names = { C: 'Customer Agent', A: 'Analyst Agent', E: 'Executive Assistant', M: 'Marketing Director', S: 'Sales Agent' };
+  const chip = { done: '<span class="chip chip-done"><svg class="icon"><use href="#i-check"/></svg>Done</span>', you: '<span class="chip chip-attention"><svg class="icon"><use href="#i-user-check"/></svg>Needs your OK</span>', hand: '<span class="chip chip-handoff"><svg class="icon"><use href="#i-user-check"/></svg>Handed off</span>' };
+  const pool = [
+    ['C', 'Phone', 'Answered a no-heat call and booked an 11:30 am visit', 'done'],
+    ['E', 'Outlook', 'Scheduled Thursday’s ops review and sent the agenda to 5 people', 'done'],
+    ['C', 'Text', 'Handed a billing question to Renee with the full transcript', 'hand'],
+    ['A', 'QuickBooks', 'Found 2 invoices past 60 days and drafted reminders', 'you'],
+    ['M', 'Meta Ads', 'Test #15 is live: “Same-day repair” vs “Free second opinion”', 'done']
+  ];
+  let pi = 0, hours = 27.5, tasks = 41, visible = true, min = 9 * 60 + 52;
+  const fmt = m => { const h = Math.floor(m / 60), mm = String(m % 60).padStart(2, '0'); return `${((h + 11) % 12) + 1}:${mm} ${h < 12 ? 'am' : 'pm'}`; };
+  if (feed && !reduce) {
+    const win = feed.closest('.app-window');
+    if ('IntersectionObserver' in window) new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; }), { threshold: 0.2 }).observe(win);
+    setInterval(() => {
+      if (document.hidden || !visible) return;
+      const [a, via, text, st] = pool[pi++ % pool.length]; min += 2 + (pi % 3);
+      const li = document.createElement('li'); li.className = 'con-row is-new';
+      li.innerHTML = `<span class="con-row__time">${fmt(min)}</span><span class="vg-glyph" style="width:28px;height:28px;border-radius:8px"><svg class="icon"><use href="#${icons[a]}"/></svg></span><span class="con-row__body"><span class="con-row__meta"><b>${names[a]}</b> · ${via}</span><span class="con-row__text"></span></span>${chip[st]}`;
+      li.querySelector('.con-row__text').textContent = text;
+      feed.prepend(li); while (feed.children.length > 6) feed.lastElementChild.remove();
+      hours = Math.round((hours + 0.25) * 100) / 100; tasks += 1;
+      hoursEl.textContent = hours.toFixed(1); tasksEl.textContent = tasks;
+    }, 4600);
+  }
+
+  /* Demo player. Chrome and rules per DESIGN.md §6.8 and DEMOS.md §0; the build uses src/scripts/demo-engine.ts.
+     This reference shows the chrome and the conventions, not the final 9-step script. */
+  const demo = document.querySelector('[data-demo]');
+  if (demo) {
+    const $ = s => demo.querySelector(s), $$ = s => [...demo.querySelectorAll(s)];
+    const STEPS = [
+      { label: 'Profile', status: 'Matching', pane: 'research', dur: 3500, cap: 'Parkline IT wants more law and accounting firms. First, the ideal customer profile.', tick: 'Matched 8 firms to the profile' },
+      { label: 'Research', status: 'Researching', pane: 'research', dur: 5000, cap: 'Deep research on the top prospect. Every fact has a source; unverified facts stay out.', tick: '2 facts verified, 1 left out' },
+      { label: 'Draft', status: 'Drafting', pane: 'draft', dur: 6000, cap: 'An 89-word email built on what it found. Specific, no fluff.', tick: 'Draft written: 89 words' },
+      { label: 'Quality check', status: 'Quality check', pane: 'check', dur: 4500, cap: 'Every claim is checked against its source, then tone, length, opt-out and send limits.', tick: 'Passed 6 of 6 checks' },
+      { label: 'Approve and send', status: 'Waiting on Sam', pane: 'check', dur: 4000, cap: 'Sam approves. It sends, logs to HubSpot and schedules one polite follow-up.', tick: 'Sent 9:52 am · logged to HubSpot' }
+    ];
+    const POSTER = 3;            /* the still frame before playback: the end of "Quality check" */
+    const POSTER_PANE = 'draft'; /* on phones the poster shows the email, the most telling pane */
+    const TOTAL = STEPS.reduce((t, s) => t + s.dur, 0);
+    const starts = []; STEPS.reduce((t, s, i) => (starts[i] = t, t + s.dur), 0);
+    const chapters = $('[data-chapters]');
+    STEPS.forEach((s, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'aw-chapter'; b.style.setProperty('--w', s.dur);
+      b.setAttribute('aria-label', 'Step ' + (i + 1) + ' of ' + STEPS.length + ': ' + s.label);
+      b.innerHTML = '<span class="aw-chapter__bar"><span class="aw-chapter__fill"></span></span><span class="aw-chapter__label"></span>';
+      b.querySelector('.aw-chapter__label').textContent = (i + 1) + ' · ' + s.label;
+      b.addEventListener('click', () => { touched = true; run(i); });
+      chapters.appendChild(b);
+    });
+    const list = document.querySelector('[data-steplist]');
+    STEPS.forEach(s => { const li = document.createElement('li'); li.textContent = s.cap; list.appendChild(li); });
+    const chEls = [...chapters.children];
+    const tags = $$('[data-icp]'), person = $('[data-person]'), fit = $('[data-fit]'), facts = $$('[data-fact]'), angle = $('[data-angle]');
+    const mail = $('[data-mail]'), qcs = $$('[data-qc]'), qcCount = $('[data-qc-count]'), approve = $('[data-approve]'), toast = $('[data-toast]');
+    const stage = $('[data-stage]'), caption = $('[data-caption]'), timeEl = $('[data-time]'), status = $('[data-status]'), ticker = $('[data-ticker-text]');
+    const playBtn = $('[data-play]'), pausedEl = $('[data-paused]');
+    const paneTabs = $$('[data-pane-tab]'), panes = $$('[data-pane]'), verified = $('[data-verified]');
+    /* wrap words so the email can stream without reflow */
+    const words = []; const marks = [...mail.querySelectorAll('mark')]; const markers = [...mail.querySelectorAll('.marker')];
+    const caret = mail.querySelector('.caret'), caretHome = caret.parentElement;
+    const wrap = node => [...node.childNodes].forEach(ch => {
+      if (ch.nodeType === 3) {
+        const f = document.createDocumentFragment();
+        ch.textContent.split(/(\s+)/).forEach(p => {
+          if (!p) return;
+          if (/^\s+$/.test(p)) f.appendChild(document.createTextNode(p));
+          else { const sp = document.createElement('span'); sp.className = 'w on'; sp.textContent = p; f.appendChild(sp); words.push(sp); }
+        });
+        ch.replaceWith(f);
+      } else if (ch.nodeType === 1 && !ch.classList.contains('caret') && !ch.classList.contains('marker') && !ch.classList.contains('skel')) wrap(ch);
+    });
+    wrap(mail);
+    let runId = 0, cur = 0, playing = false, done = false, touched = false, t0 = 0, tick = null, auto = false;
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const fmt = ms => '0:' + String(Math.round(ms / 1000)).padStart(2, '0');
+
+    /* Pane tabs (phones): follow the action at each step start; a tap holds until the next step */
+    function showPane(name, fromUser) {
+      paneTabs.forEach(t => { const on = t.dataset.paneTab === name; t.setAttribute('aria-pressed', String(on)); if (on) t.classList.remove('has-news'); });
+      panes.forEach(p => p.classList.toggle('is-active', p.dataset.pane === name));
+      if (fromUser && playing && STEPS[cur] && STEPS[cur].pane !== name) {
+        const t = paneTabs.find(x => x.dataset.paneTab === STEPS[cur].pane);
+        if (t) t.classList.add('has-news');
+      }
+    }
+    paneTabs.forEach(t => t.addEventListener('click', () => showPane(t.dataset.paneTab, true)));
+
+    function setStatus(text, kind) {
+      status.className = 'chip ' + (kind || 'chip-running');
+      status.innerHTML = kind === 'chip-done' ? '<svg class="icon"><use href="#i-check"/></svg><span></span>'
+        : kind === 'chip-attention' ? '<svg class="icon"><use href="#i-user-check"/></svg><span></span>'
+        : '<span class="typing-dots"><i></i><i></i><i></i></span><span></span>';
+      status.lastElementChild.textContent = text;
+    }
+    function setChrome(i) {
+      const k = Math.min(i, STEPS.length - 1);
+      chEls.forEach((el, n) => { el.classList.toggle('is-done', n < i); el.classList.toggle('is-current', n === i); el.style.removeProperty('--p'); });
+      caption.innerHTML = '<b>Step ' + (k + 1) + ' of ' + STEPS.length + '</b><span></span>';
+      caption.lastElementChild.textContent = STEPS[k].cap;
+      ticker.textContent = k > 0 ? STEPS[k - 1].tick : 'Starting';   /* the ticker reports the last finished action */
+      if (STEPS[i]) setStatus(STEPS[i].status, i === 4 ? 'chip-attention' : 'chip-running');
+    }
+    /* stateAt(i): the DOM as it looks when step i starts (every step before i finished) */
+    function stateAt(i) {
+      tags.forEach(t => t.classList.toggle('is-off', i < 1)); person.classList.toggle('is-off', i < 1);
+      fit.style.strokeDasharray = i < 1 ? '0 100.5' : '94.5 100.5';
+      facts.forEach(f => { f.classList.toggle('is-off', i < 2); f.classList.remove('is-checking'); }); angle.classList.toggle('is-off', i < 2); verified.classList.toggle('is-off', i < 2);
+      mail.classList.toggle('is-waiting', i < 2);
+      mail.classList.toggle('is-typing', i < 3);
+      words.forEach(w => w.classList.toggle('on', i >= 3)); marks.forEach(m => m.classList.toggle('lit', i >= 3)); markers.forEach(m => m.classList.toggle('on', i >= 3));
+      caretHome.appendChild(caret);
+      qcs.forEach(q => { q.classList.toggle('is-pass', i >= 4); q.classList.remove('is-run'); }); qcCount.textContent = i >= 4 ? '6' : '0';
+      toast.classList.remove('is-on'); stage.classList.remove('has-result');
+    }
+    function clock(i) {
+      t0 = performance.now(); clearInterval(tick);
+      tick = setInterval(() => {
+        const el = performance.now() - t0; const p = Math.min(100, el / STEPS[i].dur * 100);
+        if (chEls[i]) chEls[i].style.setProperty('--p', p + '%');
+        timeEl.textContent = fmt(Math.min(starts[i] + el, TOTAL)) + ' / ' + fmt(TOTAL);
+      }, 100);
+    }
+    async function step(i, id) {
+      const alive = () => id === runId, d = STEPS[i].dur;
+      if (i === 0) {
+        for (const t of tags) { await sleep(300); if (!alive()) return; t.classList.remove('is-off'); }
+        await sleep(400); if (!alive()) return; person.classList.remove('is-off'); await sleep(90); fit.style.strokeDasharray = '94.5 100.5'; await sleep(d - 1700);
+      } else if (i === 1) {
+        for (const f of facts) {
+          f.classList.remove('is-off');
+          if (!f.classList.contains('fact--skip')) { f.classList.add('is-checking'); await sleep(900); if (!alive()) return; f.classList.remove('is-checking'); }
+          await sleep(400); if (!alive()) return;
+        }
+        angle.classList.remove('is-off'); verified.classList.remove('is-off'); await sleep(d - 3300);
+      } else if (i === 2) {
+        mail.classList.remove('is-waiting'); mail.classList.add('is-typing');
+        const per = Math.floor((d - 1600) / words.length);
+        for (let k = 0; k < words.length; k++) {
+          const w = words[k]; w.classList.add('on'); w.after(caret);
+          const m = w.closest('mark');
+          if (m && !m.querySelector('.w:not(.on)')) { m.classList.add('lit'); const mk = m.nextElementSibling; if (mk && mk.classList.contains('marker')) mk.classList.add('on'); }
+          await sleep(per); if (!alive()) return;
+        }
+        caretHome.appendChild(caret); mail.classList.remove('is-typing'); await sleep(1200);
+      } else if (i === 3) {
+        let n = 0;
+        for (const q of qcs) { q.classList.add('is-run'); await sleep(400); if (!alive()) return; q.classList.remove('is-run'); q.classList.add('is-pass'); qcCount.textContent = ++n; await sleep(180); if (!alive()) return; }
+        await sleep(d - 3500);
+      } else if (i === 4) {
+        await sleep(900); if (!alive()) return; approve.classList.add('is-pressed'); await sleep(200); approve.classList.remove('is-pressed'); toast.classList.add('is-on'); await sleep(d - 1100);
+      }
+    }
+    function setPlaying(on) {
+      playing = on; demo.classList.toggle('is-playing', on);
+      stage.setAttribute('aria-hidden', String(on));              /* while it plays, the captions carry the story */
+      playBtn.setAttribute('aria-label', on ? 'Pause' : done ? 'Replay' : auto ? 'Resume' : 'Play demo');
+      pausedEl.hidden = on || done || !auto;
+    }
+    function finish() {
+      clearInterval(tick); timeEl.textContent = fmt(TOTAL) + ' / ' + fmt(TOTAL);
+      chEls.forEach(el => { el.classList.add('is-done'); el.classList.remove('is-current'); });
+      setStatus('Sent', 'chip-done'); toast.classList.remove('is-on'); stage.classList.add('has-result'); ticker.textContent = STEPS[STEPS.length - 1].tick;
+      done = true; cur = 0; setPlaying(false); showPane('check');
+      caption.innerHTML = '<b>Done</b><span></span>'; caption.lastElementChild.textContent = STEPS[STEPS.length - 1].tick + '. Press Replay to watch again.';
+    }
+    async function run(from) {
+      const id = ++runId; done = false; cur = from; auto = true; setPlaying(true);
+      stateAt(from);
+      for (let i = from; i < STEPS.length; i++) { cur = i; setChrome(i); showPane(STEPS[i].pane); clock(i); await step(i, id); if (id !== runId) return; }
+      finish();
+    }
+    function pause() { runId++; clearInterval(tick); setPlaying(false); }
+    /* Poster: a meaningful still frame, shown before playback and whenever playback is abandoned in step 1 or 2 */
+    function poster() {
+      runId++; clearInterval(tick); done = false; cur = 0; auto = false;
+      stateAt(POSTER + 1); setChrome(POSTER); chEls[POSTER].style.setProperty('--p', '100%');
+      timeEl.textContent = fmt(starts[POSTER] + STEPS[POSTER].dur) + ' / ' + fmt(TOTAL);
+      ticker.textContent = STEPS[POSTER].tick;
+      setPlaying(false); showPane(POSTER_PANE);
+    }
+    playBtn.addEventListener('click', () => { touched = true; if (playing) pause(); else run(done ? 0 : cur); });
+    $('[data-replay]').addEventListener('click', () => { touched = true; run(0); });
+    $('[data-replay-2]').addEventListener('click', () => { touched = true; run(0); });
+    $('[data-skip]').addEventListener('click', () => { touched = true; runId++; stateAt(STEPS.length); finish(); });
+
+    poster();
+    if (reduce) { stateAt(STEPS.length); finish(); }
+    else if ('IntersectionObserver' in window) {
+      let seen = false;
+      new IntersectionObserver(es => es.forEach(e => {
+        if (touched) return;
+        if (e.intersectionRatio >= 0.5) { if (!seen) { seen = true; run(0); } else if (!playing && !done) run(cur); }
+        else if (e.intersectionRatio < 0.2 && playing) { if (cur <= 1) { poster(); seen = false; } else pause(); }
+      }), { threshold: [0, 0.2, 0.5, 0.8] }).observe(demo);
+      document.addEventListener('visibilitychange', () => { if (document.hidden && playing && !touched) pause(); });
+    }
+  }
+
+  /* Savings calculator (SCENARIOS.md §1.4) */
+  const calc = document.querySelector('[data-calc]');
+  if (calc) {
+    const el = id => calc.querySelector('#' + id);
+    const I = { team: el('c-team'), cost: el('c-cost'), hours: el('c-hours'), share: el('c-share'), inq: el('c-inq') };
+    const out = k => calc.querySelector(`[data-o="${k}"]`);
+    const money = n => '$' + Math.round(n).toLocaleString('en-US');
+    const fill = r => r.style.setProperty('--fill', ((r.value - r.min) / (r.max - r.min) * 100) + '%');
+    const update = () => {
+      const team = +I.team.value, cost = +I.cost.value, hrs = +I.hours.value, share = +I.share.value, inq = +I.inq.value;
+      const internal = team * hrs * 4, inquiry = inq * 6 / 60, scope = internal + inquiry, taken = scope * share / 100;
+      const back = Math.floor(taken * 0.8), month = back * cost, year = month * 12, fte = Math.floor(back / 160 * 10) / 10;
+      calc.querySelector('[data-out="team"]').textContent = team; calc.querySelector('[data-out="cost"]').textContent = '$' + cost;
+      calc.querySelector('[data-out="hours"]').textContent = hrs + ' hrs'; calc.querySelector('[data-out="share"]').textContent = share + '%';
+      calc.querySelector('[data-out="inq"]').textContent = inq.toLocaleString('en-US');
+      out('hrs').textContent = back.toLocaleString('en-US'); out('year').textContent = money(year); out('be').textContent = money(month);
+      out('fte').textContent = fte < 0.1 ? 'under 0.1 FTE' : fte.toFixed(1) + ' FTE';
+      out('math').innerHTML = `${Math.round(scope).toLocaleString('en-US')} hrs in scope × ${share}% − 20% review = ${back.toLocaleString('en-US')} hrs<br>${back.toLocaleString('en-US')} hrs × $${cost} × 12 = ${money(year)} a year`;
+      Object.values(I).forEach(fill);
+    };
+    Object.values(I).forEach(r => r.addEventListener('input', update)); update();
+  }
+})();
+</script>
+</body>
+</html>

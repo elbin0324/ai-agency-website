@@ -1,0 +1,75 @@
+---
+// Experiments (DEMOS.md §4 steps 4–5). OWNER: demo-marketing.
+// Step 4: three test cards cascade. Step 5 (week 4): the cards crossfade to the results table; the
+// probability bars grow toward the 90% winner line and the decisions land: undecided tests keep the outline
+// running chip ("Promising", never brass: DESIGN.md §2.3, §2.4); only decided outcomes get a filled tag
+// (gray "No clear difference"; green is reserved for winners). Hidden at the start and at the end.
+import Icon from '@/components/ui/Icon.astro';
+import { currency } from '@/lib/format';
+import { experiments, experimentResults, each, change, winRule, winThreshold, resultsFootnote } from './data';
+---
+<div class="md-view md-experiments" data-el="view-experiments" hidden>
+  <div class="demo-stack md-exp-stack">
+    <div class="md-exp-state" data-el="exp-cards" data-placeholder hidden>
+      <div class="md-head">
+        <p class="md-head__title">Experiments <span>· 3 live</span></p>
+        <p class="md-head__aside">{winRule}</p>
+      </div>
+      <div class="md-exp-grid">
+        {experiments.map((e) => (
+          <article class="md-card md-exp" data-el="exp-card" data-ghost>
+            <header class="md-exp__head">
+              <span class="md-exp__id">{e.id}</span>
+              <p class="md-exp__type">{e.type}</p>
+              <span class="chip chip-running"><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>Running</span>
+            </header>
+            <p class="md-exp__target">{e.target}</p>
+            <dl class="md-exp__arms">
+              <div class="md-arm md-arm--current"><dt>Current</dt><dd>{e.current}</dd></div>
+              <div class="md-arm md-arm--new"><dt>New</dt><dd>{e.next}</dd></div>
+            </dl>
+            <p class="md-exp__meta">Split 50/50 · 3 weeks · Measure: {e.measure}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+
+    <div class="md-exp-state" data-el="exp-results" data-hide>
+      <div class="md-head">
+        <p class="md-head__title">Results <span>· week 4</span></p>
+        <p class="md-head__aside md-legend"><i class="md-legend__goal" aria-hidden="true"></i>Winner threshold: {winThreshold}%</p>
+      </div>
+      <div class="md-card md-table md-res">
+        <div class="md-tr md-tr--head">
+          <span class="md-r-test">Test</span>
+          <span class="md-num md-r-arm">Current</span>
+          <span class="md-num md-r-arm">New</span>
+          <span class="md-num md-r-chg"><span class="md-long">Change in cost per booking</span><span class="md-short">Change</span></span>
+          <span class="md-r-prob"><span class="md-long">Probability new is better</span><span class="md-short">Probability</span></span>
+          <span class="md-r-dec">Decision</span>
+        </div>
+        {experimentResults.map((r) => (
+          <div class="md-tr" data-el="res-row" data-ghost>
+            <span class="md-r-test">{r.test}</span>
+            <span class="md-num md-r-arm md-arm-cell"><span>{currency(r.current.spend)} · {r.current.count} {r.current.unit}</span><small>{each(r.current)} each</small></span>
+            <span class="md-num md-r-arm md-arm-cell"><span>{currency(r.next.spend)} · {r.next.count} {r.next.unit}</span><small>{each(r.next)} each</small></span>
+            <span class="md-num md-r-chg">{change(r)}</span>
+            <span class="md-r-prob md-prob">
+              <span class="md-prob__v">{r.prob}%</span>
+              <span class="md-prob__track">
+                <span class="md-prob__fill" style={`--v:${r.prob / 100}`} data-el="res-bar" data-grow="x"></span>
+                <i class="md-prob__goal" style={`--v:${winThreshold / 100}`} aria-hidden="true"></i>
+              </span>
+            </span>
+            <span class:list={['md-r-dec md-dec', r.tone !== 'running' && `hl-${r.tone}`]} data-el="res-decision" data-ghost>
+              {r.tone === 'running'
+                ? <span class="chip chip-running"><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>{r.decision}</span>
+                : <span class="hl-tag">{r.decision}</span>}<small>{r.action}</small>
+            </span>
+          </div>
+        ))}
+      </div>
+      <p class="md-foot"><Icon name="info" />{resultsFootnote}</p>
+    </div>
+  </div>
+</div>

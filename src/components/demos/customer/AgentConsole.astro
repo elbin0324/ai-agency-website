@@ -1,0 +1,250 @@
+---
+// Customer Agent demo, right pane: "Behind the scenes" (content/DEMOS.md §1 Layout). OWNER: demo-customer.
+// Top: the action timeline (icon, label, detail, time, check). Bottom: one context card at a time
+// (Safety rule → Price book → Dispatch calendar → Customer record → Handoff rule).
+// FINAL-state markup = DEMOS.md "Reduced-motion final state": 9 actions checked, the customer record with the
+// Replacement lead tag and the callback line, and the two rules collapsed to one line each.
+// All five cards share one grid cell and start as ghosts (data-ghost: invisible, space kept), so the slot is
+// always as tall as its tallest card and never jumps. Cards that are not in the final state also carry the
+// engine's ghost class in the markup; steps swap cards with hide({ keepSpace }) + show (customer-demo.ts).
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { site } from '@/config/site';
+
+type Action = { icon: IconName; label: string; detail?: string; time: string; tags?: string[]; handoff?: boolean };
+const actions: Action[] = [
+  { icon: 'shield-check', label: 'Ran safety check', detail: 'Buzzing can be electrical: asked about smell, smoke, sparks', time: '9:47 pm' },
+  { icon: 'shield-check', label: 'Safety rule: not triggered', detail: 'No smell, smoke or sparks reported', time: '9:48 pm' },
+  { icon: 'receipt', label: 'Looked up price book', detail: '4 items · residential', time: '9:48 pm' },
+  { icon: 'calendar', label: 'Checked dispatch calendar', detail: 'Wed 7/15 · 2 open windows', time: '9:48 pm' },
+  { icon: 'calendar-check', label: 'Created booking', detail: '#BK-4127 · Marcus R. · Wed 8–10 am', time: '9:49 pm' },
+  { icon: 'send', label: 'Sent text confirmation', detail: '(480) 555-0148', time: '9:49 pm' },
+  { icon: 'clipboard-list', label: 'Updated customer record', detail: 'Scheduling system · new customer', time: '9:49 pm' },
+  { icon: 'list', label: 'Tagged', tags: ['AC repair', 'After-hours', 'Plan prospect'], time: '9:49 pm' },
+  { icon: 'user-check', label: 'Handed off to a person', detail: 'Financing question → Renee K., office manager · callback Wed by 10 am · transcript attached', time: '9:50 pm', handoff: true },
+];
+
+const prices = [
+  { code: 'DIAG-01', item: 'Diagnostic visit', price: '$89, credited to the repair' },
+  { code: 'CAP-RPL', item: 'Capacitor replacement', price: '$165–$245', quoted: true },
+  { code: 'CON-RPL', item: 'Contactor replacement', price: '$185–$265', quoted: true },
+  { code: 'AH-FEE', item: 'After-hours visit fee', price: '+$149' },
+];
+
+const windows = ['8:00–10:00 am', '10:00 am–12:00 pm', '1:00–3:00 pm'];
+// Break a long window after its dash, never inside a time.
+const wrapAt = (w: string) => w.split('–');
+const dispatch = [
+  { tech: 'Marcus R.', slots: [true, false, false] },
+  { tech: 'Alicia T.', slots: [false, false, true] },
+  { tech: 'Dev K.', slots: [false, false, false] },
+];
+---
+<section class="aw-pane aw-pane--sunk ca-con" data-pane="console">
+  <div class="ca-con__head">
+    <span class="aw-label demo-hide-m">Behind the scenes</span>
+    <div class="ca-con__title">
+      <span class="ca-glyph"><Icon name="message-square" /></span>
+      <b>{site.name} Agent console</b>
+      <small>Larkfield Plumbing &amp; Air</small>
+    </div>
+  </div>
+
+  <div class="ca-con__body" data-el="fade-in" data-ghost>
+    <div class="ca-con__label"><span class="aw-label">Actions</span><span class="ca-con__live">Website chat</span></div>
+
+    <ol class="ca-acts" data-el="acts" data-autoscroll>
+      <li class="ca-acts__empty" data-el="act-empty" data-placeholder hidden>
+        <span class="skel__label">Waiting for a message…</span>
+        <span class="skel" aria-hidden="true"><i></i><i></i><i></i></span>
+      </li>
+      {actions.map((a, i) => (
+        <li class:list={['ca-act', a.handoff && 'ca-act--handoff']} data-el={`act-${i + 1}`} data-hide>
+          <span class="ca-act__glyph" aria-hidden="true"><Icon name={a.icon} /></span>
+          <span class="ca-act__main">
+            <span class="ca-act__top">
+              <b>{a.label}</b>
+              <span class="ca-act__time">{a.time}</span>
+              <span class="demo-check" data-check><Icon name="check" /></span>
+            </span>
+            {a.detail && <span class="ca-act__detail">{a.detail}</span>}
+            {a.tags && (
+              <span class="ca-tags">
+                {a.tags.map((t) => <span class="ca-tag" data-ghost>{t}</span>)}
+                <span class="ca-tag ca-tag--new" data-hide>Replacement lead</span>
+              </span>
+            )}
+          </span>
+        </li>
+      ))}
+    </ol>
+
+    <div class="ca-ctx demo-stack">
+      <!-- Before the first message: a skeleton, so the slot is never blank -->
+      <div class="ca-card ca-card--empty" data-el="ctx-empty" data-placeholder hidden>
+        <span class="skel" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      </div>
+
+      <article class="ca-card ca-rule demo-ghost" data-el="card-safety" data-ghost>
+        <header class="ca-card__head"><Icon name="shield-check" /><b>Escalation rule · Safety</b></header>
+        <p><b>If the customer reports:</b> burning smell, smoke, sparks, or water near electrical parts</p>
+        <p><b>Then:</b> tell them to switch the system off, call tonight’s on-call technician (Luis P.) and send him the transcript</p>
+        <p class="ca-rule__status"><b>Status:</b>
+          <span class="demo-stack ca-status" data-el="safety-status">
+            <span class="chip chip-running" data-el="safety-checking" data-placeholder hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>Checking…</span>
+            <span class="chip chip-done" data-el="safety-ok" data-hide><Icon name="check" />Not triggered</span>
+          </span>
+        </p>
+        <p class="ca-rule__more"><b>More rules:</b> no heat in freezing weather · active leak · complaint or complex quote → office manager</p>
+      </article>
+
+      <article class="ca-card demo-ghost" data-el="card-price" data-ghost>
+        <header class="ca-card__head"><Icon name="receipt" /><b>Price book · Residential</b></header>
+        <div class="ca-pb">
+          {prices.map((p) => (
+            <div class:list={['ca-pb__row', p.quoted && 'is-quoted']} data-ghost>
+              <span class="ca-pb__code">{p.code}</span><span class="ca-pb__item">{p.item}</span><b>{p.price}</b>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <article class="ca-card demo-ghost" data-el="card-cal" data-ghost>
+        <header class="ca-card__head"><Icon name="calendar" /><b>Dispatch · Wed, Jul 15</b></header>
+        <table class="ca-cal">
+          <thead><tr><th scope="col">Technician</th>{windows.map((w) => <th scope="col"><span class="ca-nw">{wrapAt(w)[0]}</span>–<wbr /><span class="ca-nw">{wrapAt(w)[1]}</span></th>)}</tr></thead>
+          <tbody>
+            {dispatch.map((d) => (
+              <tr>
+                <th scope="row">{d.tech}</th>
+                {d.slots.map((open) => (open ? <td class="is-open">Open</td> : <td>Booked</td>))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </article>
+
+      <article class="ca-card ca-rec" data-el="card-record" data-ghost>
+        <header class="ca-card__head"><Icon name="clipboard-list" /><b>Customer record</b><span class="ca-tag">New customer</span><span class="ca-card__aside"><Icon name="file-text" />Transcript attached</span></header>
+        <p class="ca-rec__who"><b>Jenna Morales</b> · <span class="ca-nw">(480) 555-0148</span> · <span class="ca-nw">418 Larkspur Lane</span></p>
+        <dl class="ca-rec__dl">
+          <div><dt>Source</dt><dd>Website chat, after hours</dd></div>
+          <div><dt>Job</dt><dd>AC repair. Buzzing at start-up, outdoor unit</dd></div>
+          <div><dt>Equipment</dt><dd>about 9 years old · no maintenance plan</dd></div>
+          <div><dt>Booking</dt><dd>#BK-4127 · Wed 7/15, 8:00–10:00 am · Marcus R.</dd></div>
+          <div><dt>Tags</dt><dd class="ca-tags"><span class="ca-tag">AC repair</span><span class="ca-tag">After-hours</span><span class="ca-tag">Plan prospect</span><span class="ca-tag ca-tag--new" data-ghost>Replacement lead</span></dd></div>
+          <div data-el="rec-callback" data-ghost><dt>Callback</dt><dd>Renee K., Wed by 10 am</dd></div>
+        </dl>
+      </article>
+
+      <article class="ca-card ca-rule demo-ghost" data-el="card-handoff" data-ghost>
+        <header class="ca-card__head"><Icon name="user-check" /><b>Handoff rule · Sales and financing</b></header>
+        <p><b>If the customer asks about:</b> financing, a new system, or a quote over $1,500</p>
+        <p><b>Then:</b> don’t quote. Book a callback with the office manager and attach the transcript</p>
+        <p class="ca-rule__status"><b>Status:</b>
+          <span class="demo-stack ca-status" data-el="handoff-status">
+            <span class="chip chip-running" data-el="handoff-checking" data-placeholder hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>Checking…</span>
+            <span class="chip chip-attention" data-el="handoff-on" data-hide><Icon name="user-check" />Triggered</span>
+          </span>
+          <span data-el="handoff-note" data-hide>callback task created for Renee K.</span>
+        </p>
+      </article>
+    </div>
+
+    <!-- Final state only (DEMOS.md): the two rules, one line each. Hidden in the poster and during playback. -->
+    <div class="ca-rules" data-el="rules" data-final-only>
+      <p><Icon name="shield-check" /><span>Safety rule</span><span class="chip chip-done"><Icon name="check" />Not triggered</span></p>
+      <p><Icon name="user-check" /><span>Handoff rule</span><span class="chip chip-attention"><Icon name="user-check" />Triggered</span></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Navy agent UI: raw tokens are fine here (fixed to one surface, DESIGN.md §2.1 rule). 12px floor. */
+  .ca-con { display: flex; flex-direction: column; gap: 10px; }
+  .ca-con__head { display: grid; flex: none; gap: 10px; }
+  .ca-con__title { display: flex; align-items: center; gap: 10px; min-width: 0; padding-bottom: 10px; border-bottom: 1px solid var(--color-rule-dark); }
+  .ca-con__title b { font-size: 0.875rem; font-weight: 600; color: var(--color-on); white-space: nowrap; }
+  .ca-con__title small { margin-left: auto; overflow: hidden; font-size: 0.75rem; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
+  .ca-glyph { display: grid; flex: none; place-items: center; width: 26px; height: 26px; border-radius: 8px; color: var(--color-brass-300); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+  .ca-glyph :global(.icon) { width: 13px; height: 13px; }
+
+  .ca-con__body { display: flex; flex: 1 1 auto; flex-direction: column; gap: 8px; min-height: 0; }
+  .ca-con__label { display: flex; flex: none; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .ca-con__live { font-size: 0.75rem; color: var(--color-on-3); }
+
+  /* Timeline: follows the newest action (data-autoscroll); a soft top edge hints at earlier rows */
+  .ca-acts { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent, black 14px); mask-image: linear-gradient(to bottom, transparent, black 14px); }
+  .ca-acts__empty { display: grid; gap: 10px; padding: 12px 0 4px; }
+  .ca-act { position: relative; display: grid; flex: none; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; padding: 5px 0; }
+  .ca-act:first-of-type { padding-top: 8px; }
+  /* connector from this glyph down to the next visible one */
+  .ca-act:has(+ .ca-act:not([hidden]))::after { content: ""; position: absolute; top: 31px; bottom: -5px; left: 11.5px; width: 1px; background: var(--color-rule-dark-strong); }
+  .ca-act:first-of-type:has(+ .ca-act:not([hidden]))::after { top: 34px; }
+  .ca-act__glyph { position: relative; z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 8px; color: var(--color-on-2); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+  .ca-act__glyph :global(.icon) { width: 13px; height: 13px; }
+  .ca-act--handoff .ca-act__glyph { color: var(--color-sky); background: var(--chip-att-bg); box-shadow: inset 0 0 0 1px var(--chip-att-ring); }
+  .ca-act__main { min-width: 0; }
+  .ca-act__top { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+  .ca-act__top b { flex: 1; min-width: 0; overflow: hidden; font-size: 0.8125rem; font-weight: 550; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+  .ca-act__time { flex: none; font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-on-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ca-act__detail { display: block; font-size: 0.75rem; line-height: 1.45; color: var(--color-on-3); }
+
+  .ca-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+  .ca-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 999px; font-size: 0.75rem; font-weight: 500; line-height: 1; white-space: nowrap; color: var(--color-on-2); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+  .ca-tag--new { color: var(--chip-att); background: var(--chip-att-bg); box-shadow: inset 0 0 0 1px var(--chip-att-ring); }
+
+  /* Context slot: cards share one cell (demo-stack) and ghosts keep their space, so the slot never jumps */
+  .ca-ctx { flex: none; }
+  .ca-card { display: grid; align-self: start; align-content: start; gap: 6px; padding: 11px 13px 12px; border-radius: var(--radius-tile); font-size: 0.75rem; line-height: 1.5; color: var(--color-on-2); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .ca-card p b, .ca-card dd { color: var(--color-on); }
+  .ca-card p b { font-weight: 550; }
+  .ca-card__head { display: flex; align-items: center; gap: 8px; min-width: 0; margin-bottom: 2px; padding-bottom: 8px; border-bottom: 1px solid var(--color-rule-dark); }
+  .ca-card__head :global(.icon) { flex: none; width: 14px; height: 14px; color: var(--color-on-3); }
+  .ca-card__head b { overflow: hidden; font-size: 0.8125rem; font-weight: 600; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+  .ca-card__aside { display: flex; flex: none; align-items: center; gap: 5px; margin-left: auto; color: var(--color-on-3); white-space: nowrap; }
+  .ca-card__aside :global(.icon) { width: 13px; height: 13px; }
+  .ca-card--empty { padding-top: 16px; padding-bottom: 16px; }
+
+  .ca-rule__status { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .ca-status { display: inline-grid; }
+  .ca-rule__more { padding-top: 7px; border-top: 1px solid var(--color-rule-dark); color: var(--color-on-3); }
+  .ca-rule__more b { color: var(--color-on-2); }
+
+  .ca-pb { display: grid; }
+  .ca-pb__row { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) auto; align-items: baseline; gap: 10px; padding: 5px 8px; margin: 0 -8px; border-radius: 6px; }
+  .ca-pb__row + .ca-pb__row { box-shadow: inset 0 1px 0 var(--color-rule-dark); }
+  .ca-pb__code { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-on-3); }
+  .ca-pb__item { overflow: hidden; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+  .ca-pb__row b { font-weight: 550; text-align: right; color: var(--color-on); font-variant-numeric: tabular-nums; }
+
+  .ca-cal { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 3px; margin: -3px; font-size: 0.75rem; line-height: 1.3; }
+  .ca-cal th { font-weight: 500; text-align: left; color: var(--color-on-3); }
+  .ca-cal thead th { padding: 0 6px 3px; vertical-align: bottom; font-variant-numeric: tabular-nums; }
+  .ca-cal thead th:first-child { width: 5.5rem; }
+  .ca-cal tbody th { padding-right: 4px; font-weight: 550; color: var(--color-on); white-space: nowrap; }
+  .ca-cal td { height: 24px; padding: 0 8px; border-radius: 6px; color: var(--color-on-3); background: var(--color-navy-800); }
+  .ca-cal td.is-open { --accent-display: var(--color-sage); font-weight: 600; color: var(--chip-done); background: var(--chip-done-bg); box-shadow: inset 0 0 0 1px var(--chip-done-ring); }
+
+  .ca-rec__who { color: var(--color-on-2); }
+  .ca-rec__who b { font-size: 0.8125rem; font-weight: 600; }
+  .ca-nw { white-space: nowrap; }
+  .ca-rec__dl { display: grid; gap: 2px; }
+  .ca-rec__dl > div { display: grid; grid-template-columns: 4.75rem minmax(0, 1fr); gap: 8px; align-items: baseline; }
+  .ca-rec__dl dt { color: var(--color-on-3); }
+  .ca-rec__dl .ca-tags { margin-top: 0; }
+
+  .ca-rules { display: grid; flex: none; gap: 6px; }
+  .ca-rules p { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 10px; border-radius: 8px; font-size: 0.75rem; color: var(--color-on-2); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .ca-rules p > :global(.icon) { width: 14px; height: 14px; color: var(--color-on-3); }
+  .ca-rules p > span:first-of-type { flex: 1; }
+
+  .ca-con__body { container-type: inline-size; }
+  @container (width < 26rem) { .ca-card__aside { display: none; } }
+  @media (width < 48rem) {
+    /* Phones (DEMOS.md §1 Mobile): context cards are hidden; the console tab is the action log + final rules */
+    .ca-ctx { display: none; }
+    .ca-con { gap: 10px; padding: 12px; }
+    .ca-con__title { padding-bottom: 10px; }
+  }
+</style>

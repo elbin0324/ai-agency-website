@@ -1,0 +1,92 @@
+---
+// OWNER: pages-misc
+// /approach/ §10.8 FAQ (id "faq"), the page's main FAQ (FAQPage JSON-LD). Adds the buyer-critique
+// answers: pricing structure (edit 1, same answer as Home FAQ), time to value (edit 14), mistakes and
+// accountability (edit 2, without the unconfirmed insurance line), SOC 2 (edit 4) and continuity.
+// "Long-term contract" is folded into the pricing answer. The founder's name appears once set in config.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FaqAccordion from '@/components/blocks/FaqAccordion.astro';
+import { site, emailReady } from '@/config/site';
+import { url } from '@/lib/url';
+
+const lead = site.founderName
+  ? `You’ll work with ${site.founderName} and the people who design and build your agents.`
+  : 'The people who design and build your agents.';
+
+const items = [
+  {
+    q: 'How much does it cost?',
+    a: [
+      'We don’t publish prices because scope drives them, but here’s how pricing works. A pilot is a fixed price for a fixed scope, agreed in writing before any work starts. If you continue, managed agents are a flat monthly fee that covers monitoring, upkeep, changes within scope and AI usage at the volumes we agreed. Third-party costs, like phone minutes or a software seat, are listed in the proposal at cost.',
+      `There’s no long-term contract to start, and every proposal puts our fee next to the modeled savings, so you see the payback before you sign. Want a yardstick now? The <a href="${url(site.ctas.calculator.href)}">savings calculator</a> estimates what your team’s time is worth each month: the most an AI program could cost and still pay for itself.`,
+    ],
+  },
+  {
+    q: 'How long until it’s working?',
+    a: 'A first agent is typically live 2 to 4 weeks after kickoff. For the first few weeks, your team approves its work in short reviews built into the day, and that’s how it learns your standards. Some benefits, like answering after-hours inquiries, start on day one. Time savings grow as you let routine work through without review, and the full benefit usually takes 2 to 3 months. Projects that connect to practice-management, field-service or ERP systems take longer, and you’ll get a dated plan before work starts.',
+  },
+  {
+    q: 'What if an agent gets something wrong?',
+    a: [
+      'It will happen occasionally, so we plan for it. Agents answer only from information you approve, anything unclear goes to a person, and early on your team approves the work before it goes out, which is where most mistakes get caught.',
+      'If one slips through, we tell you the same business day, correct it with the customer or in the record, pause that kind of task if needed and fix the cause. You’ll see what happened and what changed in the next report. Your agreement spells out who is responsible for what, and every action is logged, so there’s never a question about what the agent did or why.',
+    ],
+  },
+  {
+    q: 'Do you have a SOC 2 report?',
+    a: `Not yet, and we won’t imply otherwise. Instead, we answer your security questionnaire in writing, give you a list of every outside service that will touch your data, and work within your IT policies, in accounts you own wherever possible. <a href="#security">See how we handle access and data</a>.`,
+  },
+  {
+    q: 'Who will we work with?',
+    a: `${lead} You get one named lead who knows your business and answers your questions directly. There’s no handoff from a sales team to a support queue.`,
+  },
+  {
+    q: 'What if the pilot misses its target?',
+    a: 'We tell you plainly, explain why and recommend whether to adjust the approach, try a different job or stop. You decide, and you’re under no obligation to continue.',
+  },
+  {
+    q: 'Who owns what you build?',
+    a: 'Your data and accounts stay yours, and so does the business knowledge we organize for your agents, like FAQs, price lists and rules. We set things up in accounts you own wherever possible and document how everything works. Ownership terms are spelled out in your agreement.',
+  },
+  {
+    q: `What if ${site.name} goes away?`,
+    a: 'Your agents run in accounts you own wherever possible, and everything is documented as we go. If we stop working together for any reason, we hand over the documentation and credentials, remove our access and follow the exit steps written into your agreement.',
+  },
+  {
+    q: 'Can you work with our IT provider or marketing agency?',
+    a: 'Yes. We coordinate access with your IT provider and keep them informed about what we connect. The Marketing Director works alongside your agency, sharing findings and test results.',
+  },
+  {
+    q: 'Do you train our team?',
+    a: 'Yes. Short, practical sessions on reviewing agent work, changing rules and handling handoffs, plus a one-page guide for each agent.',
+  },
+];
+---
+<Section id="faq" tone="sunken" aria-labelledby="faq-title">
+  <SectionHeader num="06" eyebrow="FAQ" />
+  <div class="afaq">
+    <div class="afaq__head" data-reveal>
+      <h2 class="type-h2" id="faq-title" data-motion="split">Questions about working with us.</h2>
+      <p class="afaq__aside">
+        {emailReady
+          ? <Fragment>Something else? Email <a class="link" href={`mailto:${site.email}`}>{site.email}</a>. You’ll hear back within one business day.</Fragment>
+          : <Fragment>Something else? Bring it to your free assessment call.</Fragment>}
+      </p>
+    </div>
+    <FaqAccordion items={items} jsonLd class="afaq__list" />
+  </div>
+</Section>
+
+<style>
+  .afaq { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; align-items: start; }
+  .afaq__head { grid-column: 1 / span 4; position: sticky; top: calc(var(--header-h) + 32px); }
+  .afaq__head .type-h2 { max-width: 12ch; }
+  .afaq__aside { margin-top: 20px; max-width: 34ch; font-size: 1rem; line-height: 1.6; color: var(--fg-2); }
+  .afaq :global(.afaq__list) { grid-column: 6 / span 7; }
+  @media (width < 64rem) {
+    .afaq__head { position: static; grid-column: 1 / -1; }
+    .afaq__head .type-h2 { max-width: 20ch; }
+    .afaq :global(.afaq__list) { grid-column: 1 / -1; }
+  }
+</style>

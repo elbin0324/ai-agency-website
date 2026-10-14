@@ -1,0 +1,155 @@
+---
+// OWNER: theater. /demos/ "See it work": all six simulations in one place (content/COPY.md §8, tightened;
+// business names and story details from content/DEMOS.md). Section ids follow COPY.md: hero, the six demo
+// anchors, whats-real, cta. The COPY.md §8.2 "index" is the hero's "Agents on shift" poster (split hero,
+// stacked under the CTAs below 1024px) plus the chapter nav, sticky under the header from 1024px.
+// In-page links to a demo (hero play button, poster rows, chapter nav) scroll the demo window itself into
+// view and play it (script below). Parts live in src/components/demos-page/.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import ChapterNav from '@/components/demos-page/ChapterNav.astro';
+import DemoChapter from '@/components/demos-page/DemoChapter.astro';
+import WhatsReal from '@/components/demos-page/WhatsReal.astro';
+import HeroPoster from '@/components/demos-page/HeroPoster.astro';
+import CustomerAgentDemo from '@/components/demos/CustomerAgentDemo.astro';
+import AnalystDemo from '@/components/demos/AnalystDemo.astro';
+import AssistantDemo from '@/components/demos/AssistantDemo.astro';
+import MarketingDemo from '@/components/demos/MarketingDemo.astro';
+import SalesDemo from '@/components/demos/SalesDemo.astro';
+import ConsultingDemo from '@/components/demos/ConsultingDemo.astro';
+import { demoCopy } from '@/components/demos-page/demo-copy';
+import { site } from '@/config/site';
+
+const title = 'Demos';
+const description =
+  'Six short simulations of AI agents doing real jobs: booking customers, building reports, clearing inboxes, testing ads, writing outreach and finding savings.';
+
+const components = {
+  customer: CustomerAgentDemo,
+  analyst: AnalystDemo,
+  assistant: AssistantDemo,
+  marketing: MarketingDemo,
+  sales: SalesDemo,
+  consulting: ConsultingDemo,
+};
+const num = (i: number) => String(i + 1).padStart(2, '0');
+---
+<BaseLayout title={title} description={description}>
+  <PageHero
+    crumbs={[{ label: 'Demos' }]}
+    eyebrow="See it work"
+    title="Watch AI agents do *real work*."
+    subtitle="Six short simulations, one per job. Each runs from the first message to the finished result, with the checks and handoffs we build in, and ends with what the work is worth."
+    chips={['Under a minute each', 'Pause, replay or skip ahead', 'A full transcript for every demo']}
+    chipsLabel="How the demos work"
+    secondary={{ label: 'Start with the Customer Agent', href: '#customer-agent', icon: 'play' }}
+    micro="Simulated demos. The businesses, people and figures are fictional and illustrative."
+  >
+    <HeroPoster slot="art" />
+  </PageHero>
+
+  <div class="demos-body">
+    <ChapterNav />
+    {demoCopy.map((d, i) => {
+      const Demo = components[d.id];
+      return (
+        <DemoChapter copy={d} num={num(i)} tone={i % 2 === 0 ? 'sunken' : 'paper'}>
+          <Demo />
+        </DemoChapter>
+      );
+    })}
+  </div>
+
+  <WhatsReal num={num(demoCopy.length)} tone="sunken" />
+
+  <CtaBand
+    eyebrow="Free AI assessment"
+    title="Want to see it on your own work?"
+    subtitle="On a free 30-minute call, we’ll walk through what an agent would do with a real example from your business."
+    secondary={{ label: site.ctas.calculator.label, href: site.ctas.calculator.href }}
+    micro="No cost, no obligation. You get a written plan either way."
+  />
+</BaseLayout>
+
+<style>
+  /* Anchor jumps (desktop): the section rule lands 64px under the sticky chapter nav (58px tall) instead of a
+     full section padding below it, so more of the demo is in view (html adds header + 16px scroll padding). */
+  @media (width >= 64rem) {
+    .demos-body > :global(section) { scroll-margin-top: calc(58px + 48px - var(--spacing-section)); }
+  }
+</style>
+
+<script>
+  // In-page links to a demo chapter (the hero's "Start with the Customer Agent", the poster rows and the
+  // chapter nav) would land on the chapter heading with little or none of the window in view, under the
+  // engine's 50% autoplay line. Instead: scroll so the demo sits just under the header (and the sticky
+  // chapter nav on desktop), play it (DEMO_ENGINE.md "Programmatic control": demo:play) and move focus to
+  // the window, where Space toggles play. Modified clicks (new tab, etc.) keep the browser default.
+  //
+  // The scroll is driven frame by frame, not with behavior: 'smooth': a native smooth scroll gets cut short
+  // when the page height changes mid-flight (headings split as they pass, and motion.ts then refreshes
+  // ScrollTrigger, which resets the scroll position). Each frame re-measures the target, so layout shifts
+  // above it don't matter either. Any wheel, touch, key or click stops it. Reduced motion jumps at once.
+  const GAP = 16;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  const chapterOf = (a: HTMLAnchorElement) => {
+    const id = a.hash.slice(1);
+    const section = id ? document.getElementById(id) : null;
+    const demo = section?.querySelector<HTMLElement>('.chapter-demo');
+    return section && demo ? { id, demo } : null;
+  };
+  /** Document top of an element, ignoring transforms (reveal and motion offsets). */
+  const docTop = (el: HTMLElement) => {
+    let y = 0;
+    for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) y += n.offsetTop;
+    return y;
+  };
+  const topOffset = () => {
+    const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
+    const nav = document.querySelector<HTMLElement>('[data-chapter-nav]');
+    const sticky = nav && getComputedStyle(nav).position === 'sticky' ? nav.offsetHeight : 0; // desktop only
+    return header + sticky + GAP;
+  };
+  const jumpTo = (y: number) => window.scrollTo({ top: y, behavior: 'instant' as ScrollBehavior });
+
+  let flight: AbortController | null = null;
+  function scrollToDemo(demo: HTMLElement) {
+    flight?.abort();
+    const target = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      return Math.max(0, Math.min(max, docTop(demo) - topOffset()));
+    };
+    if (reduced.matches) return jumpTo(target());
+    const ac = new AbortController();
+    flight = ac;
+    ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((type) =>
+      window.addEventListener(type, () => ac.abort(), { passive: true, signal: ac.signal }),
+    );
+    const from = window.scrollY;
+    const duration = Math.min(900, Math.max(400, 250 + Math.abs(target() - from) * 0.08));
+    const ease = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2);
+    const t0 = performance.now();
+    const frame = (now: number) => {
+      if (ac.signal.aborted) return;
+      const k = Math.min(1, (now - t0) / duration);
+      jumpTo(from + (target() - from) * ease(k));
+      if (k < 1) requestAnimationFrame(frame);
+      else ac.abort();
+    };
+    requestAnimationFrame(frame);
+  }
+
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[href^="#"]');
+    const target = a ? chapterOf(a) : null;
+    if (!target) return;
+    e.preventDefault();
+    scrollToDemo(target.demo);
+    target.demo.querySelector<HTMLElement>('[data-demo]')?.dispatchEvent(new CustomEvent('demo:play'));
+    target.demo.querySelector<HTMLElement>('[data-demo-window]')?.focus({ preventScroll: true });
+    history.replaceState(null, '', `#${target.id}`);
+  });
+</script>

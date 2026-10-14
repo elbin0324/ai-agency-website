@@ -1,0 +1,103 @@
+---
+// One slide of the Q3 deck, full size, on the client's template (copper rule, wordmark, page number).
+// OWNER: demo-assistant. Content: content/DEMOS.md §3 step 6. Charts follow DESIGN.md §3.5: one series = --viz-1,
+// actual vs. budget = --viz-1 + --viz-context with a legend, 12px horizontal bars, a selective value label.
+// Paper slides carry .ctx-light, so the surface-aware --viz-* roles resolve to their paper values.
+import {
+  business, fieldHours, fieldHoursAxis, fieldHoursCallout, kpis, priorities, quality, segments, segmentsTotal, titleSlide,
+  type SlideKind,
+} from './data';
+
+interface Props {
+  kind: SlideKind;
+  n: number;
+  title: string;
+  /** data-el handle (the engine swaps slides in the active area). */
+  el?: string;
+}
+const { kind, n, title, el } = Astro.props;
+
+const fmt = (v: number) => v.toLocaleString('en-US');
+const maxSegment = Math.max(...segments.map((s) => s.value));
+const frac = (v: number, max: number) => (v / max).toFixed(4);
+const [calloutLead, ...calloutRest] = fieldHoursCallout.split('. ');
+---
+{kind === 'title' ? (
+  <div class="ea-slide ea-slide--title" data-el={el} data-hide>
+    <div class="ea-slide__titleblock">
+      <i class="ea-slide__rule"></i>
+      <p class="ea-slide__big">{title}</p>
+      <p class="ea-slide__sub">{titleSlide.sub}</p>
+    </div>
+    <p class="ea-slide__mark"><i></i>{business}</p>
+  </div>
+) : (
+  <div class:list={['ea-slide ctx-light', `ea-slide--${kind}`]} data-el={el} data-hide>
+    <div class="ea-slide__head">
+      <i class="ea-slide__rule"></i>
+      <p class="ea-slide__t">{title}</p>
+    </div>
+    <div class="ea-slide__body">
+      {kind === 'kpis' && (
+        <ul class="ea-kpis">
+          {kpis.map((k) => (
+            <li class="ea-kpi">
+              <span class="ea-kpi__l">{k.label}</span>
+              <span class="ea-kpi__v">{k.value}</span>
+              {k.delta && <span class="ea-kpi__d"><b>{k.delta}</b> {k.deltaNote}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {kind === 'hbars' && (
+        <>
+          <ul class="ea-hb">
+            {segments.map((s) => (
+              <li class="ea-hb__row">
+                <span class="ea-hb__l">{s.label}</span>
+                <span class="ea-hb__track"><span class="ea-hb__bar" style={`--v:${frac(s.value, maxSegment)}`}></span><b class="ea-hb__v">{'$' + s.value + 'K'}</b></span>
+              </li>
+            ))}
+          </ul>
+          <p class="ea-slide__note">{`Total $${fmt(segmentsTotal)}K`}</p>
+        </>
+      )}
+      {kind === 'columns' && (
+        <div class="ea-cc">
+          <div class="ea-cc__chart">
+            <ul class="chart__legend">
+              <li><span class="chart__key" style="--k:var(--viz-1)"></span>Actual</li>
+              <li><span class="chart__key" style="--k:var(--viz-context)"></span>Budget</li>
+            </ul>
+            <div class="ea-cc__plot">
+              <div class="ea-cc__grid">
+                {fieldHoursAxis.ticks.map((t) => <span style={`--v:${frac(t, fieldHoursAxis.max)}`} data-l={fmt(t)}></span>)}
+              </div>
+              <div class="ea-cc__groups">
+                {fieldHours.map((m) => (
+                  <div class="ea-cc__g">
+                    <span class="ea-cc__bar" style={`--v:${frac(m.actual, fieldHoursAxis.max)}`}>{m.label && <b class="ea-cc__val">{fmt(m.actual)}</b>}</span>
+                    <span class="ea-cc__bar ea-cc__bar--budget" style={`--v:${frac(m.budget, fieldHoursAxis.max)}`}></span>
+                    <span class="ea-cc__x">{m.month}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <p class="ea-cc__note"><b>{calloutLead}.</b> {calloutRest.join('. ')}</p>
+        </div>
+      )}
+      {kind === 'table' && (
+        <table class="ea-qt">
+          <tbody>
+            {quality.map((q) => <tr><th scope="row">{q.label}</th><td>{q.value}</td></tr>)}
+          </tbody>
+        </table>
+      )}
+      {kind === 'bullets' && (
+        <ul class="ea-bul">{priorities.map((p) => <li>{p}</li>)}</ul>
+      )}
+    </div>
+    <div class="ea-slide__foot"><span>{business}</span><span>{n}</span></div>
+  </div>
+)}

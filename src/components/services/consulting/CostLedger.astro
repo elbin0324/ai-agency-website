@@ -1,0 +1,294 @@
+---
+// OWNER: services-b
+// The AI Consulting comparison (DESIGN.md §6.18 cost ledger + range bars; reference: design-lab/reference/consulting.html).
+// Provider categories as rows, our row last on navy. Every figure comes from @/data/consulting:
+//   cost = modeled range for the same scope (range bar on a shared $ axis), time to recommendations
+//   (range bar on a shared weeks axis), what's included, and access for a 20-100 person business.
+// Rules (content/DECISIONS.md): categories not firms; same scope, never "same results"; GSA figures
+// labeled as federal ceilings (in the method notes); our price reads "Fixed fee, scoped after a free
+// assessment" while site.consultingPrice is null, and switches to the range + priceComparison() when set.
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import { providers, ours, scopeNote, footnote, priceComparison, type Provider } from '@/data/consulting';
+import { getSource } from '@/data/benchmarks';
+import { site } from '@/config/site';
+import { currency } from '@/lib/format';
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+
+const COST_MAX = 400_000; // "$400K+": the global strategy firm runs past the axis (open bar)
+const WEEKS_MAX = 32;
+const MONTH_WEEKS = 52 / 12;
+
+const times = (s: string) => s.replace(/ x /g, ' × ');
+const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+const pct = (v: number, max: number) => `${Math.max(0, Math.min(100, (v / max) * 100)).toFixed(1)}%`;
+
+/** "$30,000 to $63,000 (blended $250 to $350/hr x 120 to 180 hours), if …" -> fig + method note. */
+function costCell(p: Provider) {
+  if (p.costLow > 0 && p.costHigh > 0) {
+    let rest = p.cost.replace(/^Modeled estimate:\s*/i, '').replace(/^\$[\d,.]+[KM]?\s+to\s+\$[\d,.]+[KM]?\+?\s*/i, '');
+    let note = rest;
+    if (rest.startsWith('(')) {
+      const close = rest.indexOf(')');
+      const inner = rest.slice(1, close);
+      const after = rest.slice(close + 1).trim();
+      note = after.startsWith(',') ? `${inner}${after}` : after.replace(/^\.\s*/, '') ? `${inner}. ${after.replace(/^\.\s*/, '')}` : `${inner}.`;
+    }
+    return {
+      fig: `${currency(p.costLow)} to ${currency(p.costHigh)}`,
+      note: times(cap(note.trim())),
+      bar: { from: pct(p.costLow, COST_MAX), to: pct(p.costHigh, COST_MAX), open: p.costHigh > COST_MAX },
+    };
+  }
+  // No fixed price (contingency): the billing basis is the figure, the cost sentence is the note.
+  return { fig: cap(p.rate.split(',')[0].trim()), note: times(p.cost), bar: null, na: 'No fixed price' };
+}
+
+/** "8 to 17 weeks (modeled; …)" -> fig, note, and a span in weeks. */
+function timeCell(s: string) {
+  const m = s.match(/(\d+(?:\.\d+)?)\s*to\s*(\d+(?:\.\d+)?)(\+)?\s*(weeks|months)/i);
+  const paren = s.match(/\(([^)]*)\)/);
+  const fig = s.replace(/\s*\([^)]*\)/, '').split(';')[0].trim();
+  const note = paren ? cap(paren[1]) : s.includes(';') ? cap(s.split(';').slice(1).join(';').trim()) : '';
+  if (!m) return { fig, note, bar: null };
+  const k = /month/i.test(m[4]) ? MONTH_WEEKS : 1;
+  return { fig, note, bar: { from: pct(+m[1] * k, WEEKS_MAX), to: pct(+m[2] * k, WEEKS_MAX) }, weeksFrom: +m[1] * k };
+}
+
+const rows = providers.map((p) => ({ p, cost: costCell(p), time: timeCell(p.time) }));
+
+// Our row. Time: "Typically 3 to 5 weeks from kickoff to readout" -> fig + note.
+const [ourTimeFig, ourTimeRest = ''] = ours.time.split(/\s+from\s+/);
+const ourTime = timeCell(ourTimeFig);
+// "AI does … before it reaches you. You get an executive summary, …": the table shows the deliverables.
+const ourGet = ours.includes.split(/\.\s+(?=You get)/)[1] ?? ours.includes;
+const price = site.consultingPrice;
+const comparison = priceComparison(price);
+const fixedRows = providers.filter((p) => p.costLow > 0);
+const lowest = fixedRows.reduce((a, b) => (b.costLow < a.costLow ? b : a));
+const lowestCmp = comparison?.find((c) => c.id === lowest.id);
+const difference = lowestCmp && lowestCmp.savingsLow > 0 ? lowestCmp.savingsLow : null;
+const ourName = ours.category.replace('{brand}', site.name);
+
+// Every source behind the table, for the method disclosure (firm names may appear in citations only).
+const sourceIds = [...new Set(providers.flatMap((p) => p.sources))];
+const sources = sourceIds.map((id) => getSource(id)).filter((s): s is NonNullable<typeof s> => !!s);
+---
+<div class:list={['cl', className]}>
+  <table class="cost-ledger cl__table">
+    <caption>
+      <span class="type-label">Same scope of work: a diagnostic plus a prioritized roadmap</span>
+      <span class="cl__scope">{scopeNote}</span>
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Provider</th>
+        <th scope="col">
+          Typical cost for this scope
+          <span class="cost-ledger__axis" aria-hidden="true"><span>$0</span><span>$200K</span><span>$400K+</span></span>
+        </th>
+        <th scope="col">
+          Time to recommendations
+          <span class="cost-ledger__axis" aria-hidden="true"><span>0</span><span>16</span><span>32 weeks</span></span>
+        </th>
+        <th scope="col">What's included</th>
+        <th scope="col">Access for a 20-100 person business</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map(({ p, cost, time }) => (
+        <tr>
+          <th scope="row"><span class="cost-ledger__name">{p.category}</span></th>
+          <td data-label="Typical cost for this scope">
+            <span class="cost-ledger__fig">{cost.fig}</span>
+            {cost.bar ? (
+              <span class:list={['range-bar', cost.bar.open && 'is-open']} aria-hidden="true">
+                <span class="range-bar__fill" style={cost.bar.open ? `--from:${cost.bar.from}` : `--from:${cost.bar.from};--to:${cost.bar.to}`}></span>
+              </span>
+            ) : (
+              <span class="cost-ledger__na">{cost.na}</span>
+            )}
+            <span class="cost-ledger__note">{cost.note}</span>
+          </td>
+          <td data-label="Time to recommendations">
+            <span class="cost-ledger__fig">{time.fig}</span>
+            {time.bar ? (
+              <span class="range-bar" aria-hidden="true"><span class="range-bar__fill" style={`--from:${time.bar.from};--to:${time.bar.to}`}></span></span>
+            ) : (
+              <span class="cost-ledger__na">No published range</span>
+            )}
+            {time.note && <span class="cost-ledger__note">{time.note}</span>}
+          </td>
+          <td data-label="What's included" class="cl__text cl__inc">
+            <details class="cl__more" open data-cl-more>
+              <summary><span>What’s included and who it’s for</span><Icon name="chevron-down" /></summary>
+              <p>{p.includes}</p>
+              <div class="cl__acc"><p class="type-label cl__acc-k">Access</p><p>{p.access}</p></div>
+            </details>
+          </td>
+          <td data-label="Access for a 20-100 person business" class="cl__text cl__acc-col">{p.access}</td>
+        </tr>
+      ))}
+      <tr class="is-us ctx-dark">
+        <th scope="row">
+          <span class="cost-ledger__name">
+            <svg class="cl__mark" viewBox="0 0 32 32" aria-hidden="true"><rect x="6" y="10" width="4" height="17" rx=".6" fill="currentColor" /><rect x="22" y="4" width="4" height="23" rx=".6" fill="currentColor" /><path d="M10 19.2 22 11.2v4.4l-12 8z" fill="var(--color-brass-400)" /></svg>
+            <span>{ourName}</span>
+          </span>
+          <span class="cost-ledger__sub">AI does the reading and the math. A person checks every finding.</span>
+        </th>
+        <td data-label="Typical cost for this scope">
+          {price ? (
+            <Fragment>
+              <span class="cost-ledger__fig">{currency(price.from)} to {currency(price.to)}</span>
+              <span class="range-bar range-bar--us" aria-hidden="true"><span class="range-bar__fill" style={`--from:${pct(price.from, COST_MAX)};--to:${pct(price.to, COST_MAX)}`}></span></span>
+              <span class="cost-ledger__note">One fixed fee, agreed before work starts</span>
+            </Fragment>
+          ) : (
+            <Fragment>
+              <span class="cost-ledger__fig">{ours.price}</span>
+              <span class="cost-ledger__note cl__brass">A fraction of the cost of a traditional engagement</span>
+            </Fragment>
+          )}
+        </td>
+        <td data-label="Time to recommendations">
+          <span class="cost-ledger__fig">{ourTime.fig}</span>
+          {ourTime.bar && <span class="range-bar range-bar--us" aria-hidden="true"><span class="range-bar__fill" style={`--from:${ourTime.bar.from};--to:${ourTime.bar.to}`}></span></span>}
+          <span class="cost-ledger__note">{cap(ourTimeRest)}. The analysis itself takes days.</span>
+        </td>
+        <td data-label="What's included" class="cl__text cl__inc">
+          <details class="cl__more" open data-cl-more>
+            <summary><span>What’s included and who it’s for</span><Icon name="chevron-down" /></summary>
+            <p>{ourGet}</p>
+            <div class="cl__acc"><p class="type-label cl__acc-k">Access</p><p>{ours.access}</p></div>
+          </details>
+        </td>
+        <td data-label="Access for a 20-100 person business" class="cl__text cl__acc-col">{ours.access}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {difference && (
+    <p class="cl__diff">
+      <Icon name="check" />
+      <span>That's <b>{currency(difference)}</b> less than the lowest modeled traditional cost for the same scope ({lowest.category.toLowerCase()}, low end).</span>
+    </p>
+  )}
+
+  <div class="cmp-foot cl__foot">
+    <IllustrativeLabel kind="Modeled estimate" />
+    <div class="cl__foot-body">
+      <p>{times(footnote)}</p>
+      <details class="cl__method">
+        <summary><span>How each range was modeled, with {sources.length} sources</span><Icon name="chevron-down" /></summary>
+        <div class="cl__method-body">
+          <dl class="cl__basis">
+            {providers.map((p) => (
+              <div>
+                <dt>{p.category}</dt>
+                <dd>{times(p.rate)}</dd>
+              </div>
+            ))}
+          </dl>
+          <p class="type-label cl__src-title">Sources</p>
+          <ol class="cl__sources">
+            {sources.map((s) => (
+              <li><span class="cl__src-id">{s.id}</span><a class="link" href={s.url} target="_blank" rel="noopener">{s.citation}<span class="sr-only"> (opens in a new tab)</span></a></li>
+            ))}
+          </ol>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Five columns from 1024px: rebalance the widths the base class sets for the reference's four. */
+  @media (width >= 64rem) {
+    .cl__table thead th:nth-child(1), .cl__table tbody th { width: 17%; }
+    .cl__table thead th:nth-child(2) { width: 24%; }
+    .cl__table thead th:nth-child(3) { width: 19%; }
+    .cl__table thead th:nth-child(4), .cl__table thead th:nth-child(5) { width: 20%; }
+  }
+  /* "What's included" carries the access note (shown at tablet and phone widths) inside a <details>
+     that only collapses on phones: wider screens hide its summary, and the markup ships open. */
+  .cl__more > summary { display: none; }
+  .cl__more > p, .cl__acc > p:last-child { margin: 0; }
+  .cl__acc { display: none; margin-top: 12px; }
+  .cl__acc-k { margin-bottom: 4px; color: var(--fg-3); }
+  /* 768-1023px: four columns, the access note folded under "What's included" */
+  @media (48rem <= width < 64rem) {
+    .cl__table thead th:nth-child(5), .cl__table .cl__acc-col { display: none; }
+    .cl__table thead th:nth-child(1), .cl__table tbody th { width: 20%; }
+    .cl__table thead th:nth-child(2) { width: 28%; }
+    .cl__table thead th:nth-child(3) { width: 20%; }
+    .cl__table thead th:nth-child(4) { width: 32%; }
+    .cl__table th, .cl__table td { padding-inline: 14px; }
+    .cl__table thead th:first-child, .cl__table tbody tr:not(.is-us) th { padding-left: 0; }
+    .cl__table tr.is-us > .cl__inc { border-radius: 0 var(--radius-card) var(--radius-card) 0; border-top-right-radius: var(--radius-card) calc(var(--radius-card) + 12px); }
+    .cl__acc { display: block; }
+  }
+  /* the caption must stay display: table-caption (a grid caption becomes an anonymous cell) */
+  .cl__table caption > span { display: block; }
+  .cl__scope { max-width: 72ch; margin-top: 6px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .cl__text { font-size: 0.875rem; line-height: 1.55; }
+  .cost-ledger__fig + .range-bar { margin-top: 12px; }
+  .range-bar + .cost-ledger__note, .cost-ledger__na + .cost-ledger__note { margin-top: 10px; }
+  .cl__mark { flex: none; width: 18px; height: 18px; color: var(--color-on); }
+  .is-us .cost-ledger__sub { max-width: 30ch; color: var(--color-on-2); }
+  .cl__brass { color: var(--color-brass-300); }
+  .cl__diff { display: flex; align-items: flex-start; gap: 10px; margin-top: 18px; font-size: 1rem; line-height: 1.5; color: var(--fg); }
+  .cl__diff > :global(.icon) { margin-top: 4px; color: var(--accent-display); }
+  .cl__diff b { font-weight: 600; }
+  .cl__foot { margin-top: 24px; }
+  .cl__foot-body { flex: 1 1 40ch; max-width: 92ch; }
+  .cl__method { margin-top: 10px; }
+  .cl__method > summary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; list-style: none; cursor: pointer; font-size: 0.875rem; font-weight: 550; color: var(--fg); }
+  .cl__method > summary::-webkit-details-marker { display: none; }
+  .cl__method > summary > span { text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  .cl__method > summary :global(.icon) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
+  .cl__method[open] > summary :global(.icon) { transform: rotate(180deg); }
+  .cl__method-body { display: grid; gap: 14px; padding: 8px 0 4px; }
+  .cl__basis > div { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .cl__basis > div:first-child { border-top: 1px solid var(--line); }
+  .cl__basis dt { font-size: 0.8125rem; font-weight: 600; color: var(--fg); }
+  .cl__basis dd { margin-top: 2px; }
+  .cl__src-title { margin-top: 6px; }
+  .cl__sources { display: grid; gap: 8px; }
+  .cl__sources li { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 12px; }
+  .cl__src-id { font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.8; color: var(--accent); }
+  .cl__sources a { overflow-wrap: anywhere; }
+  @media (width < 48rem) {
+    .cl__table caption { margin-bottom: 4px; }
+    .cl__text { font-size: 0.9375rem; }
+    /* Each card shows name, cost and time; what's included and access fold into the summary. */
+    .cl__table .cl__acc-col { display: none; }
+    .cl__table .cl__inc { margin-top: 8px; }
+    .cl__table .cl__inc::before { display: none; }
+    .cl__more > summary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; list-style: none; cursor: pointer; font-size: 0.875rem; font-weight: 550; color: var(--fg); }
+    .cl__more > summary::-webkit-details-marker { display: none; }
+    .cl__more > summary > span { text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+    .cl__more > summary :global(.icon) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
+    .cl__more[open] > summary :global(.icon) { transform: rotate(180deg); }
+    .cl__more[open] > summary { margin-bottom: 6px; }
+    .cl__acc { display: block; }
+    .is-us .cl__acc-k { color: var(--color-brass-300); }
+  }
+</style>
+
+<script>
+  // Phones: start each provider's "What's included and who it's for" closed. The markup ships open,
+  // so without JavaScript (and on wider screens, where the summary is hidden) the text always shows.
+  const phone = window.matchMedia('(width < 48rem)');
+  const sync = () => {
+    document.querySelectorAll<HTMLDetailsElement>('details[data-cl-more]').forEach((d) => {
+      d.open = !phone.matches;
+    });
+  };
+  sync();
+  phone.addEventListener('change', sync);
+</script>

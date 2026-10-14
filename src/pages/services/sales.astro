@@ -1,0 +1,295 @@
+---
+// OWNER: services-b
+// AI Sales Agent. Copy: content/COPY.md §6, tightened. Quality over volume is the centerpiece: the
+// problem statement opens the generic-vs-ours comparison (#comparison; its heading carries the
+// #problem anchor), then the research checklist and the quality bar. Section ids follow COPY.md §6.
+// The worked example values time only, so it leads with hours back (SalesWorth), not dollars.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import Steps from '@/components/blocks/Steps.astro';
+import FaqAccordion from '@/components/blocks/FaqAccordion.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import LedgerList from '@/components/blocks/LedgerList.astro';
+import Icon from '@/components/ui/Icon.astro';
+import SalesDemo from '@/components/demos/SalesDemo.astro';
+import HeroQualityCheck from '@/components/services/sales/HeroQualityCheck.astro';
+import EmailCompare from '@/components/services/sales/EmailCompare.astro';
+import SalesWorth from '@/components/services/sales/SalesWorth.astro';
+import type { IconName } from '@/components/ui/icons';
+import { getSource } from '@/data/benchmarks';
+import { url } from '@/lib/url';
+
+const title = 'AI Sales Agent';
+const description =
+  'Prospecting that reads like a person did the homework: researched, personal emails sent in small batches, with deliverability and opt-outs built in.';
+
+const research = [
+  { t: 'Fit.', b: 'Matches your ideal customer profile: industry, size, location and the signals you care about.' },
+  { t: 'Not already in your world.', b: 'Not a current customer, an open deal, a past opt-out or on your do-not-contact list.' },
+  { t: 'Their website.', b: 'What they sell, who they serve, where they operate and what’s new.' },
+  { t: 'Recent news.', b: 'Openings, expansions, new services, leadership changes and announcements.' },
+  { t: 'Hiring.', b: 'Open roles that reveal priorities or strain, like a first operations hire or one role covering three jobs.' },
+  { t: 'The person.', b: 'Their role, responsibilities and tenure, plus any public, work-related posts.' },
+  { t: 'Customer reviews.', b: 'Recurring themes in public reviews, good and bad.' },
+  { t: 'Tools they use.', b: 'What their website and job posts reveal about the systems they run on.' },
+  { t: 'A reason to write now.', b: 'One specific, verifiable trigger tied to your offer.' },
+  { t: 'A verified address.', b: 'The email address is validated before anything is sent.' },
+];
+
+const quality = [
+  { t: 'True.', b: 'Every fact is checked against its source. Nothing invented, nothing exaggerated.' },
+  { t: 'Specific.', b: 'At least one observation the reader would recognize as accurate about their business.' },
+  { t: 'Relevant.', b: 'Tied to an offer you’ve approved and a problem they plausibly have.' },
+  { t: 'Short.', b: 'Under 120 words before the signature. Plain text. No images or attachments.' },
+  { t: 'One clear ask.', b: 'Easy to say yes to. Usually something useful, not a meeting.' },
+  { t: 'Your voice.', b: 'Matches your tone and style guide. No filler openers, no fake familiarity.' },
+  { t: 'Honest.', b: 'No fake “Re:” subject lines, no false urgency and no misleading claims.' },
+  { t: 'Respectful.', b: 'Business context only. Nothing about anyone’s personal life, family or sensitive traits.' },
+];
+
+const capabilities: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'users', title: 'Builds your list', body: 'Finds businesses that match your ideal customer profile, from reputable business data sources and public information.' },
+  { icon: 'search', title: 'Researches every prospect', body: 'Builds a short dossier from their website, news, job posts, reviews and the person’s role.' },
+  { icon: 'lightbulb', title: 'Finds the reason to write', body: 'Looks for a real, recent trigger that connects to what you sell, and skips the prospect if there isn’t one.' },
+  { icon: 'pen-line', title: 'Writes one email for one person', body: 'Short, specific and in your voice, with one clear, easy ask.' },
+  { icon: 'list-checks', title: 'Checks quality before sending', body: 'Verifies facts against sources and checks tone, length, claims and spam-trigger phrasing.' },
+  { icon: 'user-check', title: 'Sends on your rules', body: 'Approve every email, approve a sample, or let it send anything above the quality bar. Daily limits per inbox, always.' },
+  { icon: 'refresh-cw', title: 'Follows up like a person', body: 'A few follow-ups, each adding something new. It stops the moment someone replies or opts out.' },
+  { icon: 'mail', title: 'Handles replies', body: 'Sorts interested, not now, wrong person and unsubscribe. Drafts responses, books meetings and flags hot replies.' },
+  { icon: 'database', title: 'Logs everything in your CRM', body: 'Contacts, research notes, emails, replies and next steps in HubSpot, Salesforce, Pipedrive or a spreadsheet.' },
+];
+
+const steps = [
+  { title: 'Define your ideal customer', body: 'We study your best customers and agree on who to target, what to offer and what never to say.', time: 'Typically week 1' },
+  { title: 'Set up sending the right way', body: 'A separate sending domain, authenticated email and a gradual warm-up that protects your main domain.', time: 'Weeks 1 to 4, in parallel' },
+  { title: 'Research and calibrate', body: 'The agent researches a first batch. You see every dossier and draft, and we tune voice, offers and rules until they sound like your best salesperson.', time: 'Typically weeks 2 to 3' },
+  { title: 'Send and follow up', body: 'Steady daily sends within limits, follow-ups that add something, and replies routed to you.', time: 'Typically from week 3 or 4' },
+  { title: 'Review and improve', body: 'A weekly look at replies, meetings and what’s landing. Targeting and messages get sharper over time.', time: 'Ongoing' },
+];
+
+const deliverability = [
+  '<b>A separate sending domain.</b> Outreach goes from a dedicated domain or subdomain, so your main domain’s reputation stays protected.',
+  '<b>Authenticated email.</b> SPF, DKIM and DMARC are set up and tested before the first send, to the standards Gmail and Yahoo require of bulk senders.',
+  '<b>Gradual warm-up.</b> New inboxes ramp up slowly over several weeks.',
+  '<b>Low daily limits.</b> Sends are capped per inbox and spread through the business day.',
+  '<b>Verified addresses only.</b> Every address is checked before sending, and bounces are removed automatically.',
+  '<b>Plain, human formatting.</b> Plain text, no images and few or no links.',
+  '<b>Daily health checks.</b> Bounce, complaint and reply rates are watched every day. Sending pauses automatically if something looks off.',
+];
+
+const compliance = [
+  '<b>CAN-SPAM basics, every time.</b> Accurate sender details, honest subject lines, your physical mailing address and a clear way to opt out.',
+  '<b>Opt-outs honored automatically.</b> A “no thanks” or an unsubscribe stops all future emails to that person, across every inbox, right away.',
+  '<b>Your do-not-contact list respected.</b> Synced with your CRM, so customers, open deals and past opt-outs never get cold outreach.',
+  '<b>Business context only.</b> Research uses public, work-related information. Nothing personal or sensitive.',
+  '<b>Stricter regions scoped first.</b> Canada (CASL), the UK and the EU (GDPR) have stricter rules. We scope those markets with you and your counsel, or leave them out.',
+  '<b>Records kept.</b> Every send, reply and opt-out is logged.',
+];
+
+const ftc = getSource('sales-16');
+const gmail = getSource('sales-13');
+const yahoo = getSource('sales-14');
+
+const faq = [
+  {
+    q: 'Isn’t cold email just spam?',
+    a: 'Spam is irrelevant, deceptive and sent in bulk. Our outreach is researched, relevant to the reader, honest about who’s writing, easy to opt out of and sent in small numbers. If the agent can’t find a genuine reason to contact someone, it doesn’t.',
+  },
+  {
+    q: 'Will it send from my main email address?',
+    a: 'No. We set up a separate sending domain or subdomain, so outreach stays apart from your main domain’s reputation. Replies come straight to you or your sales team.',
+  },
+  {
+    q: 'How many emails does it send?',
+    a: 'Deliberately few. Sends are capped per inbox per day and ramped up slowly. We’d rather send fewer emails that get read than many that get deleted.',
+  },
+  {
+    q: 'Can I approve emails before they go out?',
+    a: 'Yes. You can approve every email, approve a sample, or let the agent send anything that passes the quality bar. A good way to start is approving every email, then relaxing that once you trust the drafts.',
+  },
+  {
+    q: 'Where do the prospects come from? Do you buy lists?',
+    a: 'We don’t blast purchased lists. The agent builds each list for you from reputable business data sources and public information, checks every prospect against your criteria and your do-not-contact list, and verifies every address.',
+  },
+  {
+    q: 'What results should we expect?',
+    a: `Fewer replies than most tools promise, and we’d rather say so now. Cold email is a slow channel, even done well, so we value the Sales Agent on the prospecting hours it gives back and treat new business as upside. Research and a real reason to write are how you beat the odds, not volume. <a href="${url('/results/#methodology')}">See how we estimate</a>.`,
+  },
+];
+---
+<BaseLayout title={title} description={description}>
+  <PageHero
+    crumbs={[{ label: 'Services', href: '/services/' }, { label: 'AI Sales Agent' }]}
+    eyebrow="AI Sales Agent"
+    title="Every prospect researched. Every email written *for one person.*"
+    subtitle="The AI Sales Agent finds businesses that fit your ideal customer, studies each one and writes a short, specific email a thoughtful salesperson would be proud to send. Then it sends on your rules, follows up and logs everything in your CRM."
+    chips={['Research on every prospect', 'A quality check before every send', 'Small, capped daily volumes', 'Opt-outs honored automatically']}
+    secondary={{ label: 'Compare the emails', href: '#comparison' }}
+    micro="Quality over volume, always. If the agent can’t find a real reason to write, it doesn’t write."
+  >
+    <HeroQualityCheck slot="art" />
+  </PageHero>
+
+  <Section id="comparison" tone="sunken" aria-labelledby="problem">
+    <SectionHeader num="01" eyebrow="The difference" titleId="problem"><span slot="title" data-motion="split">Too much AI outreach is spam with better grammar.</span>
+      <p>Blasting thousands of lightly personalized emails teaches buyers to ignore you and can hurt your domain. The Sales Agent sends fewer emails, each one worth reading.</p>
+    </SectionHeader>
+    <EmailCompare />
+    <div class="cmp-under" data-reveal>
+      <p class="fig-caption">Fictional businesses and people, for illustration. The Sales Agent’s email is the standard every send is held to.</p>
+      <a class="link-arrow" href="#research"><span>See how the research works</span><Icon name="arrow-right" /></a>
+    </div>
+  </Section>
+
+  <Section id="research" aria-labelledby="research-title">
+    <SectionHeader num="02" eyebrow="Research checklist" subtitle="Every prospect gets a short dossier. If the research doesn’t turn up a real reason to reach out, the prospect is skipped." titleId="research-title"><span slot="title" data-motion="split">What the agent checks before it writes a word.</span></SectionHeader>
+    <div class="rc" data-reveal>
+      <ol class="rc__list" role="list">
+        {research.map((r, i) => (
+          <li class="rc__item">
+            <span class="rc__n">{String(i + 1).padStart(2, '0')}</span>
+            <div>
+              <h3 class="rc__t">{r.t}</h3>
+              <p class="rc__b">{r.b}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <aside class="rc__rule" aria-label="Our rule">
+        <p class="type-label">Our rule</p>
+        <p class="rc__rule-t">No reason, no email.</p>
+        <p class="rc__rule-b">Every fact in an email links back to its source in the dossier, so you can check it in one click. Research covers business context only, never personal details.</p>
+      </aside>
+    </div>
+  </Section>
+
+  <Section id="quality" tightTop aria-labelledby="quality-title">
+    <SectionHeader num="03" eyebrow="Our quality bar" subtitle="Before anything goes out, the draft is checked against these eight standards. Anything that falls short goes to a person, or doesn’t go at all." titleId="quality-title"><span slot="title" data-motion="split">Every email has to earn its send.</span></SectionHeader>
+    <ul class="cell-grid qb" style="--cols: 4" role="list" data-reveal data-motion="stagger">
+      {quality.map((q) => (
+        <li class="cell">
+          <h3 class="qb__t"><Icon name="check" />{q.t}</h3>
+          <p class="cell__body">{q.b}</p>
+        </li>
+      ))}
+    </ul>
+    <p class="note-line" data-reveal><Icon name="list-checks" />The review queue shows the result of every check, for every email.</p>
+  </Section>
+
+  <Section id="demo" tone="sunken" aria-labelledby="demo-title">
+    <SectionHeader num="04" eyebrow="See it work" titleId="demo-title"><span slot="title" data-motion="split">Watch one prospect go from profile to personal email.</span>
+      <p>The research, the draft, the quality check and the send, side by side with what a generic AI tool would have written.</p>
+      <a class="link-arrow demo-all" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
+    </SectionHeader>
+    <div data-reveal><SalesDemo /></div>
+  </Section>
+
+  <Section id="capabilities" aria-labelledby="capabilities-title">
+    <SectionHeader num="05" eyebrow="What it does" subtitle="It does the slow, careful parts of prospecting that busy teams skip, for every prospect." titleId="capabilities-title"><span slot="title" data-motion="split">A researcher, writer and sales assistant in one.</span></SectionHeader>
+    <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="cells" items={capabilities} cols={3} label="Capabilities" /></div>
+  </Section>
+
+  <Section id="how-it-works" tightTop aria-labelledby="how-title">
+    <SectionHeader num="06" eyebrow="How it works" subtitle="The first weeks go into targeting, voice and sending setup, so every email after that is one you’d be glad to have sent." titleId="how-title"><span slot="title" data-motion="split">Careful setup, then steady outreach every week.</span></SectionHeader>
+    <div data-motion="draw stagger" data-draw-target=".steps__rope line" data-stagger-target=".step"><Steps steps={steps} label="How the Sales Agent gets started" /></div>
+    <p class="note-line note-line--rule" data-reveal><Icon name="clock" />New sending domains need a few weeks of warm-up before full volume. We use that time to research and calibrate.</p>
+  </Section>
+
+  <Section id="deliverability" tone="sunken" aria-labelledby="deliverability-title">
+    <SectionHeader num="07" eyebrow="Deliverability and compliance" subtitle="A great email is wasted in a spam folder, and no result is worth your reputation. Both are handled from day one." titleId="deliverability-title"><span slot="title" data-motion="split">Built to reach the inbox and respect the rules.</span></SectionHeader>
+    <div class="dc" data-reveal>
+      <div class="dc__col">
+        <div class="dc__head"><span class="icon-tile icon-tile--sm" aria-hidden="true"><Icon name="mail" size={18} /></span><h3 class="type-h3">Deliverability</h3></div>
+        <LedgerList items={deliverability} label="Deliverability" />
+      </div>
+      <div class="dc__col">
+        <div class="dc__head"><span class="icon-tile icon-tile--sm" aria-hidden="true"><Icon name="shield-check" size={18} /></span><h3 class="type-h3">Compliance</h3></div>
+        <LedgerList items={compliance} label="Compliance" />
+      </div>
+    </div>
+    <div class="cmp-foot dc__foot" data-reveal>
+      <span class="tag">Source</span>
+      <p>
+        CAN-SPAM makes no exception for business-to-business email ({ftc ? <a class="link" href={ftc.url} target="_blank" rel="noopener">FTC, “CAN-SPAM Act: A Compliance Guide for Business”<span class="sr-only"> (opens in a new tab)</span></a> : 'FTC, “CAN-SPAM Act: A Compliance Guide for Business”'}).
+        Bulk-sender authentication: {gmail ? <a class="link" href={gmail.url} target="_blank" rel="noopener">Google email sender guidelines<span class="sr-only"> (opens in a new tab)</span></a> : 'Google email sender guidelines'} and {yahoo ? <a class="link" href={yahoo.url} target="_blank" rel="noopener">Yahoo Sender Hub<span class="sr-only"> (opens in a new tab)</span></a> : 'Yahoo Sender Hub'}.
+        This section describes how we set things up. It isn’t legal advice, and your counsel has the final say.
+      </p>
+    </div>
+  </Section>
+
+  <Section id="worth" aria-labelledby="worth-title">
+    <SectionHeader num="08" eyebrow="What it’s worth" subtitle="A different fictional business, a 70-person commercial cleaner: this worked example counts only the prospecting time its rep gets back, and leaves new business out." titleId="worth-title"><span slot="title" data-motion="split">The math: the same emails, in less of your rep’s time.</span></SectionHeader>
+    <SalesWorth />
+  </Section>
+
+  <Section id="faq" tightTop aria-labelledby="faq-title">
+    <div class="faq-wrap">
+      <SectionHeader num="09" eyebrow="FAQ" align="left" titleId="faq-title"><span slot="title" data-motion="split">Questions about the Sales Agent.</span></SectionHeader>
+      <FaqAccordion items={faq} jsonLd />
+    </div>
+  </Section>
+
+  <CtaBand
+    eyebrow="Free AI assessment"
+    title="See what researched outreach would look like for you."
+    subtitle="On a free 30-minute call we’ll sketch your ideal customer together and show you what the agent would look for."
+    secondary={{ label: 'See all six demos', href: '/demos/' }}
+    micro="No cost, no obligation."
+  />
+</BaseLayout>
+
+<style>
+  .cmp-under { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; margin-top: 18px; }
+  .demo-all { margin-top: 8px; }
+
+  /* Research checklist: two ledger columns of five, with the rule on the right */
+  .rc { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 32px 56px; align-items: start; }
+  .rc__list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: column; grid-template-rows: repeat(5, auto); column-gap: 32px; border-top: 1px solid var(--line-strong); }
+  .rc__item { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 12px; padding: 16px 0 18px; border-bottom: 1px solid var(--line); }
+  .rc__n { font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.9; letter-spacing: 0.06em; color: var(--accent); }
+  .rc__t { font-size: 1.0625rem; font-weight: 600; line-height: 1.4; color: var(--fg); }
+  .rc__b { margin-top: 4px; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .rc__rule { position: sticky; top: calc(var(--header-h) + 32px); padding: 26px 26px 28px; border-radius: var(--radius-card); background: var(--raised); box-shadow: var(--card-shadow); }
+  .rc__rule::before { content: ""; position: absolute; left: 26px; right: 26px; top: 0; height: 2px; background: var(--color-brass-500); }
+  .rc__rule-t { margin-top: 14px; font-family: var(--font-serif); font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem); font-weight: 360; line-height: 1.1; letter-spacing: -0.02em; color: var(--fg); }
+  .rc__rule-b { margin-top: 14px; font-size: 0.9375rem; line-height: 1.6; color: var(--fg-2); }
+  @media (width < 64rem) {
+    .rc { grid-template-columns: minmax(0, 1fr); }
+    .rc__rule { position: relative; top: 0; }
+  }
+  @media (width < 40rem) {
+    .rc__list { grid-template-columns: minmax(0, 1fr); grid-auto-flow: row; grid-template-rows: none; }
+  }
+
+  /* Quality bar: eight one-word standards */
+  .qb__t { display: flex; align-items: center; gap: 10px; font-family: var(--font-serif); font-size: var(--text-h3); font-weight: 420; line-height: 1.2; letter-spacing: -0.014em; color: var(--fg); }
+  .qb__t :global(.icon) { width: 18px; height: 18px; color: var(--accent-display); }
+  .qb .cell__body { margin-top: 10px; }
+
+  .note-line { display: flex; align-items: flex-start; gap: 10px; margin-top: 22px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2); }
+  .note-line > :global(.icon) { margin-top: 3px; color: var(--accent-display); }
+  .note-line--rule { margin-top: clamp(36px, 4vw, 52px); padding-top: 20px; border-top: 1px solid var(--line); }
+
+  /* Deliverability and compliance */
+  .dc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 56px; }
+  .dc__head { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; }
+  .dc :global(.ledger-list) { border-top-color: var(--line-strong); }
+  .dc :global(.ledger-list > li) { padding: 14px 0; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .dc :global(.ledger-list b) { font-weight: 600; color: var(--fg); }
+  .dc__foot { margin-top: 28px; }
+  @media (width < 64rem) { .dc { grid-template-columns: minmax(0, 1fr); } }
+
+  /* FAQ: title left, questions right */
+  .faq-wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 0 48px; }
+  .faq-wrap > :global(.sec-rule) { grid-column: 1 / -1; }
+  .faq-wrap > :global(.sec-head) { grid-column: 1; align-self: start; display: block; position: sticky; top: calc(var(--header-h) + 32px); }
+  .faq-wrap > :global(.faq) { grid-column: 2; }
+  @media (width < 64rem) {
+    .faq-wrap { grid-template-columns: minmax(0, 1fr); }
+    .faq-wrap > :global(.sec-head) { position: static; }
+    .faq-wrap > :global(.sec-head), .faq-wrap > :global(.faq) { grid-column: 1; }
+  }
+</style>

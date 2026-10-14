@@ -1,0 +1,335 @@
+---
+// Internal test page for the site-wide motion system (MOTION.md). OWNER: motion.
+// noindex, and /dev/ is excluded from the sitemap. Every effect on paper and on navy, composed only
+// from DESIGN.md tokens and global.css classes. Sample numbers here are for this page only.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import Button from '@/components/ui/Button.astro';
+import Card from '@/components/ui/Card.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Badge from '@/components/ui/Badge.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import type { IconName } from '@/components/ui/icons';
+import { site } from '@/config/site';
+
+const index = [
+  { id: 'split', label: 'split' },
+  { id: 'tilt-in', label: 'tilt-in' },
+  { id: 'count', label: 'count' },
+  { id: 'draw', label: 'draw' },
+  { id: 'parallax', label: 'parallax' },
+  { id: 'stagger', label: 'stagger · spotlight' },
+  { id: 'reference', label: 'reference' },
+  { id: 'cta', label: 'magnetic' },
+];
+
+const feed = [
+  { t: '9:47 pm', text: 'Booked a furnace tune-up for Thursday, 8 to 10 am', chip: 'done', label: 'Booked' },
+  { t: '9:31 pm', text: 'Drafted a quote from the price book: $412 for a capacitor swap', chip: 'attention', label: 'Your OK' },
+  { t: '9:12 pm', text: 'Answered "do you service heat pumps?" and logged it to HubSpot', chip: 'done', label: 'Logged' },
+  { t: '8:58 pm', text: 'Refund request over $150 handed to the office manager', chip: 'handoff', label: 'Handed off' },
+] as const;
+
+const steps = [
+  { title: 'Assess', body: 'A short call to find where AI pays off first.', time: '45 minutes, free', get: 'Your top opportunities, ranked' },
+  { title: 'Design', body: 'Approval rules, limits and the systems it may touch.', time: 'About a week', get: 'A one-page plan you sign off' },
+  { title: 'Build', body: 'Agents built on your tools, tested on real cases.', time: 'Typically 2 to 6 weeks', get: 'Working agents, with a log' },
+  { title: 'Run', body: 'We run, measure and tune it, in hours and dollars.', time: 'Ongoing', get: 'A monthly results report' },
+];
+
+const cards: { icon: IconName; title: string; body: string; href?: string }[] = [
+  { icon: 'user-check', title: 'You approve the sensitive steps', body: 'Refunds, discounts, budget moves and first emails wait for your OK.' },
+  { icon: 'key-round', title: 'Least-privilege access', body: 'Each agent gets only the systems and actions its job needs.' },
+  { icon: 'list', title: 'Every action logged', body: 'A timestamped trail of what ran, when, and who approved it.' },
+  { icon: 'database', title: 'Your data stays yours', body: 'AI providers whose terms exclude training on your data.' },
+  { icon: 'power', title: 'An off switch', body: 'Pause any agent in one click, and it stops mid-task.' },
+  { icon: 'chart-line', title: 'Measured in hours and dollars', body: 'Results tracked against the baseline we agree up front.', href: '/results/' },
+];
+
+const reference = [
+  { attr: 'split', what: 'Headings: words rise out of a mask on entry, once. The brass italic phrase lands a beat later.', opts: 'data-delay · data-start' },
+  { attr: 'tilt-in', what: 'Product reveal: starts reclined 18° at 92% scale, stands up as it scrolls into place.', opts: 'data-tilt · data-start · data-end' },
+  { attr: 'parallax', what: 'Decorative depth. 0.12 = 12% slower than the page; negative comes forward.', opts: 'data-speed' },
+  { attr: 'draw', what: 'SVG strokes draw with scroll progress, forward and back.', opts: 'data-draw-target · data-start · data-end' },
+  { attr: 'count', what: 'Counts up once to the number already in the text, keeping its format. Serif figures fade up instead.', opts: 'data-count-from · data-duration · data-delay' },
+  { attr: 'stagger', what: 'Children cascade in, 80ms apart (about 0.4s of spread at most).', opts: 'data-stagger-target · data-delay · data-start' },
+  { attr: 'spotlight', what: 'Soft light and a brass edge glint follow a fine pointer across a card.', opts: '–' },
+  { attr: 'magnetic', what: 'A CTA leans up to 6px toward a fine pointer.', opts: 'data-strength' },
+];
+---
+<BaseLayout title="Motion system" description="Internal test page for the site-wide motion system." noindex>
+  <!-- Hero: split H1 with the page's one brass italic phrase, magnetic CTAs, a staggered index. -->
+  <section class="page-hero motion-hero" id="hero" data-section="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <Eyebrow>Motion system · internal</Eyebrow>
+      <h1 id="hero-title" class="type-h1 mt-5 max-w-[17ch]" data-motion="split">Motion that proves <em>the work happened</em>.</h1>
+      <p class="type-lead mt-6">
+        Opt-in, attribute-driven scroll motion on GSAP and ScrollTrigger. <b>Scroll slowly:</b> every effect below is scrubbed to
+        your scroll or plays once on entry. With reduced motion or without JavaScript, the page renders in its final state.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <Button href={site.cta.href} size="lg" icon="arrow-right" data-motion="magnetic">{site.cta.label}</Button>
+        <Button href="/demos/" variant="secondary" size="lg" data-motion="magnetic">See the demos</Button>
+      </div>
+      <ul class="motion-index mt-12" data-motion="stagger" data-delay="0.35" aria-label="Effects on this page">
+        {index.map((e, i) => (
+          <li><a href={`#${e.id}`}><span class="motion-index__n">{String(i + 1).padStart(2, '0')}</span>{e.label}</a></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- 01 Split -->
+  <Section id="split" tone="sunken" aria-labelledby="split-title">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">01</span><span class="sec-rule__name">Split</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal data-reveal-delay="80">
+      <h2 id="split-title" class="sec-head__title type-h2" data-motion="split">Headlines rise into place, one word at a time.</h2>
+      <div class="sec-head__aside">
+        <p>Each word lifts out of its own mask as the heading enters. Screen readers get the whole sentence as the heading's label, and once the words land the original markup returns.</p>
+        <p class="math mt-4"><b>data-motion="split"</b></p>
+      </div>
+    </div>
+    <div class="grid gap-6 md:grid-cols-3">
+      <Card>
+        <p class="type-label">Same element as data-reveal</p>
+        <h3 class="type-h3 mt-4" data-motion="split" data-reveal>Motion wins, and the reveal stands down.</h3>
+        <p class="math mt-4"><b>data-motion="split" data-reveal</b></p>
+      </Card>
+      <Card>
+        <p class="type-label">Sequenced</p>
+        <h3 class="type-h3 mt-4" data-motion="split" data-delay="0.35">This one waits a third of a second.</h3>
+        <p class="math mt-4"><b>data-delay="0.35"</b></p>
+      </Card>
+      <Card>
+        <p class="type-label">A display line, not a heading</p>
+        <p class="type-lead mt-4" data-motion="split">On a short display line, a hidden copy keeps the sentence readable.</p>
+        <p class="math mt-4"><b>&lt;p data-motion="split"&gt;</b></p>
+      </Card>
+    </div>
+  </Section>
+
+  <!-- 02 Tilt-in (with count and spotlight inside the window) -->
+  <Section id="tilt-in" aria-labelledby="tilt-title">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">02</span><span class="sec-rule__name">Tilt-in</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal data-reveal-delay="80">
+      <h2 id="tilt-title" class="sec-head__title type-h2" data-motion="split">The product settles into view as you scroll.</h2>
+      <div class="sec-head__aside">
+        <p>Scrubbed to scroll: the window starts reclined in perspective and stands up as it reaches the upper half of the screen. Scroll back and it reclines again. Above the fold it simply renders flat.</p>
+        <p class="math mt-4"><b>data-motion="tilt-in spotlight"</b></p>
+      </div>
+    </div>
+    <div class="app-window" data-motion="tilt-in spotlight" role="img" aria-label="Illustrative console: four KPI tiles and a feed of agent actions, one waiting for your approval.">
+      <div class="aw-bar">
+        <span class="aw-dots"><i></i><i></i><i></i></span>
+        <span class="aw-title">Agents on shift · Fernhill Heating &amp; Air</span>
+        <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+      </div>
+      <div class="grid gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
+        <div class="kpi"><span class="kpi__label">Hours back this week</span><span class="kpi__value" data-motion="count">27.5<small>h</small></span><span class="kpi__delta"><b class="is-good">▲ 3.0 h</b> vs last week</span></div>
+        <div class="kpi"><span class="kpi__label">Tasks done</span><span class="kpi__value" data-motion="count" data-delay="0.1">1,240</span><span class="kpi__delta"><b class="is-good">▲ 86</b> this week</span></div>
+        <div class="kpi"><span class="kpi__label">Waiting on you</span><span class="kpi__value" data-motion="count" data-delay="0.2">2</span><span class="kpi__delta">oldest 14 min</span></div>
+        <div class="kpi"><span class="kpi__label">Cost per lead</span><span class="kpi__value" data-motion="count" data-delay="0.3" data-count-from="71">$46</span><span class="kpi__delta"><b class="is-good">▼ $25</b> since the shift</span></div>
+      </div>
+      <ul class="px-4 pb-4 sm:px-5 sm:pb-5">
+        {feed.map((r) => (
+          <li class="flex items-center gap-4 border-t border-line py-3">
+            <span class="num-tab w-14 flex-none font-mono text-ui-sm text-fg-3">{r.t}</span>
+            <span class="min-w-0 flex-1 text-ui text-fg-2">{r.text}</span>
+            <Badge variant={r.chip}>{r.label}</Badge>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <p class="fig-caption mt-5"><b>FIG. 1</b> Illustrative interface. Fernhill Heating &amp; Air is a fictional 18-person HVAC company.</p>
+  </Section>
+
+  <!-- 03 Count -->
+  <Section id="count" tightTop aria-labelledby="count-title">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">03</span><span class="sec-rule__name">Count</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal data-reveal-delay="80">
+      <h2 id="count-title" class="sec-head__title type-h2" data-motion="split">Numbers count up to the value already on the page.</h2>
+      <div class="sec-head__aside">
+        <p>The real figure is in the HTML, so crawlers, screen readers and readers without JavaScript always get it. Geist figures, like the KPI tiles in the window above, tick up and keep their currency, separators, decimals and units. Fraunces has no tabular digits, so serif figures like these fade up instead.</p>
+        <p class="math mt-4"><b>data-motion="count"</b></p>
+      </div>
+    </div>
+    <div class="stat-ledger" style="--cols: 3">
+      <article class="stat">
+        <div class="stat__top"><span class="stat__svc">Home services · 18 staff</span><IllustrativeLabel /></div>
+        <p class="stat__fig" data-motion="count">36<small>hours a month</small></p>
+        <p class="stat__desc">Back to the office manager once the agent takes after-hours calls.</p>
+        <div class="stat__math"><p class="math"><b>62 h</b> by hand − <b>26 h</b> with the agent = <b>36 h</b></p></div>
+      </article>
+      <article class="stat">
+        <div class="stat__top"><span class="stat__svc">Dental · 3 chairs</span><IllustrativeLabel kind="Modeled estimate" /></div>
+        <p class="stat__fig" data-motion="count" data-delay="0.12">$12,400<small>a year</small></p>
+        <p class="stat__desc">Recovered from confirmations and refills that used to slip.</p>
+        <div class="stat__math"><p class="math"><b>$1,033</b> / month × <b>12</b> ≈ <b>$12,400</b></p></div>
+      </article>
+      <article class="stat">
+        <div class="stat__top"><span class="stat__svc">Retail · online store</span><IllustrativeLabel /></div>
+        <p class="stat__fig" data-motion="count" data-delay="0.24">2.1x<small>return on ad spend</small></p>
+        <p class="stat__desc">After budget moved to the campaigns that actually sold.</p>
+        <div class="stat__math"><p class="math"><b>$8,820</b> revenue ÷ <b>$4,200</b> spend = <b>2.1x</b></p></div>
+      </article>
+    </div>
+    <p class="mt-5 text-caption text-fg-3">Sample values for this test page only. Not a quote or a guarantee.</p>
+  </Section>
+
+  <!-- 04 Draw: the rising halyard line in the process steps -->
+  <Section id="draw" tone="sunken" aria-labelledby="draw-title">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">04</span><span class="sec-rule__name">Draw</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal data-reveal-delay="80">
+      <h2 id="draw-title" class="sec-head__title type-h2" data-motion="split">The halyard line draws as the process unfolds.</h2>
+      <div class="sec-head__aside">
+        <p>Scrubbed: the brass rope tracks your scroll, forward and back, while the steps cascade in. In <code class="font-mono">Steps.astro</code> the attribute goes on the rope's <code class="font-mono">&lt;svg&gt;</code>.</p>
+        <p class="math mt-4"><b>&lt;svg class="steps__rope" data-motion="draw"&gt;</b></p>
+      </div>
+    </div>
+    <div class="steps" style={`--n: ${steps.length}`} data-surface="sunken" role="list" aria-label="How an engagement runs" data-motion="stagger" data-stagger-target=".step">
+      <svg class="steps__rope" aria-hidden="true" focusable="false" data-motion="draw">
+        <line class="steps__rope-shade" x1="0" y1="54" x2="100%" y2="18" />
+        <line x1="0" y1="52" x2="100%" y2="16" />
+      </svg>
+      {steps.map((s, i) => (
+        <div class="step" role="listitem" style={`--k: ${i}`}>
+          <span class="step__knot" aria-hidden="true"></span>
+          <span class="step__n">{String(i + 1).padStart(2, '0')}</span>
+          <h3 class="step__title">{s.title}</h3>
+          <p class="step__body">{s.body}</p>
+          <p class="step__time"><Icon name="clock" />{s.time}</p>
+          <p class="step__get"><span>You get</span>{s.get}</p>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <!-- 05 Parallax + draw on navy: the sail engraving recedes while its halyard draws -->
+  <Section id="parallax" tone="navy" aria-labelledby="parallax-title">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">05</span><span class="sec-rule__name">Parallax</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="grid items-center gap-x-6 gap-y-12 lg:grid-cols-12">
+      <div class="lg:col-span-6">
+        <h2 id="parallax-title" class="type-h2 max-w-[16ch]" data-motion="split">Depth for the decoration, never for the words.</h2>
+        <p class="type-lead mt-6">The engraving and its caption drift slower than the page as one plate, while the halyard draws in brass. Copy and controls never move.</p>
+        <dl class="ledger-rows mt-8 max-w-[30rem]">
+          <div><dt>Engraving plate</dt><dd class="font-mono">data-speed="0.08"</dd></div>
+          <div><dt>Halyard and knots</dt><dd class="font-mono">data-motion="draw"</dd></div>
+          <div><dt>Heading, copy, buttons</dt><dd class="font-mono">static</dd></div>
+        </dl>
+      </div>
+      <figure class="lg:col-span-5 lg:col-start-8" aria-hidden="true" data-motion="parallax" data-speed="0.08">
+        <svg class="motion-sail" viewBox="0 0 460 430">
+          <defs><linearGradient id="motionSailWash" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D1AE6C" stop-opacity=".10"/><stop offset="1" stop-color="#D1AE6C" stop-opacity="0"/></linearGradient></defs>
+          <path d="M18 392 Q 236 414 450 392" fill="none" stroke="#A9B4C2" stroke-opacity=".22"/>
+          <path d="M60 404 Q 236 420 420 404" fill="none" stroke="#A9B4C2" stroke-opacity=".12"/>
+          <path d="M292 44 Q 214 214 72 356 L 292 356 Z" fill="url(#motionSailWash)" stroke="#D1AE6C" stroke-opacity=".5"/>
+          <g fill="none" stroke="#D1AE6C" stroke-opacity=".16"><path d="M292 44 L104 356M292 44 L136 356M292 44 L168 356M292 44 L200 356M292 44 L232 356M292 44 L262 356"/></g>
+          <path d="M300 70 L 436 372 L 312 362 Z" fill="none" stroke="#D1AE6C" stroke-opacity=".34"/>
+          <g fill="none" stroke="#D1AE6C" stroke-opacity=".12"><path d="M300 70 L 352 365M300 70 L 394 368"/></g>
+          <path d="M300 22 V 384" stroke="#A9B4C2" stroke-opacity=".5" stroke-width="1.5"/>
+          <path d="M300 356 H 58" stroke="#A9B4C2" stroke-opacity=".4" stroke-width="1.5"/>
+          <g data-motion="draw" data-start="top 80%" data-end="center 35%">
+            <path d="M292 44 C 292 30, 296 24, 302 22 C 309 20, 312 26, 312 34 V 318" fill="none" stroke="#E0BF7F" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M306 318 h12" stroke="#E0BF7F" stroke-width="1.6" stroke-linecap="round"/>
+            <g fill="#0E2136" stroke="#E0BF7F" stroke-width="1.3"><circle cx="302" cy="21" r="4"/><circle cx="292" cy="44" r="3.4"/><circle cx="72" cy="356" r="3.4"/><circle cx="292" cy="356" r="3.4"/><circle cx="436" cy="372" r="3"/></g>
+          </g>
+          <g font-family="Geist Mono Variable, ui-monospace, monospace" font-size="11.5" letter-spacing="1.2" fill="#A9B4C2" fill-opacity=".75"><text x="318" y="16">MASTHEAD</text><text x="250" y="40" text-anchor="end">HEAD</text><text x="64" y="378" text-anchor="middle">CLEW</text><text x="276" y="378" text-anchor="end">TACK</text></g>
+        </svg>
+        <figcaption class="brand-def"><b>hal·yard</b> <i>(n.)</i> The line that raises the sail.</figcaption>
+      </figure>
+    </div>
+  </Section>
+
+  <!-- 06 Stagger + spotlight (the grid also carries data-reveal: motion takes precedence) -->
+  <Section id="stagger" aria-labelledby="stagger-title">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">06</span><span class="sec-rule__name">Stagger · Spotlight</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal data-reveal-delay="80">
+      <h2 id="stagger-title" class="sec-head__title type-h2" data-motion="split">Cards cascade in, then follow the cursor.</h2>
+      <div class="sec-head__aside">
+        <p>The grid's children arrive 80ms apart as they enter. With a mouse, each card answers with a soft light and a brass glint along its edge.</p>
+        <p class="math mt-4"><b>data-motion="stagger"</b> on the grid · <b>"spotlight"</b> on each card</p>
+      </div>
+    </div>
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-motion="stagger" data-reveal>
+      {cards.map((c) => (
+        <Card href={c.href} data-motion="spotlight">
+          <span class="icon-tile icon-tile--sm"><Icon name={c.icon} size={18} /></span>
+          <h3 class="type-h4 mt-5">{c.title}</h3>
+          <p class="mt-2 text-fg-2">{c.body}</p>
+          {c.href && <span class="link-arrow mt-3"><span>See how we measure</span><Icon name="arrow-right" /></span>}
+        </Card>
+      ))}
+    </div>
+  </Section>
+
+  <!-- 07 Reference -->
+  <Section id="reference" tone="sunken" aria-labelledby="reference-title">
+    <div class="sec-rule" data-reveal><span class="sec-rule__num">07</span><span class="sec-rule__name">Reference</span><span class="sec-rule__line"></span><span class="sec-rule__knot"></span></div>
+    <div class="sec-head" data-reveal data-reveal-delay="80">
+      <h2 id="reference-title" class="sec-head__title type-h2" data-motion="split">One attribute, eight effects.</h2>
+      <div class="sec-head__aside">
+        <p>Combine effects with spaces: <code class="font-mono">data-motion="tilt-in spotlight"</code>. Full notes and examples live in <code class="font-mono">MOTION.md</code>.</p>
+      </div>
+    </div>
+    <div class="motion-ref">
+      <table class="w-full text-left">
+        <caption class="sr-only">data-motion values</caption>
+        <thead>
+          <tr><th scope="col" class="type-label">data-motion</th><th scope="col" class="type-label">What it does</th><th scope="col" class="type-label">Options</th></tr>
+        </thead>
+        <tbody data-motion="stagger">
+          {reference.map((r) => (
+            <tr>
+              <th scope="row" class="font-mono text-small font-medium text-fg">"{r.attr}"</th>
+              <td class="text-small text-fg-2">{r.what}</td>
+              <td class="font-mono text-caption text-fg-3">{r.opts}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </Section>
+
+  <!-- 08 Magnetic, in the final navy band -->
+  <Section id="cta" tone="navy" aria-labelledby="cta-title">
+    <div class="max-w-[46rem]">
+      <span class="eyebrow">Magnetic</span>
+      <h2 id="cta-title" class="type-h2 mt-5 max-w-[18ch]" data-motion="split">Find out where AI pays off first in your business.</h2>
+      <p class="type-lead mt-5">With a mouse, both buttons lean a few pixels toward the pointer and settle back when it leaves. The second one opens another page, so you can see the cross-page transition.</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <Button href={site.cta.href} variant="brass" size="lg" icon="arrow-right" data-motion="magnetic">Book your free assessment</Button>
+        <Button href="/dev/primitives/" variant="outline-dark" size="lg" data-motion="magnetic">Try a view transition</Button>
+      </div>
+      <p class="math mt-5"><b>data-motion="magnetic"</b> · data-strength="0.3"</p>
+    </div>
+  </Section>
+</BaseLayout>
+
+<style>
+  /* Page-hero light (DESIGN.md §7.2: white light on paper, hero only). */
+  .motion-hero { position: relative; isolation: isolate; }
+  .motion-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(900px 520px at 80% 6%, rgb(255 255 255 / 0.62), transparent 70%), radial-gradient(760px 460px at 8% 0%, rgb(255 255 255 / 0.4), transparent 70%); }
+
+  /* Effect index: mono labels on hairlines. */
+  .motion-index { display: flex; flex-wrap: wrap; gap: 0 28px; border-top: 1px solid var(--color-rule); }
+  .motion-index a { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-ink-2); text-decoration: none; }
+  .motion-index a:hover { color: var(--color-ink); }
+  .motion-index__n { color: var(--color-brass-700); letter-spacing: 0.06em; }
+
+  /* Steps replica: the two scoped rules Steps.astro adds for the rope shade and sunken knots. */
+  .steps__rope-shade { stroke: var(--color-ink); stroke-opacity: 0.25; }
+  .steps[data-surface="sunken"] .step__knot { background: var(--color-paper-sunken); box-shadow: inset 0 0 0 1.5px var(--color-brass-600), 0 0 0 4px var(--color-paper-sunken); }
+  .steps[data-surface="sunken"] .step:last-child .step__knot { background: var(--color-brass-500); }
+
+  /* Sail engraving (the CTA art, DESIGN.md §7.6). */
+  .motion-sail { display: block; width: 100%; height: auto; overflow: visible; }
+  @media (width < 40rem) { .motion-sail { max-width: 300px; } }
+
+  /* Reference table on hairlines. */
+  .motion-ref { overflow-x: auto; }
+  .motion-ref table { min-width: 36rem; border-collapse: collapse; }
+  .motion-ref th, .motion-ref td { padding: 14px 16px 14px 0; vertical-align: top; border-bottom: 1px solid var(--color-rule); }
+  .motion-ref thead th { padding-bottom: 12px; border-bottom-color: var(--color-rule-strong); }
+  .motion-ref tbody th { white-space: nowrap; }
+</style>

@@ -1,0 +1,63 @@
+---
+// OWNER: home-story
+// Industries (COPY.md §2.11, DESIGN.md §6.17 .cell-grid): the eight industries from
+// src/data/industries.ts, each with its fixed icon. Headline replaced per CRITIQUE.md ("Made for local
+// businesses..." was flagged as generic); compliance line per CRITIQUE.md edit 6. Examples, not client claims.
+// Keep id="industries": it is the anchor from COPY.md and may be linked from other pages.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { homeNum } from './story/sections';
+import { industries, industriesCopy } from '@/data/industries';
+import { url } from '@/lib/url';
+
+// Card lines tightened from COPY.md §2.11 for the four-column grid (same meaning; the dental line keeps
+// the front-desk sentence readers responded to in CRITIQUE.md). Falls back to the data file's body.
+const short: Record<string, { title?: string; body: string }> = {
+  'home-services': { body: 'HVAC, plumbing, roofing and electrical. Every call answered, jobs booked after hours, estimates followed up.' },
+  practices: { title: 'Dental, medical and vet', body: 'Questions answered, appointments confirmed and cancellations filled, so the front desk can focus on the people in the room.' },
+  'law-accounting': { body: 'Intake, document prep, inbox triage and deadlines, with your review on anything that leaves the firm.' },
+  'real-estate': { body: 'Every inquiry answered in minutes, buyers and sellers qualified, showings and follow-ups on track.' },
+  restaurants: { body: 'Reservations, catering and event inquiries, review replies and weekly food and labor costs.' },
+  retail: { body: 'Order and return questions, product data cleanup, ad testing and inventory reports.' },
+  distribution: { title: 'Distribution and manufacturing', body: 'Quotes and orders from email, inventory analysis and margin by product and customer.' },
+  'professional-services': { body: 'Proposals, client reporting, utilization tracking and new-business outreach.' },
+};
+const items = industries.map((i) => ({
+  icon: i.icon,
+  title: short[i.slug]?.title ?? i.name,
+  body: short[i.slug]?.body ?? (i.examples ? `${i.examples} ${i.body}` : i.body),
+}));
+---
+<Section id="industries" tone="sunken" aria-labelledby="industries-title">
+  <SectionHeader
+    num={homeNum.industries}
+    eyebrow={industriesCopy.eyebrow}
+    subtitle="If your team juggles customers, paperwork and numbers, there’s work an agent can take on. A few examples:"
+    titleId="industries-title"
+  ><span slot="title" data-motion="split">From the front desk to the loading dock.</span></SectionHeader>
+
+  <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="cells" cols={4} items={items} label="Industries we work with" /></div>
+
+  <div class="ind-foot" data-reveal>
+    <div class="ind-foot__notes">
+      <p><b>Don’t see yours?</b> Fitness studios, multi-location service businesses and many others fit too. We start from how your business runs, not from a template.</p>
+      <p><b>Handle patient, client or financial records?</b> We agree what agents can see with you, and whoever handles compliance for you, before anything connects.</p>
+    </div>
+    <a class="link-arrow" href={url(industriesCopy.cta.href)}><span>{industriesCopy.cta.label}</span><Icon name="arrow-right" /></a>
+  </div>
+</Section>
+
+<style>
+  .ind-foot { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px 24px; align-items: end; margin-top: 24px; }
+  .ind-foot__notes { grid-column: 1 / span 9; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
+  .ind-foot__notes p { font-size: 0.875rem; line-height: 1.55; color: var(--fg-3); text-wrap: pretty; }
+  .ind-foot__notes b { font-weight: 600; color: var(--fg-2); }
+  .ind-foot .link-arrow { grid-column: 10 / span 3; justify-self: end; }
+  @media (width < 64rem) {
+    .ind-foot__notes, .ind-foot .link-arrow { grid-column: 1 / -1; }
+    .ind-foot .link-arrow { justify-self: start; }
+  }
+  @media (width < 40rem) { .ind-foot__notes { grid-template-columns: minmax(0, 1fr); } }
+</style>

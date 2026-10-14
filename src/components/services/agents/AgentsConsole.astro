@@ -1,0 +1,93 @@
+---
+// OWNER: services-a
+// Hero art for /services/ai-agents/: one morning of the three agents at one fictional business,
+// with the human control point (Waiting on you) in sky. Decorative console: role="img" plus a
+// one-sentence summary (DESIGN.md §6.10). Card and approval rules are ported from the reference
+// hero console (.con-card, .con-appr in design-lab/reference/index.html).
+import Badge from '@/components/ui/Badge.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+
+// Newest first. Times follow DESIGN.md §6.8 (lowercase am/pm); `day` marks an entry from an earlier day.
+// The EA's one drafted reply plus the Customer Agent's handoff are the 2 items in "Waiting on you".
+type Row = { time: string; day?: string; icon: IconName; who: string; via: string; text: string; status: 'done' | 'handoff'; chip: string };
+const rows: Row[] = [
+  { time: '7:30 am', icon: 'chart-column', who: 'Analyst Agent', via: 'QuickBooks', text: 'Weekly numbers ready. Parts costs rose on two job types; summary in your inbox.', status: 'done', chip: 'Ready' },
+  { time: '7:15 am', icon: 'inbox', who: 'Executive Assistant', via: 'Outlook', text: 'Inbox sorted. 3 tasks assigned, 1 reply drafted for your OK.', status: 'handoff', chip: '1 for you' },
+  { time: '9:47 pm', day: 'Yesterday', icon: 'message-square', who: 'Customer Agent', via: 'Website chat', text: 'Booked an AC repair for Thursday, 8 to 10 am. Confirmation sent by text.', status: 'done', chip: 'Booked' },
+];
+const summary =
+  'Illustrative console: last night the Customer Agent booked a repair from a website chat, this morning the Analyst Agent had the weekly numbers ready, and the Executive Assistant drafted a reply that waits for your approval.';
+---
+<figure class="ac">
+  <div class="app-window ac__win" role="img" aria-label={summary}>
+    <div class="aw-bar">
+      <span class="aw-dots"><i></i><i></i><i></i></span>
+      <span class="aw-crumb"><b>Agents on shift</b><span class="aw-crumb__sep">/</span>Today</span>
+      <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+    </div>
+    <div class="ac__body">
+      <div class="con-card">
+        <div class="con-card__head"><span class="aw-label">Activity log</span><span class="ac__meta">3 agents</span></div>
+        <ol class="ac__feed">
+          {rows.map((r) => (
+            <li class="ac__row">
+              <span class="ac__time">{r.time}{r.day && <span class="ac__day">{r.day}</span>}</span>
+              <span class="vg-glyph ac__glyph"><Icon name={r.icon} /></span>
+              <span class="ac__text"><span class="ac__who"><b>{r.who}</b> · {r.via}</span><span class="ac__what">{r.text}</span></span>
+              <Badge variant={r.status}>{r.chip}</Badge>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div class="con-card">
+        <div class="con-card__head"><span class="aw-label">Waiting on you</span><span class="count">2</span></div>
+        <div class="con-appr">
+          <div class="con-appr__item">
+            <span class="con-appr__who"><span>Executive Assistant · reply</span><Badge variant="attention">Your OK</Badge></span>
+            <p class="con-appr__what">To a supplier: confirm Friday’s delivery<span>“Friday works. Please deliver both condensers to the shop by 10 am.”</span></p>
+            <span class="con-appr__act"><span class="app-btn">Edit</span><span class="app-btn app-btn--primary">Approve</span></span>
+          </div>
+          <div class="con-appr__item">
+            <span class="con-appr__who"><span>Customer Agent · handoff</span><Badge variant="handoff">Handed off</Badge></span>
+            <p class="con-appr__what">Refund request above your limit<span>Sent to the office manager with the transcript and a summary</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption class="fig-caption mt-3"><b>FIG. 1</b> Illustrative interface. Larkfield Plumbing &amp; Air is a fictional 18-person company.</figcaption>
+</figure>
+
+<style>
+  .ac { margin: 0; }
+  .ac__body { display: grid; gap: 10px; padding: 12px; }
+  /* Ported from the reference hero console */
+  .con-card { position: relative; min-width: 0; border-radius: 12px; background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark), inset 0 1px 0 rgb(255 255 255 / .03); }
+  .con-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 40px; padding: 0 14px; border-bottom: 1px solid var(--color-rule-dark); }
+  .con-appr { display: grid; gap: 8px; padding: 10px; }
+  .con-appr__item { padding: 11px 12px; border-radius: 10px; background: var(--color-navy-800); box-shadow: inset 0 0 0 1px rgb(143 184 224 / .22); }
+  .con-appr__who { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--color-on-3); }
+  .con-appr__what { margin: 6px 0 0; font-size: 13px; line-height: 1.4; color: var(--color-on); }
+  .con-appr__what span { display: block; margin-top: 2px; font-size: 12px; color: var(--color-on-3); }
+  .con-appr__act { display: flex; gap: 6px; margin-top: 10px; }
+
+  .ac__meta { font-size: 12px; color: var(--color-on-3); }
+  .ac__feed { display: grid; padding: 4px 0; }
+  .ac__row { display: grid; grid-template-columns: 76px 26px minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 10px 14px; }
+  .ac__row + .ac__row { border-top: 1px solid var(--color-rule-dark); }
+  .ac__time { padding-top: 5px; font-family: var(--font-mono); font-size: 12px; color: var(--color-on-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ac__day { display: block; margin-top: 2px; font-size: 11px; }
+  .ac__glyph { width: 26px; height: 26px; border-radius: 7px; }
+  .ac__text { min-width: 0; font-size: 13px; line-height: 1.4; }
+  .ac__who { display: block; font-size: 12px; color: var(--color-on-3); }
+  .ac__who b { font-weight: 550; color: var(--color-on); }
+  .ac__what { display: block; margin-top: 2px; color: var(--color-on-2); }
+  .ac__row :global(.chip) { margin-top: 2px; }
+
+  @media (width < 40rem) {
+    .ac__row { grid-template-columns: 26px minmax(0, 1fr); }
+    .ac__time { display: none; }
+    .ac__row :global(.chip) { grid-column: 2; justify-self: start; margin-top: 0; }
+  }
+</style>

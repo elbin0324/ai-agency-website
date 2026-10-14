@@ -1,0 +1,77 @@
+---
+// Trend: cost per new-patient booking, weeks 1–8 (DEMOS.md §4 step 7, the final state). OWNER: demo-marketing.
+// One series (--viz-1), $0–$200 with gridlines every $50 (DESIGN.md §3.5). The SVG stretches to the plot
+// box (non-scaling 2px stroke); every label, dot and annotation is HTML, so text never drops below 12px.
+// Point events sit in a lane above the plot with 1px leaders; the ranges (Experiments band, weekly-steps
+// bracket) use the empty lower plot. Under reduced motion, a compact results table follows the chart.
+import { linePath } from '@/components/demo/chart';
+import { currency } from '@/lib/format';
+import { weeks, weeklyCpb, trendTitle, trendFinding, experimentResults, change } from './data';
+
+const MAX = 200;
+const W = 700;
+const ticks = [0, 50, 100, 150, 200];
+const xf = (i: number) => i / (weeks.length - 1); // 0..1
+const yf = (v: number) => 1 - v / MAX; // 0 (top) .. 1 (baseline)
+const d = linePath(weeklyCpb.map((v, i) => [xf(i) * W, yf(v) * MAX] as [number, number]));
+const pos = (i: number) => `--x:${xf(i).toFixed(4)};--y:${yf(weeklyCpb[i]).toFixed(4)}`;
+const first = currency(Math.round(weeklyCpb[0])); // $171
+const last = currency(Math.round(weeklyCpb[weeklyCpb.length - 1])); // $154
+const [title, sub] = trendTitle.split(' · ');
+---
+<div class="md-view md-trend" data-el="view-trend" data-hide>
+  <figure class="md-card md-chart">
+    <figcaption class="md-head">
+      <p class="md-head__title">{title} <span>· {sub}</span></p>
+      <p class="md-head__aside">Spend held at $6,000 a week</p>
+    </figcaption>
+
+    <div class="md-chart__frame" role="img" aria-label={trendFinding}>
+      <div class="md-plot">
+        <div class="lc__grid" aria-hidden="true">{ticks.map((t) => <span style={`--v:${t / MAX}`} data-l={currency(t)}></span>)}</div>
+
+        <div class="md-band" style={`--x0:${xf(1)};--x1:${xf(3)}`} data-el="ann-band" data-ghost><span>Experiments</span></div>
+        <div class="md-bracket" style={`--x0:${xf(5)};--x1:${xf(7)}`} data-el="ann-bracket" data-ghost><span>Weekly budget steps <span class="md-nowrap">(±20% cap)</span></span></div>
+
+        <span class="md-ann md-ann--start" style={pos(0)} data-el="ann-audit" data-ghost><span>Audit</span></span>
+        <span class="md-ann md-ann--alt" style={pos(1)} data-el="ann-fixes" data-ghost><span>Fixes live</span></span>
+        <span class="md-ann md-ann--mid" style={pos(4)} data-el="ann-budget" data-ghost><span>Budget moved</span></span>
+
+        <svg class="md-line" viewBox={`0 0 ${W} ${MAX}`} preserveAspectRatio="none" aria-hidden="true" focusable="false" data-el="trend-line" data-ghost>
+          <path class="viz-line" d={d} stroke="var(--viz-1)" vector-effect="non-scaling-stroke" />
+        </svg>
+
+        <span class="md-pt" style={pos(0)} data-el="trend-start" data-ghost><i class="lc__dot"></i><b class="md-pt__v md-pt__v--above">{first}</b></span>
+        <span class="md-pt" style={pos(weeks.length - 1)} data-el="trend-end" data-ghost><i class="lc__dot"></i><b class="md-pt__v md-pt__v--right">{last}</b></span>
+
+        <div class="md-axis" aria-hidden="true">
+          {weeks.map((w, i) => <span class="md-axis__x" style={`--x:${xf(i)}`}><span class="md-axis__wk">Week </span>{w.week}</span>)}
+          <span class="md-axis__key md-axis__key--wk">Week</span>
+          {weeks.map((w, i) => <span class="md-axis__n" style={`--x:${xf(i)}`}>{w.bookings}</span>)}
+          <span class="md-axis__key">Bookings</span>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <div class="md-compact" data-final-only>
+    <p class="md-head__title">Experiment results <span>· week 4</span></p>
+    <div class="md-card md-table md-cmp">
+      <div class="md-tr md-tr--head">
+        <span class="md-k-test">Test</span><span class="md-num md-k-chg">Change</span><span class="md-num md-k-prob">Probability</span><span class="md-k-dec">Decision</span>
+      </div>
+      {experimentResults.map((r) => (
+        <div class="md-tr">
+          <span class="md-k-test md-r-test">{r.test}</span>
+          <span class="md-num md-k-chg">{change(r)}</span>
+          <span class="md-num md-k-prob">{r.prob}%</span>
+          <span class:list={['md-k-dec md-dec md-dec--inline', r.tone !== 'running' && `hl-${r.tone}`]}>
+            {r.tone === 'running'
+              ? <span class="chip chip-running"><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>{r.decision}</span>
+              : <span class="hl-tag">{r.decision}</span>}<small>{r.action}</small>
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>

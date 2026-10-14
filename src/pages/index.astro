@@ -1,16 +1,37 @@
 ---
+// Home: the whole story in one scroll (BRIEF.md site map, ARCHITECTURE.md). OWNER: foundation (layout).
+// Each section is its own component in src/components/home/, built by its owner; keep this order.
+// Background sequence (DESIGN.md §5): paper → sunken (demos) → navy (calculator) → paper → sunken (why-us)
+// → paper → sunken (industries) → paper → navy (final CTA) → footer.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/home/Hero.astro';
+import Integrations from '@/components/home/Integrations.astro';
+import Outcomes from '@/components/home/Outcomes.astro';
+import DayStory from '@/components/home/DayStory.astro';
+import ServicesGrid from '@/components/home/ServicesGrid.astro';
+import DemoTheater from '@/components/home/DemoTheater.astro';
+import Savings from '@/components/home/Savings.astro';
+import ScenariosPreview from '@/components/home/ScenariosPreview.astro';
+import Process from '@/components/home/Process.astro';
+import Differentiators from '@/components/home/Differentiators.astro';
+import Security from '@/components/home/Security.astro';
+import Industries from '@/components/home/Industries.astro';
+import HomeFaq from '@/components/home/HomeFaq.astro';
+import FinalCta from '@/components/home/FinalCta.astro';
 ---
-
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout>
+  <Hero />
+  <Integrations />
+  <Outcomes />
+  <DayStory />
+  <ServicesGrid />
+  <DemoTheater />
+  <Savings />
+  <ScenariosPreview />
+  <Process />
+  <Differentiators />
+  <Security />
+  <Industries />
+  <HomeFaq />
+  <FinalCta />
+</BaseLayout>

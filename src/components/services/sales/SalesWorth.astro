@@ -1,0 +1,114 @@
+---
+// OWNER: services-b
+// "What it's worth" for the Sales Agent. The worked example (@/data/worth, id 'sales') values the rep's
+// time only, so this card leads with the hours back and the unchanged quality bar, shows the dollar
+// value as a secondary, labeled line, and states plainly what cold email can and can't promise.
+// Same card language as WorthExample (tags, business, ledgers, MathLedger, footnote); figures are read
+// from the example, never retyped.
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import LedgerRows from '@/components/blocks/LedgerRows.astro';
+import MathLedger from '@/components/blocks/MathLedger.astro';
+import { getWorth } from '@/data/worth';
+import { currency, number } from '@/lib/format';
+import { url } from '@/lib/url';
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+
+const ex = getWorth('sales')!;
+const row = (re: RegExp) => ex.math.find((r) => re.test(r.label));
+const hoursOf = (s?: string) => (s ? Number.parseFloat(s.replace(/[^0-9.]/g, '')) : Number.NaN);
+const before = hoursOf(row(/^prospecting time today/i)?.value);
+const after = hoursOf(row(/^prospecting time after/i)?.value);
+const perEmailBefore = ex.baseline.find((b) => /time per email/i.test(b.label))?.value.split(' (')[0];
+const perEmailAfter = ex.after.find((b) => /time per email/i.test(b.label))?.value;
+const volume = ex.baseline.find((b) => /emails a month/i.test(b.label))?.value;
+// "About 1-2 held meetings a year at this volume" -> "about 1 to 2 held meetings a year" (prose ranges use "to").
+const meetings = ex.after.find((b) => /realistically/i.test(b.label))?.value;
+const meetingsText = meetings
+  ? meetings.replace(/ at this volume$/i, '').replace(/(\d)\s*-\s*(\d)/g, '$1 to $2').replace(/^About/, 'about')
+  : 'very few held meetings a year';
+const [kind, rest = ''] = ex.profile.split(/:\s*/, 2);
+const size = rest.split(/\s*[(,;]/)[0]?.trim();
+const annualRow = row(/^annual value/i);
+---
+<article class:list={['card', 'sw', className]} data-reveal>
+  <div class="sw__top">
+    <div class="tag-row"><IllustrativeLabel kind={ex.label} /><IllustrativeLabel kind={ex.label === 'Modeled estimate' ? 'Illustrative example' : 'Modeled estimate'} /></div>
+    <span class="sw__svc">{ex.service}</span>
+  </div>
+
+  <header class="sw__head">
+    <div>
+      <h3 class="type-h3">{ex.business}</h3>
+      <p class="sw__profile">{kind}{size ? ` · ${size}` : ''}</p>
+      <p class="sw__summary">{ex.summary}</p>
+    </div>
+    <div class="sw__fig">
+      <p class="stat__fig sw__value">{number(ex.hoursPerMonth ?? 0)}<small>hours back a month</small></p>
+      <p class="sw__lead">The same {volume} researched first emails a month, at the same quality bar. The rep reviews and approves each one{perEmailAfter ? ` in ${perEmailAfter.replace(/ to review.*$/, '')}` : ''} instead of spending {perEmailBefore} researching and writing it.</p>
+      {Number.isFinite(before) && Number.isFinite(after) && (
+        <div class="stat__bars">
+          <div class="mbar"><span class="mbar__label">By hand</span><span class="mbar__track"><span class="mbar__fill" style="width:100%"></span></span><span class="mbar__val">{number(before, 1)} h</span></div>
+          <div class="mbar"><span class="mbar__label">With the agent</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style={`width:${((after / before) * 100).toFixed(1)}%`}></span></span><span class="mbar__val">{number(after, 1)} h</span></div>
+        </div>
+      )}
+      <p class="sw__money">Valued at {currency(ex.monthlyValue)} a month in rep time{annualRow?.formula ? <Fragment>: <span class="math">{annualRow.formula} = <b>{annualRow.value}</b></span></Fragment> : null}</p>
+    </div>
+  </header>
+
+  <div class="sw__body">
+    <div class="sw__compare">
+      <LedgerRows title="Today" rows={ex.baseline} layout="stacked" />
+      <LedgerRows title="With the agent" rows={ex.after} layout="stacked" />
+    </div>
+    <div class="sw__math">
+      <MathLedger caption="The math" rows={ex.math} />
+      <div class="sw__honest">
+        <Icon name="info" />
+        <p><b>What we don’t count: new business.</b> Cold email is a slow channel. At this volume it realistically yields {meetingsText}, so any contract won is upside, not the case for buying.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="sw__foot">
+    <p class="sw__note">Gross value before any fees. Not a quote or a guarantee. Estimates exclude the cost of the engagement.</p>
+    <div class="sw__links">
+      <a class="link-arrow" href={url('/results/#methodology')}><span>How we estimate</span><Icon name="arrow-right" /></a>
+      <a class="link-arrow" href={url('/results/#examples')}><span>See the full example</span><Icon name="arrow-right" /></a>
+    </div>
+  </footer>
+</article>
+
+<style>
+  .sw { display: grid; gap: 24px; padding: clamp(20px, 3vw, 36px); }
+  .sw__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .sw__svc { font-size: 0.8125rem; color: var(--fg-3); }
+  .sw__head { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 24px 48px; align-items: start; }
+  .sw__profile { margin-top: 6px; font-size: 0.875rem; line-height: 1.5; color: var(--fg-3); }
+  .sw__summary { margin-top: 14px; max-width: 58ch; font-size: 1rem; line-height: 1.6; color: var(--fg-2); }
+  .sw__fig { padding-left: 28px; border-left: 1px solid var(--line-accent); }
+  .sw__value { margin-top: 0; }
+  .sw__lead { margin-top: 14px; max-width: 46ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg); }
+  .sw__fig .stat__bars { margin-top: 18px; max-width: 420px; }
+  .sw__money { margin-top: 16px; font-size: 0.875rem; line-height: 1.6; color: var(--fg-2); }
+  .sw__money .math { display: inline; }
+  .sw__body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px 48px; align-items: start; padding-top: 28px; border-top: 1px solid var(--line); }
+  .sw__compare { display: grid; gap: 28px; }
+  .sw__honest { display: flex; gap: 12px; margin-top: 20px; padding: 14px 16px; border-radius: var(--radius-tile); background: var(--color-paper-sunken); box-shadow: inset 2px 0 0 var(--color-brass-500); }
+  .sw__honest > :global(.icon) { width: 18px; height: 18px; margin-top: 2px; color: var(--color-brass-700); }
+  .sw__honest p { font-size: 0.9375rem; line-height: 1.55; color: var(--color-ink-2); }
+  .sw__honest b { font-weight: 600; color: var(--color-ink); }
+  .sw__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .sw__note { flex: 1 1 36ch; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .sw__links { display: flex; flex-wrap: wrap; gap: 0 24px; }
+  @media (width < 64rem) {
+    .sw__head, .sw__body { grid-template-columns: minmax(0, 1fr); }
+    .sw__fig { padding-left: 0; padding-top: 20px; border-left: 0; border-top: 1px solid var(--line-accent); }
+    .sw__compare { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 40px; }
+  }
+  @media (width < 48rem) { .sw__compare { grid-template-columns: minmax(0, 1fr); } }
+</style>

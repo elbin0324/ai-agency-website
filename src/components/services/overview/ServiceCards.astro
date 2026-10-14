@@ -1,0 +1,108 @@
+---
+// OWNER: services-a
+// /services/ "What we do": the four service lines as rich cards (COPY.md §3.3, tightened). Each card
+// opens on a tagged mini-window vignette (DESIGN.md §6.6), then the icon tile and number, the name,
+// the headline, a short body, four highlights, the "good fit" line and two links. Card ids are the
+// service slugs (#ai-agents, #marketing, #sales, #consulting). Like .svc-col, a 2px brass rule draws
+// across the top on hover or focus.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { services, type ServiceSlug } from '@/data/services';
+import { ours } from '@/data/consulting';
+import { url } from '@/lib/url';
+import ServiceArt from './ServiceArt.astro';
+import ServiceVignette from './ServiceVignette.astro';
+
+type CardCopy = { body: string; bullets: string[]; fit: string; demo: { label: string; href: string } };
+
+const consultingTime = ours.time.replace(/^Typically /, 'typically ').replace(/ from kickoff to readout$/, '');
+
+const copy: Record<ServiceSlug, CardCopy> = {
+  'ai-agents': {
+    body: 'Three agents, each built for one job, working inside your tools and handing off to your team when they should.',
+    bullets: ['Chat, text, email and phone', 'Bookings, quotes and follow-ups', 'Spreadsheets, forecasts and dashboards', 'Inbox triage, tasks and decks'],
+    fit: 'your team answers the same questions all day, rebuilds the same report every week or lives in the inbox.',
+    demo: { label: 'Watch the demos', href: '/demos/#customer-agent' },
+  },
+  marketing: {
+    body: 'It checks every ad against your real results and moves budget to what works, inside limits you set.',
+    bullets: ['Google, Meta and more, tied to real sales', 'Tests with a hypothesis and a stopping rule', 'Budget moves within your caps', 'A plain-English weekly report'],
+    fit: 'you spend real money on ads and can’t say which dollars bring in customers.',
+    demo: { label: 'Watch the demo', href: '/demos/#marketing-director' },
+  },
+  sales: {
+    body: 'It researches each prospect and writes one specific email at a time, on your sending rules.',
+    bullets: ['Lists built from your ideal customer', 'A research dossier on every prospect', 'A quality check before every send', 'Deliverability and opt-outs built in'],
+    fit: 'you sell to other businesses and need more qualified conversations without hiring another rep or sending spam.',
+    demo: { label: 'Watch the demo', href: '/demos/#sales-agent' },
+  },
+  consulting: {
+    body: `A review of your books and operations that ranks every saving by value, effort and payback, ${consultingTime}.`,
+    bullets: ['Cost, vendor and pricing review', 'Margin by job, product and customer', 'Automation sized in hours and dollars', 'AI strategy and readiness'],
+    fit: 'revenue is growing but margin isn’t, or you want a plan before you spend on AI.',
+    demo: { label: 'Watch the demo', href: '/demos/#consulting' },
+  },
+};
+---
+<Section id="services" aria-labelledby="services-title" tightTop>
+  <SectionHeader
+    num="01"
+    eyebrow="What we do"
+    subtitle="Each has its own page, a live demo and a worked example with the math shown."
+    titleId="services-title"
+  ><span slot="title" data-motion="split">Four services, one team behind all of them.</span></SectionHeader>
+  <div class="svc-grid" data-motion="stagger" data-stagger-target=".svc-card">
+    {services.map((s, i) => {
+      const c = copy[s.slug];
+      return (
+        <article class="card svc-card" id={s.slug} aria-labelledby={`${s.slug}-title`} data-reveal data-reveal-delay={String((i % 2) * 80)} data-motion="spotlight">
+          <ServiceVignette slug={s.slug} />
+          <div class="svc-card__head">
+            <span class="icon-tile"><ServiceArt slug={s.slug} /></span>
+            <span class="svc-card__num">{s.num}</span>
+          </div>
+          <h3 class="type-h3 svc-card__title" id={`${s.slug}-title`}>{s.name}</h3>
+          <p class="svc-card__headline">{s.headline}</p>
+          <p class="svc-card__body">{c.body}</p>
+          <ul class="knot-list svc-card__list" role="list" aria-label={`${s.name} highlights`}>
+            {c.bullets.map((b) => <li>{b}</li>)}
+          </ul>
+          <p class="svc-card__fit"><span class="svc-card__fit-k">Good fit if</span> {c.fit}</p>
+          <div class="svc-card__links">
+            <a class="link-arrow" href={url(s.href)}><span>{s.linkLabel}</span><Icon name="arrow-right" /></a>
+            <Button href={c.demo.href} variant="ghost" icon="play">{c.demo.label}</Button>
+          </div>
+        </article>
+      );
+    })}
+  </div>
+</Section>
+
+<style>
+  .svc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .svc-card { display: flex; flex-direction: column; min-width: 0; scroll-margin-top: 24px; }
+  .svc-card::before {
+    content: ""; position: absolute; top: 0; left: 14px; right: 14px; height: 2px; background: var(--color-brass-500);
+    transform: scaleX(0); transform-origin: left; transition: transform 0.5s var(--ease-out-soft);
+  }
+  .svc-card:hover::before, .svc-card:focus-within::before { transform: scaleX(1); }
+  .svc-card__head { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 28px; }
+  .svc-card__num { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--fg-3); }
+  .svc-card__title { margin-top: 20px; }
+  .svc-card__headline { margin-top: 8px; font-size: 1.0625rem; line-height: 1.5; font-weight: 550; color: var(--fg); text-wrap: balance; }
+  .svc-card__body { margin-top: 12px; font-size: 1rem; line-height: 1.6; color: var(--fg-2); }
+  .svc-card__list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .svc-card__fit { margin-top: 20px; padding: 14px 16px; border-radius: var(--radius-tile); background: var(--color-paper-sunken); font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .svc-card__fit-k { font-weight: 600; color: var(--fg); }
+  .svc-card__links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 28px; margin-top: auto; padding-top: 20px; }
+  @media (width < 48rem) {
+    .svc-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (width < 40rem) {
+    .svc-card__head { display: none; }
+    .svc-card__title { margin-top: 24px; }
+    .svc-card__list { display: grid; grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

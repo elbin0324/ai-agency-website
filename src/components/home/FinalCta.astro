@@ -1,0 +1,23 @@
+---
+// OWNER: home-story
+// Final CTA (COPY.md §2.13, DESIGN.md §6.24, §7.6): the navy band with the sail engraving (its HALYARD
+// label and dictionary caption follow site.brandStory), then "What you leave with". The page's brass
+// italic is used in the hero, so this headline has none. One brass button per navy band.
+// Keep id="cta": it is the anchor from COPY.md and may be linked from other pages.
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import { site } from '@/config/site';
+---
+<CtaBand
+  id="cta"
+  eyebrow="Free AI assessment"
+  title="Find out where AI pays off first in your business."
+  subtitle="Thirty minutes with the people who would build your agents. You get a short written plan with your top opportunities, ranked by value. No cost, no obligation."
+  primary={{ label: site.cta.label, href: site.cta.href, icon: 'arrow-right' }}
+  secondary={{ label: 'Estimate your savings first', href: site.ctas.calculator.href }}
+  micro="Prefer email? Write to {email}."
+  leaveWith={[
+    { title: 'Your top three opportunities, ranked', body: 'By estimated value and effort, specific to how your business runs.' },
+    { title: 'A rough savings estimate', body: 'Labeled as a modeled estimate, with the assumptions shown.' },
+    { title: 'A suggested first step', body: 'The first job to hand an agent. Yours to keep, whether or not we work together.' },
+  ]}
+/>

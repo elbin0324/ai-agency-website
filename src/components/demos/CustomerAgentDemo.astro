@@ -1,0 +1,68 @@
+---
+// Customer Agent demo: a late-night website chat becomes a booked job, with handoff rules.
+// OWNER: demo-customer. Story, copy and timing: content/DEMOS.md §1. Engine and conventions: DEMO_ENGINE.md.
+// Renders the demo only: the page supplies the <section> and its anchor (it appears on /demos/,
+// /services/ai-agents/ and in the home DemoTheater).
+//
+//   customer/customer-demo.ts   steps, captions, choreography and the result card
+//   customer/CustomerChat.astro  left pane: Larkfield's contact page with the chat widget (final state)
+//   customer/AgentConsole.astro  right pane: action timeline + context cards (final state)
+import AppWindow from '@/components/demo/AppWindow.astro';
+import CustomerChat from './customer/CustomerChat.astro';
+import AgentConsole from './customer/AgentConsole.astro';
+import demo, { result } from './customer/customer-demo';
+
+interface Props {
+  /** false: never autoplay (a tab switcher drives it with demo:play). Default true. */
+  autoplay?: boolean;
+  class?: string;
+}
+const { autoplay = true, class: className } = Astro.props;
+---
+<AppWindow
+  demo={demo.id}
+  steps={demo.steps}
+  title="Larkfield Plumbing & Air · Website chat"
+  address="larkfieldair.example/contact"
+  label="Customer Agent: a late-night chat becomes a booked job"
+  columns="60% 40%"
+  tabs={[{ id: 'chat', label: 'Customer chat' }, { id: 'console', label: 'Agent console' }]}
+  height={540}
+  mobileHeight={470}
+  ticker="Handed off to Renee K. · callback Wed by 10 am"
+  tickerStart="Waiting for a message…"
+  result={result}
+  microcopy="Simulated demo. Larkfield Plumbing & Air and the people named are fictional. Figures are illustrative."
+  autoplay={autoplay}
+  class:list={['ca-demo', className]}
+>
+  <Fragment slot="meta">
+    <span class="aw-status demo-hide-m"><span data-el="clock" data-initial-text="Tue 9:47 pm">Tue 9:50 pm</span>&nbsp;· Office closed</span>
+  </Fragment>
+
+  <CustomerChat />
+  <AgentConsole />
+</AppWindow>
+
+<script>
+  import { mountDemos } from '@/scripts/demo-engine';
+  import demo from './customer/customer-demo';
+  mountDemos(demo);
+</script>
+
+<style is:global>
+  /* Window adjustments for this demo only (keyed to data-demo, so no other window changes).
+     Title bar: the centered title must never collide with the side items, so the address pill steps aside
+     under 1200px and the clock chip under 1120px (global.css hides both on phones; captions carry the time). */
+  @media (width < 75rem) {
+    [data-demo="customer"] .aw-address { display: none; }
+  }
+  @media (width < 70rem) {
+    [data-demo="customer"] .aw-meta__scene { display: none; }
+  }
+  /* Tablets and small laptops (768–1119px): two even panes and a taller scene, so the console keeps a readable timeline
+     next to its context card. Playback only: reduced motion and no-JS already size the scene to content. */
+  @media (48rem <= width < 70rem) and (prefers-reduced-motion: no-preference) {
+    html.js [data-demo="customer"] .aw-scene--grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); height: 620px; }
+  }
+</style>

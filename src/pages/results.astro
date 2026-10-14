@@ -1,0 +1,141 @@
+---
+// OWNER: results
+// Savings and examples (COPY.md §9 with CRITIQUE.md edits 9 and 10, and the "Proof you can check
+// yourself" retitle). Background sequence (DESIGN.md §5): paper hero → navy calculator → paper scenarios
+// → sunken worked examples → paper methodology → sunken proof → navy final CTA. Section numbers restart
+// on this page. Anchors other pages use: #calculator, #examples, #methodology (plus #scenario-{id},
+// #worked-examples, #example-{id} and #src-{id}).
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import LedgerList from '@/components/blocks/LedgerList.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+import RoiCalculator from '@/components/results/RoiCalculator.astro';
+import ScenarioGrid from '@/components/results/ScenarioGrid.astro';
+import ServiceExamples from '@/components/results/ServiceExamples.astro';
+import Methodology from '@/components/results/Methodology.astro';
+import LabelGuide from '@/components/results/LabelGuide.astro';
+import { scenarios } from '@/data/scenarios';
+import { number } from '@/lib/format';
+import { url } from '@/lib/url';
+
+const title = 'Savings calculator and examples';
+const description =
+  'Estimate what AI agents could save your business, then walk through worked examples with every assumption shown. Modeled estimates, not promises.';
+const smallest = Math.min(...scenarios.map((s) => s.employees));
+const largest = Math.max(...scenarios.map((s) => s.employees));
+---
+<BaseLayout title={title} description={description}>
+  <PageHero
+    crumbs={[{ label: 'Results' }]}
+    eyebrow="Savings and examples"
+    title="Check the math before you *commit*."
+    subtitle="Estimate what AI agents could save your business. Then walk through six industry scenarios and a worked example for each service, with every assumption on the page."
+    primary={{ label: 'Estimate your savings', href: '#calculator', icon: 'arrow-right' }}
+    secondary={{ label: 'See the examples', href: '#examples' }}
+    micro="Every number here is a modeled estimate or an illustrative example. None are client results."
+  >
+    <LabelGuide slot="art" />
+  </PageHero>
+
+  <Section id="calculator" tone="navy" aria-labelledby="calculator-title">
+    <SectionHeader
+      num="01"
+      eyebrow="Savings calculator"
+      titleId="calculator-title"
+      subtitle="Five inputs with conservative defaults. Change anything and the estimate updates, with the formula under the result."
+    ><span slot="title" data-motion="split">Start with your own numbers.</span></SectionHeader>
+    <div data-reveal>
+      <RoiCalculator variant="full" id="roi" />
+    </div>
+  </Section>
+
+  <Section id="examples" aria-labelledby="examples-title">
+    <SectionHeader
+      num="02"
+      eyebrow="Industry scenarios"
+      titleId="examples-title"
+      subtitle={`Six fictional businesses, from ${number(smallest)} to ${number(largest)} staff. Each shows the agents it uses, how long they take to go live and every line of the math.`}
+    ><span slot="title" data-motion="split">Find a business like yours.</span></SectionHeader>
+    <div data-reveal>
+      <ScenarioGrid />
+    </div>
+    <p class="results-note" data-reveal>Fictional businesses. Modeled estimates, not client results. Time to value is a planning estimate for a typical scope, not a track record.</p>
+  </Section>
+
+  <Section id="worked-examples" tone="sunken" aria-labelledby="worked-title">
+    <SectionHeader
+      num="03"
+      eyebrow="Worked examples"
+      titleId="worked-title"
+      subtitle="Each uses a fictional business, base-case rates and arithmetic you can check line by line, down to the rounding."
+    ><span slot="title" data-motion="split">One worked example for every service.</span></SectionHeader>
+    <div data-reveal>
+      <ServiceExamples />
+    </div>
+  </Section>
+
+  <Section id="methodology" aria-labelledby="methodology-title">
+    <SectionHeader
+      num="04"
+      eyebrow="How we estimate"
+      titleId="methodology-title"
+      subtitle="Every figure on this site follows them. If a number can’t meet them, it doesn’t appear."
+    ><span slot="title" data-motion="split">The rules behind every number.</span></SectionHeader>
+    <Methodology />
+  </Section>
+
+  <Section id="proof" tone="sunken" aria-labelledby="proof-title">
+    <SectionHeader
+      num="05"
+      eyebrow="Our approach to proof"
+      titleId="proof-title"
+      subtitle="Instead of borrowed credibility, we give you things you can verify before you sign anything."
+    ><span slot="title" data-motion="split">Proof you can check yourself.</span></SectionHeader>
+    <div class="proof" data-reveal>
+      <div class="proof__col">
+        <p class="type-label proof__label"><Icon name="x" size={14} />You won’t see</p>
+        <LedgerList items={['Testimonials or reviews', 'Client logos or names', 'Guaranteed ROI', 'Statistics without a source']} label="You won’t see" />
+      </div>
+      <div class="proof__col">
+        <p class="type-label proof__label proof__label--yes"><Icon name="check" size={14} />You will see</p>
+        <LedgerList items={['Working demos of every agent', 'Assumptions next to every number', 'A written success measure for your pilot', 'Straight answers, including “AI isn’t the fix here”']} label="You will see" />
+      </div>
+      <div class="proof__cta">
+        <a class="link-arrow" href={url('/approach/#engagements')}><span>See how a pilot works</span><Icon name="arrow-right" /></a>
+        <a class="link-arrow" href={url('/demos/')}><span>Watch the demos</span><Icon name="arrow-right" /></a>
+      </div>
+    </div>
+  </Section>
+
+  <CtaBand
+    eyebrow="Free AI assessment"
+    title="Get an estimate built on your numbers."
+    subtitle="On a free 30-minute call we size the opportunities task by task, then send a written summary with every assumption shown."
+    secondary={{ label: 'See how we work', href: '/approach/' }}
+    micro="No cost, no obligation."
+  />
+</BaseLayout>
+
+<style>
+  .results-note { margin-top: 20px; font-size: 0.8125rem; line-height: 1.55; color: var(--fg-3); }
+  .proof { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; }
+  .proof__col { grid-column: span 5; }
+  .proof__col:first-child { grid-column: 1 / span 5; }
+  .proof__col:nth-child(2) { grid-column: 7 / span 5; }
+  .proof__label { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; color: var(--fg-2); }
+  .proof__label :global(.icon) { color: var(--fg-3); }
+  .proof__label--yes :global(.icon) { color: var(--color-success); }
+  /* "You won't see": muted rows with a × so a skimmer can't read them as features; the brass knot
+     stays with "You will see". */
+  .proof__col:first-child :global(.ledger-list > li) { color: var(--fg-2); }
+  .proof__col:first-child :global(.ledger-list > li::before) {
+    content: "\00D7"; width: auto; height: auto; margin-top: 0; box-shadow: none; color: var(--fg-3); line-height: 1.45;
+  }
+  .proof__cta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0 32px; }
+  @media (width < 48rem) {
+    .proof__col, .proof__col:first-child, .proof__col:nth-child(2) { grid-column: 1 / -1; }
+  }
+</style>

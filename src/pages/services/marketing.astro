@@ -1,0 +1,245 @@
+---
+// OWNER: services-b
+// AI Marketing Director. Copy: content/COPY.md §5, tightened, with content/CRITIQUE.md edits 12 (works
+// for your marketer, not instead of them) and 13 (margin and double-counted sales), plus the customer-
+// data guardrail and the e-commerce example link from the critique's missing content.
+// Numbers come from @/data/worth (the worked example), never retyped. Section ids follow COPY.md §5.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import Steps from '@/components/blocks/Steps.astro';
+import WorthExample from '@/components/blocks/WorthExample.astro';
+import FaqAccordion from '@/components/blocks/FaqAccordion.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import LedgerList from '@/components/blocks/LedgerList.astro';
+import Icon from '@/components/ui/Icon.astro';
+import MarketingDemo from '@/components/demos/MarketingDemo.astro';
+import HeroAdsWindow from '@/components/services/marketing/HeroAdsWindow.astro';
+import type { IconName } from '@/components/ui/icons';
+import { getWorth } from '@/data/worth';
+import { site } from '@/config/site';
+import { url } from '@/lib/url';
+
+const title = 'AI Marketing Director';
+const description =
+  'An AI that audits your Google and Meta ads, cuts waste, runs its own tests and moves budget to what works, inside limits you set.';
+
+const leaks = [
+  { t: 'Search terms that never convert', b: 'Clicks from people looking for jobs, free advice or a service you don’t offer, paid for every month.' },
+  { t: 'Spend where it can’t pay off', b: 'Ads shown outside the area you serve, at hours nobody can answer, or for products that are out of stock or too thin on margin to advertise.' },
+  { t: 'Campaigns competing with each other', b: 'Two campaigns bidding on the same searches and driving up your own costs.' },
+  { t: 'Tired creative', b: 'The same ad shown to the same people too many times, with results sliding.' },
+  { t: 'Landing pages that lose people', b: 'Slow pages, unclear offers and forms that ask too much.' },
+  { t: 'Tracking you can’t trust', b: 'Conversions counted twice or not at all, so every decision rests on bad data.' },
+  { t: 'Sales counted twice', b: 'Google and Meta can both claim the same sale. We check their numbers against your real orders and booked jobs, and judge campaigns on margin, not revenue.' },
+];
+
+const capabilities: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'search', title: 'Full-account audit', body: 'Every campaign, ad group, keyword, audience and search term across Google Ads, Meta Ads, Microsoft Ads and LinkedIn.' },
+  { icon: 'dollar-sign', title: 'Ties spend to revenue', body: 'Connects ad data to your website analytics and CRM, so you see cost per booked job or sale, not just cost per click.' },
+  { icon: 'circle-check', title: 'Fixes tracking first', body: 'Checks that conversions are counted correctly and flags broken tags and double counting. Good decisions need good data.' },
+  { icon: 'trending-down', title: 'Cuts the waste', body: 'Adds negative keywords, fixes location and schedule settings and pauses what’s losing money, with your approval.' },
+  { icon: 'lightbulb', title: 'Designs experiments', body: 'Tests one change at a time (creative, audience, offer, landing page or budget split), each with a clear hypothesis and a rule for when to stop.' },
+  { icon: 'chart-line', title: 'Calls winners on evidence', body: 'Waits for enough data before declaring a winner, so you don’t chase noise.' },
+  { icon: 'sliders-horizontal', title: 'Moves budget to what works', body: 'Shifts spend toward the campaigns bringing in customers, inside the caps and rules you approve.' },
+  { icon: 'pen-line', title: 'Drafts new creative', body: 'Writes headlines, ad copy and landing page variants in your brand voice, for your approval.' },
+  { icon: 'file-text', title: 'Reports in plain English', body: 'A short weekly note on what changed, what we tested, what we learned and what’s next, plus a monthly view of cost per lead, cost per acquisition and return on ad spend.' },
+];
+
+const roles = {
+  you: ['Strategy, brand and positioning', 'Final say on creative and messaging', 'Budget, caps and any increase', 'New campaigns and new offers'],
+  agent: ['Checks every search term and placement, daily', 'Spots tired ads and broken tracking', 'Runs clean tests and calls them on evidence', 'Moves budget inside your caps, then reports'],
+};
+
+const steps = [
+  { title: 'Connect, read-only', body: 'We connect your ad accounts, analytics and CRM with read-only access first.', time: 'Typically week 1', get: 'A full picture, nothing changed' },
+  { title: 'Audit and baseline', body: 'A full audit with each finding sized in dollars, plus the baseline we measure against: cost per lead, cost per acquisition and return on ad spend.', time: 'Typically weeks 1 to 2', get: 'Every leak, sized in dollars' },
+  { title: 'Fix the obvious', body: 'With your approval, we fix tracking, cut clear waste and tighten targeting.', time: 'Typically weeks 2 to 3', get: 'Clean tracking, less waste' },
+  { title: 'Test and learn', body: 'A running test plan. Each experiment has a hypothesis, a budget and a stopping rule.', time: 'Ongoing, in weekly cycles', get: 'Answers you can trust' },
+  { title: 'Report and reallocate', body: 'Weekly plain-English notes and a monthly review. Budget moves toward what works, inside your caps.', time: 'Ongoing', get: 'A weekly note, a monthly review' },
+];
+
+const guardrails: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'lock', title: 'Spending caps', body: 'Set inside the ad platforms wherever they support it. The agent can’t raise them without your approval.' },
+  { icon: 'user-check', title: 'Approval for big moves', body: 'New campaigns, new offers, budget increases and new messaging all wait for your OK.' },
+  { icon: 'shield-check', title: 'Brand-safe copy', body: 'Every ad follows your brand voice and a list of approved claims. No invented promises, discounts or guarantees.' },
+  { icon: 'database', title: 'Customer data stays put', body: 'Customer lists never go to an ad platform without your approval.' },
+  { icon: 'list', title: 'Change log and rollback', body: 'Every change is logged with the reason and the result, and any change can be rolled back.' },
+  { icon: 'scale', title: 'Platform and industry rules', body: 'Special ad categories (housing, employment) and regulated fields (healthcare, legal) follow platform policy and your compliance review.' },
+  { icon: 'circle-alert', title: 'Early warnings', body: 'If results dip or something looks off, the agent flags it right away and holds risky changes until you’ve seen it.' },
+  { icon: 'power', title: 'An off switch', body: 'Pause the agent at any time. It makes no further changes until you say so.' },
+];
+
+const moves = [
+  'Your monthly ad spend and how it’s split across platforms',
+  'Your current cost per lead or per customer',
+  'How much spend goes to searches, places or audiences that never convert',
+  'How quickly tests can reach a reliable answer at your spend',
+];
+
+const faq = [
+  {
+    q: 'Does this replace my agency or marketer?',
+    a: 'No. It works for them. Your marketer or agency keeps the strategy, the brand and the final say on creative and budget. The Marketing Director does the daily work they rarely have time for: checking every search term and placement, spotting tired ads, running clean tests and writing up what happened. If you don’t have a marketer, it can run the accounts day to day inside the limits you set, and the big calls still come to you.',
+  },
+  {
+    q: 'Can it spend more than my budget?',
+    a: 'Not without your approval. We set spending caps inside the ad platforms wherever they support it, and only you can approve an increase.',
+  },
+  {
+    q: 'How soon will we see results?',
+    a: 'Audit findings and quick fixes typically arrive in the first two weeks. Tests take longer. How long depends on your spend and traffic, and we won’t call a winner before the data supports it.',
+  },
+  {
+    q: 'Which platforms do you work with?',
+    a: 'We start with Google Ads and Meta Ads (Facebook and Instagram), and also work with Microsoft Ads and LinkedIn. We connect your website analytics and CRM too, so results tie to real customers and real orders.',
+  },
+  {
+    q: 'Do our customer lists go to the ad platforms?',
+    a: 'Not without your approval. Some advertisers upload customer lists to find similar buyers or to measure results. That’s your decision, made with whoever handles privacy for you, and the agent never does it on its own.',
+  },
+  {
+    q: 'Is there a minimum ad spend?',
+    a: 'There’s no fixed minimum. At smaller budgets the biggest gains usually come from fixing tracking, cutting waste and tightening targeting, rather than from running lots of tests. We’ll tell you on the assessment call which applies to you.',
+  },
+];
+---
+<BaseLayout title={title} description={description}>
+  <PageHero
+    crumbs={[{ label: 'Services', href: '/services/' }, { label: 'AI Marketing Director' }]}
+    eyebrow="AI Marketing Director"
+    title="Spend less to win *each customer.*"
+    subtitle="The AI Marketing Director audits every ad you run on Google, Meta and beyond, cuts the waste, runs its own tests and moves budget to what works, inside limits you set. Every week, it tells you what changed, in plain English."
+    chips={['Every account audited', 'Tests called on evidence', 'Budget within your caps']}
+    secondary={{ label: 'Watch the demo', href: '#demo', icon: 'play' }}
+    micro="Works for your marketer or agency, not instead of them. They approve strategy, creative and budget."
+  >
+    <HeroAdsWindow slot="art" />
+  </PageHero>
+
+  <Section id="leaks" aria-labelledby="leaks-title">
+    <SectionHeader num="01" eyebrow="Where budgets leak" subtitle="The first audit checks for the patterns that quietly drain ad budgets, and puts a dollar figure on each one it finds." titleId="leaks-title"><span slot="title" data-motion="split">The usual leaks, found and sized.</span></SectionHeader>
+    <ol class="cell-grid leaks" style="--cols: 4" role="list" data-reveal data-motion="stagger">
+      {leaks.map((l, i) => (
+        <li class="cell">
+          <span class="leaks__n">{String(i + 1).padStart(2, '0')}</span>
+          <h3 class="cell__title">{l.t}</h3>
+          <p class="cell__body">{l.b}</p>
+        </li>
+      ))}
+      <li class="cell leaks__ok" aria-label="Your approval">
+        <span class="chip chip-attention"><Icon name="user-check" />Your OK</span>
+        <p class="leaks__ok-t">Every finding comes with the fix, and nothing changes without your approval.</p>
+      </li>
+    </ol>
+  </Section>
+
+  <Section id="capabilities" tightTop aria-labelledby="capabilities-title">
+    <SectionHeader num="02" eyebrow="What it does" subtitle="It does the analysis a good marketing lead would do, every day, across every account." titleId="capabilities-title"><span slot="title" data-motion="split">A marketing director that tests, measures and reports.</span></SectionHeader>
+    <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="cells" items={capabilities} cols={3} label="Capabilities" /></div>
+    <div class="roles" data-reveal>
+      <p class="type-label roles__label">Who does what</p>
+      <div class="roles__col">
+        <p class="roles__k"><Icon name="user-check" />Your marketer, agency or you decide</p>
+        <LedgerList items={roles.you} variant="knot" label="What you decide" />
+      </div>
+      <div class="roles__col">
+        <p class="roles__k"><Icon name="target" />The Marketing Director does the daily work</p>
+        <LedgerList items={roles.agent} variant="knot" label="What the Marketing Director does" />
+      </div>
+    </div>
+  </Section>
+
+  <Section id="demo" tone="sunken" aria-labelledby="demo-title">
+    <SectionHeader num="03" eyebrow="See it work" titleId="demo-title"><span slot="title" data-motion="split">Watch an ad audit turn into a test plan.</span>
+      <p>The agent connects to the accounts, finds the waste, launches tests and moves budget, then reports what changed.</p>
+      <a class="link-arrow demo-all" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
+    </SectionHeader>
+    <div data-reveal><MarketingDemo /></div>
+  </Section>
+
+  <Section id="how-it-works" aria-labelledby="how-title">
+    <SectionHeader num="04" eyebrow="How it works" subtitle="A steady weekly rhythm, with every change logged and every big decision left to you." titleId="how-title"><span slot="title" data-motion="split">Audit, fix, test, repeat.</span></SectionHeader>
+    <div data-motion="draw stagger" data-draw-target=".steps__rope line" data-stagger-target=".step" data-start="top 85%" data-end="top 45%"><Steps steps={steps} label="How the Marketing Director works" /></div>
+    <p class="note-line note-line--rule" data-reveal><Icon name="clock" />How fast tests produce answers depends on your spend and traffic. We’d rather wait than call a winner on noise.</p>
+  </Section>
+
+  <Section id="guardrails" tightTop aria-labelledby="guardrails-title">
+    <SectionHeader num="05" eyebrow="Guardrails" subtitle="The agent works inside limits you set. The big decisions stay with you." titleId="guardrails-title"><span slot="title" data-motion="split">Your budget, your brand, your rules.</span></SectionHeader>
+    <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="guard" items={guardrails} cols={4} label="Guardrails" /></div>
+  </Section>
+
+  <Section id="worth" tone="sunken" aria-labelledby="worth-title">
+    <SectionHeader num="06" eyebrow="What it’s worth" subtitle="Ad improvements show up as money you stop wasting and more customers from the same budget. This example keeps spend flat, puts the savings to work and counts only the gross profit on the extra jobs." titleId="worth-title"><span slot="title" data-motion="split">Fewer wasted dollars, more customers per dollar.</span></SectionHeader>
+    <WorthExample example={getWorth('marketing')!} link={{ label: 'See an e-commerce example', href: '/results/#examples' }} />
+    <div class="moves" data-reveal>
+      <p class="type-label moves__label">What moves the number</p>
+      <LedgerList items={moves} variant="knot" class="moves__list" label="What moves the number" />
+      <a class="link-arrow moves__link" href={url(site.ctas.calculator.href)}><span>Run your own numbers</span><Icon name="arrow-right" /></a>
+    </div>
+  </Section>
+
+  <Section id="faq" aria-labelledby="faq-title">
+    <div class="faq-wrap">
+      <SectionHeader num="07" eyebrow="FAQ" align="left" titleId="faq-title"><span slot="title" data-motion="split">Questions about the Marketing Director.</span></SectionHeader>
+      <FaqAccordion items={faq} jsonLd />
+    </div>
+  </Section>
+
+  <CtaBand
+    eyebrow="Free AI assessment"
+    title="Find out where your ad budget is leaking."
+    subtitle="On a free 30-minute call we’ll talk through your accounts and tell you what we’d check first. Share read-only access beforehand and we’ll come with specifics."
+    secondary={site.ctas.calculator}
+    micro="Read-only access is optional, and you can remove it at any time."
+  />
+</BaseLayout>
+
+<style>
+  /* Leaks: seven numbered cells and the approval cell that closes the grid */
+  .leaks__n { display: block; margin-bottom: 10px; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--accent); }
+  .leaks .cell__title { display: block; line-height: 1.35; }
+  .leaks__ok { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+  .leaks__ok-t { max-width: 26ch; font-family: var(--font-serif); font-size: 1.375rem; font-weight: 420; line-height: 1.25; letter-spacing: -0.014em; color: var(--fg); }
+
+  /* Who does what */
+  .roles { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px 24px; margin-top: clamp(32px, 3.5vw, 44px); }
+  .roles__label { grid-column: 1 / span 3; padding-top: 3px; }
+  .roles__col { grid-column: span 4; }
+  .roles__col:first-of-type { grid-column: 4 / span 4; }
+  .roles__col:last-of-type { grid-column: 9 / span 4; }
+  .roles__k { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 0.9375rem; font-weight: 600; color: var(--fg); }
+  .roles__k :global(.icon) { color: var(--accent-display); }
+  .roles__col:first-of-type .roles__k :global(.icon) { color: var(--color-attention); }
+  @media (width < 64rem) {
+    .roles__label, .roles__col, .roles__col:first-of-type, .roles__col:last-of-type { grid-column: 1 / -1; }
+  }
+
+  .demo-all { margin-top: 8px; }
+
+  .note-line { display: flex; align-items: flex-start; gap: 10px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2); }
+  .note-line > :global(.icon) { margin-top: 3px; color: var(--accent-display); }
+  .note-line--rule { margin-top: clamp(36px, 4vw, 52px); padding-top: 20px; border-top: 1px solid var(--line); }
+
+  .moves { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px 24px; align-items: start; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .moves__label { grid-column: 1 / span 3; padding-top: 4px; }
+  .moves :global(.moves__list) { grid-column: 4 / span 6; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+  .moves__link { grid-column: 10 / span 3; justify-self: end; margin-top: -10px; }
+  @media (width < 64rem) {
+    .moves__label, .moves :global(.moves__list), .moves__link { grid-column: 1 / -1; }
+    .moves__link { justify-self: start; margin-top: 0; }
+  }
+  @media (width < 40rem) { .moves :global(.moves__list) { grid-template-columns: minmax(0, 1fr); } }
+
+  .faq-wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 0 48px; }
+  .faq-wrap > :global(.sec-rule) { grid-column: 1 / -1; }
+  .faq-wrap > :global(.sec-head) { grid-column: 1; align-self: start; display: block; position: sticky; top: calc(var(--header-h) + 32px); }
+  .faq-wrap > :global(.faq) { grid-column: 2; }
+  @media (width < 64rem) {
+    .faq-wrap { grid-template-columns: minmax(0, 1fr); }
+    .faq-wrap > :global(.sec-head) { position: static; }
+    .faq-wrap > :global(.sec-head), .faq-wrap > :global(.faq) { grid-column: 1; }
+  }
+</style>

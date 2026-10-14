@@ -1,0 +1,88 @@
+---
+// Consulting demo, step 2: the P&L, trailing 12 months (DEMOS.md §6). OWNER: demo-consulting.
+// Final-state markup: rows start hidden (data-hide) and cascade in; each cost line's spend bar grows from
+// the left, scaled to the largest line (Labor). Step 3 pulses the traced lines (data-line) and pops their
+// numbered markers (data-pnl-mark), which match the numbers in the Findings list.
+// Phones: the first 8 lines, then "Show all", then the totals.
+import Icon from '@/components/ui/Icon.astro';
+import { currency } from '@/lib/format';
+import { findings, pctOfRevenue, pnl, pnlTopLines } from './data';
+
+const largest = Math.max(...pnl.filter((l) => !l.kind).map((l) => l.value));
+const marks = (key: string) => findings.map((f, i) => (f.line === key ? i + 1 : 0)).filter(Boolean);
+const extra = pnl.filter((l) => !l.kind).length + 1 - pnlTopLines; // cost lines hidden on phones
+---
+<div class="pnl-wrap">
+<div class="pnl" role="table" aria-label="P&L, trailing 12 months">
+  <div class="pnl__row pnl__row--head" role="row">
+    <span role="columnheader">Line</span>
+    <span class="pnl__num" role="columnheader">Annual</span>
+    <span class="pnl__num pnl__pcthead" role="columnheader" data-short="%">% of revenue</span>
+    <span class="pnl__spend" role="columnheader">Spend</span>
+  </div>
+  {pnl.map((l, i) => (<Fragment>
+    {l.kind === 'total' && (
+      <div class="pnl__more" aria-hidden="true" data-el="pnl-row" data-hide>
+        <span class="app-btn">Show all<Icon name="chevron-down" /></span>
+        <span class="pnl__more-n">{extra} more lines</span>
+      </div>
+    )}
+    <div
+      class:list={['pnl__row', l.kind && `pnl__row--${l.kind}`, i >= pnlTopLines && !l.kind && 'pnl__row--more']}
+      role="row"
+      data-line={l.key}
+      data-el={l.kind === 'ebitda' ? 'pnl-ebitda' : 'pnl-row'}
+      data-hide
+    >
+      <span class="pnl__label" role="cell">
+        <span class="pnl__name">{l.label}</span>
+        {marks(l.key).map((n) => <span class="marker" data-pnl-mark={n} data-hide>{n}</span>)}
+      </span>
+      <span class="pnl__num" role="cell">{currency(l.value)}</span>
+      <span class="pnl__num pnl__pct" role="cell">{pctOfRevenue(l.value)}</span>
+      <span class="pnl__spend" role="cell" aria-hidden="true">
+        {!l.kind && <span class="pnl__bar" style={`--v:${(l.value / largest).toFixed(4)}`} data-grow="x" data-el="pnl-bar"></span>}
+      </span>
+    </div>
+  </Fragment>))}
+</div>
+</div>
+
+<style>
+  .pnl-wrap { container-type: inline-size; }
+  .pnl { font-size: 0.8125rem; line-height: 1.35; color: var(--color-on-2); font-variant-numeric: tabular-nums lining-nums; }
+  .pnl__row {
+    display: grid; grid-template-columns: minmax(0, 1fr) 6.75rem 6.25rem minmax(0, 0.95fr); align-items: center; column-gap: 18px;
+    min-height: 26px; padding: 3px 4px; border-bottom: 1px solid var(--color-rule-dark); border-radius: 4px;
+  }
+  .pnl__row--head { min-height: 0; padding-top: 0; padding-bottom: 7px; font-size: 0.75rem; font-weight: 500; color: var(--color-on-3); border-bottom-color: var(--color-rule-dark-strong); border-radius: 0; }
+  .pnl__row--head { position: sticky; top: 0; z-index: 1; background: var(--color-navy-800); }   /* stays put if the views box scrolls */
+  .pnl__label { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .pnl__name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .pnl__label .marker { flex: none; margin: 0; width: 18px; height: 18px; vertical-align: 0; }
+  .pnl__num { text-align: right; color: var(--color-on); }
+  .pnl__pct { color: var(--color-on-3); }
+  .pnl__spend { min-width: 0; }
+  .pnl__bar { display: block; width: calc(var(--v) * 100%); min-width: 3px; height: 8px; border-radius: 0 var(--radius-data) var(--radius-data) 0; background: var(--viz-1); }
+  .pnl__row--revenue .pnl__name { font-weight: 550; color: var(--color-on); }
+  .pnl__row--total { border-top: 1px solid var(--color-rule-dark-strong); font-weight: 600; }
+  .pnl__row--total .pnl__name { color: var(--color-on); }
+  .pnl__row--ebitda { border-bottom: 0; font-weight: 600; }
+  .pnl__row--ebitda .pnl__name, .pnl__row--ebitda .pnl__pct { color: var(--color-on); }
+  .pnl__more { display: none; }
+  /* Narrow (phones, tablets): no spend column, "%" header */
+  @container (width < 34rem) {
+    .pnl__row { grid-template-columns: minmax(0, 1fr) 6.25rem 3.75rem; column-gap: 10px; padding-inline: 2px; }
+    .pnl__spend { display: none; }
+    .pnl__name { white-space: normal; }
+    .pnl__pcthead { font-size: 0; }
+    .pnl__pcthead::after { content: attr(data-short); font-size: 0.75rem; }
+  }
+  /* Phones: the first 8 lines, then "Show all", then the totals (DEMOS.md §6) */
+  @media (width < 48rem) {
+    .pnl__row--more { display: none; }
+    .pnl__more { display: flex; align-items: center; gap: 10px; padding: 7px 2px; border-bottom: 1px solid var(--color-rule-dark); }
+    .pnl__more .app-btn :global(.icon) { width: 12px; height: 12px; }
+    .pnl__more-n { font-size: 0.75rem; color: var(--color-on-3); }
+  }
+</style>

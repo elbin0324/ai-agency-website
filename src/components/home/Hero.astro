@@ -1,0 +1,84 @@
+---
+// Home hero. OWNER: home-hero.
+// Copy: COPY.md §2.1 with CRITIQUE.md edit 8 (an AI agent defined in the subhead; the fixed-price
+// pilot chip), tightened. Layout and CSS ported from design-lab/reference/index.html (.hero*):
+// eyebrow and display H1 on 7 columns, lead and proof chips on 5, the CTA under the H1, then the
+// live agent console (FIG. 1) and the trust strip (DESIGN.md §5, §6.11, §6.17, §7.2).
+// The H1 is site.tagline; its last two words are the page's one brass italic phrase (§2.3).
+// Keep id="hero": it is the anchor from COPY.md.
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import TrustStrip from '@/components/blocks/TrustStrip.astro';
+import HeroConsole from './hero/HeroConsole.astro';
+import { site } from '@/config/site';
+
+const words = site.tagline.trim().split(/\s+/);
+const cut = Math.max(1, words.length - 2);
+const titleLead = words.slice(0, cut).join(' ');
+const titleEm = words.slice(cut).join(' ');
+
+const proof = [
+  'Built and run for you',
+  'Human approval where it matters',
+  'Measured in hours and dollars',
+  'Starts with a fixed-price pilot',
+];
+---
+<section id="hero" data-section="hero" class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+    <div class="hero__grid">
+      <div class="hero__title">
+        <Eyebrow>AI agents and consulting for small and mid-size businesses</Eyebrow>
+        <h1 class="type-display" id="hero-title" data-motion="split">{titleLead} <em>{titleEm}</em></h1>
+      </div>
+      <p class="hero__lead type-lead">
+        {site.name} builds and runs AI agents: software that does a defined job, like answering customers,
+        building the weekly report or testing your ads, inside the tools you already use. Your people approve
+        anything that matters. Every month, we report the results in hours and dollars.
+      </p>
+      <div class="hero__actions">
+        <div class="hero__ctas">
+          <Button href={site.cta.href} size="lg" icon="arrow-right">{site.cta.label}</Button>
+          <Button href="#demos" variant="ghost" icon="play">Watch the agents work</Button>
+        </div>
+        <p class="hero__micro">{site.cta.microcopy}</p>
+      </div>
+      <ul class="hero__chips" role="list" aria-label="What you can count on">
+        {proof.map((item) => <li><Icon name="check" />{item}</li>)}
+      </ul>
+    </div>
+
+    <HeroConsole />
+    <TrustStrip class="hero__trust" />
+  </div>
+</section>
+
+<style>
+  .hero { position: relative; isolation: isolate; padding-top: clamp(32px, 4vw, 56px); }
+  .hero::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(900px 520px at 80% 6%, rgb(255 255 255 / .62), transparent 70%), radial-gradient(760px 460px at 8% 0%, rgb(255 255 255 / .4), transparent 70%); }
+  .hero__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+  .hero__title { grid-column: 1 / span 7; }
+  .hero__title .type-display { margin-top: 20px; max-width: 12ch; }
+  .hero__lead { grid-column: 8 / span 5; align-self: end; padding-bottom: 6px; }
+  .hero__actions { grid-column: 1 / span 7; margin-top: 30px; }
+  .hero__ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+  .hero__micro { margin-top: 12px; font-size: .8125rem; color: var(--color-ink-3); }
+  /* content-sized columns keep each proof point on one line down to about 1280px */
+  .hero__chips { grid-column: 8 / span 5; align-self: start; display: grid; grid-template-columns: repeat(2, auto); justify-content: start; gap: 10px 28px; margin-top: 34px; font-size: .875rem; color: var(--color-ink-2); }
+  .hero__chips li { display: flex; align-items: center; gap: 8px; }
+  .hero__chips :global(.icon) { color: var(--color-brass-600); }
+  /* The trust strip's own bottom rule doubles as the top rule of the integrations ledger below. */
+  .hero :global(.hero__trust) { margin-top: clamp(24px, 3vw, 36px); }
+  @media (width < 64rem) {
+    .hero__title, .hero__lead, .hero__actions, .hero__chips { grid-column: 1 / -1; }
+    .hero__lead { margin-top: 20px; }
+    .hero__chips { margin-top: 22px; }
+  }
+  @media (width < 40rem) {
+    .hero__ctas :global(.btn-primary) { width: 100%; }
+    /* Phones: the console (the product proof) gets the first screen instead. The trust strip under
+       it already covers approval and logging. */
+    .hero__chips { display: none; }
+  }
+</style>

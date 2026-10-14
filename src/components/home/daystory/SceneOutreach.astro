@@ -1,0 +1,82 @@
+---
+// Day story, 3:30 pm: the Sales Agent's researched first emails wait for approval. OWNER: home-daystory.
+// Same prospecting run as the hero console's approval card (property managers, 12 researched, 9 ready,
+// 3 skipped). Prospects are invented, clearly generic names (BRIEF.md honesty rules).
+import Icon from '@/components/ui/Icon.astro';
+import { business, sales } from './day-data';
+
+const prospects = [
+  { name: 'Northgate Property Mgmt', why: '3 downtown buildings, built before 1980', state: 'sel' },
+  { name: 'Cedar Row Apartments', why: '120 units · new owner since June', state: 'ready' },
+  { name: 'Bellmont Offices', why: 'Hiring a facilities manager', state: 'ready' },
+  { name: 'Greyfield Self Storage', why: 'Skipped: no clear reason to write', state: 'skip' },
+];
+---
+<div class="sc">
+  <div class="sc__list">
+    <p class="aw-label">Researched · {sales.researched}</p>
+    <ul class="sc-pros" role="list">
+      {prospects.map((p) => (
+        <li class:list={['sc-pro', `is-${p.state}`]} data-ds="pro">
+          <b>{p.name}</b>
+          <span>{p.why}</span>
+        </li>
+      ))}
+    </ul>
+    <p class="sc-pros__more">+ {sales.ready - 3} more ready · {sales.skipped - 1} more skipped</p>
+  </div>
+
+  <div class="sc__draft">
+    <div class="aw-doc sc-mailer">
+      <div class="aw-doc__row"><span>To</span>Carla Benson, Northgate Property Mgmt</div>
+      <div class="aw-doc__row"><span>Subject</span>Boiler season at your downtown buildings</div>
+      <div class="aw-doc__body">
+        <p data-ds="line">Hi Carla,</p>
+        <p data-ds="line">Your August newsletter mentioned replacing the boilers in your three downtown buildings before winter. Systems that age are most of our week.</p>
+        <p data-ds="line">Could we inspect all three in one visit and send you a written plan?</p>
+        <p data-ds="line" class="sc-sign">Renee K.<span>{business.name}</span></p>
+        <p data-ds="line" class="sc-optout">Not the right person? Reply “no thanks” and we won’t write again.</p>
+      </div>
+    </div>
+    <div class="sc-checks" data-ds="checks">
+      <span class="chip chip-done"><Icon name="check" />2 facts, sourced</span>
+      <span class="chip chip-done"><Icon name="check" />Opt-out included</span>
+    </div>
+    <div class="sc-approve" data-ds="approve">
+      <span class="sc-approve__label"><Icon name="user-check" />Waiting on you <span class="count">{sales.ready}</span></span>
+      <span class="sc-approve__btns"><span class="app-btn">Review</span><span class="app-btn app-btn--primary">Approve</span></span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .sc { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.25fr); gap: 16px; height: 100%; min-height: 0; }
+
+  .sc__list { display: flex; flex-direction: column; gap: 10px; min-height: 0; padding: 14px; border-radius: var(--radius-tile); background: var(--color-navy-850); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .sc-pros { display: grid; gap: 6px; }
+  .sc-pro { display: grid; gap: 2px; padding: 9px 11px; border-radius: var(--radius-control); line-height: 1.35; box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .sc-pro b { font-size: 0.8125rem; font-weight: 550; color: var(--color-on); }
+  .sc-pro span { font-size: 0.75rem; color: var(--color-on-3); }
+  .sc-pro.is-sel { background: var(--color-navy-600); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+  .sc-pro.is-skip { box-shadow: none; }
+  .sc-pro.is-skip b { color: var(--color-on-3); font-weight: 500; }
+  .sc-pros__more { margin-top: auto; font-size: 0.75rem; color: var(--color-on-3); }
+
+  .sc__draft { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+  .sc-mailer { min-height: 0; overflow: hidden; font-size: 0.8125rem; line-height: 1.5; }
+  .sc-mailer .aw-doc__row { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .sc-sign { display: grid; line-height: 1.4; }
+  .sc-sign span { font-size: 0.75rem; color: var(--color-ink-3); }
+  .sc-optout { padding-top: 10px; border-top: 1px solid var(--color-rule); font-size: 0.75rem; line-height: 1.45; color: var(--color-ink-3); }
+  .sc-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sc-approve { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding: 10px 12px; border-radius: var(--radius-tile); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .sc-approve__label { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8125rem; font-weight: 550; color: var(--color-sky); }
+  .sc-approve__label .icon { width: 14px; height: 14px; }
+  .sc-approve__btns { display: inline-flex; gap: 8px; }
+
+  @container (width < 520px) {
+    .sc { grid-template-columns: minmax(0, 1fr); }
+    .sc__list { display: none; }
+    .sc-mailer .aw-doc__row { white-space: normal; }
+  }
+</style>

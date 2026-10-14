@@ -1,0 +1,460 @@
+---
+// OWNER: pages-misc
+// The free-assessment form (COPY.md §11.2, trimmed to the seven fields in the brief; DESIGN.md §6.13).
+//
+// Without JS it is a plain form: native validation, then a mailto: to site.email (or a normal POST
+// to site.formEndpoint when one is set, e.g. Formspree).
+// With JS (script below): inline, accessible validation (aria-invalid + aria-describedby, focus on the
+// first problem), then
+//   - site.formEndpoint set: POST JSON (Formspree-compatible), "Sending…", success replaces the form,
+//     error shows a danger callout with the email address;
+//   - no endpoint: opens a pre-written email to site.email and shows a short confirmation note.
+// Calculator hand-off: /contact/?source=calculator&team=&hourly=&hours=&share=&inquiries=&annual=
+// prefills the message (values re-checked against roi.ts ranges; the estimate is recomputed with
+// computeRoi so the message never carries a figure the model didn't produce).
+import Icon from '@/components/ui/Icon.astro';
+import Button from '@/components/ui/Button.astro';
+import Callout from '@/components/blocks/Callout.astro';
+import { site, emailReady } from '@/config/site';
+
+const endpoint = site.formEndpoint;
+const subject = 'Free AI assessment request';
+const action = endpoint ?? `mailto:${site.email}?subject=${encodeURIComponent(subject)}`;
+
+const sizes = ['1-4 people', '5-19 people', '20-49 people', '50-199 people', '200-500 people', 'More than 500'];
+const interests = [
+  { value: 'Customer Agent', label: 'Answering customers', sub: 'Customer Agent' },
+  { value: 'Analyst Agent', label: 'Spreadsheets, reports and numbers', sub: 'Analyst Agent' },
+  { value: 'Executive Assistant', label: 'Email, scheduling and admin', sub: 'Executive Assistant' },
+  { value: 'Marketing Director', label: 'Ads and marketing', sub: 'Marketing Director' },
+  { value: 'Sales Agent', label: 'Finding new customers', sub: 'Sales Agent' },
+  { value: 'Consulting', label: 'Costs, pricing and margin', sub: 'AI Consulting' },
+  { value: 'Not sure yet', label: 'Not sure yet', sub: 'We’ll suggest where to start' },
+];
+const id = (s: string) => `cf-${s}`;
+---
+<div class="cform card" data-contact-form-root>
+  <div class="cform__panel" data-cf-panel>
+    <div class="cform__head">
+      <h2 class="type-h3" id="form-title">Tell us about your business.</h2>
+      <p class="cform__intro">Five required fields. The rest helps us prepare. Takes about 2 minutes.</p>
+    </div>
+
+    <div class="cform__calc" data-cf-calc hidden>
+      <Callout variant="method" title="Your savings estimate is attached." icon="calculator">
+        We added your calculator inputs to the message below. Edit or remove them as you like.
+      </Callout>
+    </div>
+
+    <form
+      class="cform__form"
+      data-contact-form
+      data-endpoint={endpoint ?? ''}
+      data-email={site.email}
+      data-email-ready={emailReady ? 'true' : 'false'}
+      data-subject={subject}
+      action={action}
+      method="post"
+      enctype={endpoint ? undefined : 'text/plain'}
+      aria-labelledby="form-title"
+    >
+      <div class="cform__grid">
+        <div class="field">
+          <label class="field__label" for={id('name')}>Full name</label>
+          <input class="input" id={id('name')} name="name" type="text" autocomplete="name" required
+            data-cf-validate="required" data-cf-msg="Please enter your name." />
+          <p class="field__error" id={id('name-err')} hidden><Icon name="circle-alert" /><span></span></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for={id('email')}>Work email</label>
+          <input class="input" id={id('email')} name="email" type="email" autocomplete="email" required
+            placeholder="jordan@yourcompany.com" aria-describedby={id('email-hint')}
+            data-cf-validate="email" data-cf-msg="Please enter a valid email, like name@company.com." />
+          <p class="field__hint" id={id('email-hint')}>We’ll send your assessment summary here. No newsletters.</p>
+          <p class="field__error" id={id('email-err')} hidden><Icon name="circle-alert" /><span></span></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for={id('company')}>Company</label>
+          <input class="input" id={id('company')} name="company" type="text" autocomplete="organization" required
+            data-cf-validate="required" data-cf-msg="Please enter your company name." />
+          <p class="field__error" id={id('company-err')} hidden><Icon name="circle-alert" /><span></span></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for={id('size')}>Company size</label>
+          <select class="select" id={id('size')} name="company_size" required
+            data-cf-validate="required" data-cf-msg="Please choose a company size.">
+            <option value="" selected disabled>Choose one</option>
+            {sizes.map((s) => <option value={s}>{s}</option>)}
+          </select>
+          <p class="field__error" id={id('size-err')} hidden><Icon name="circle-alert" /><span></span></p>
+        </div>
+
+        <fieldset class="field cform__wide cform__set" id={id('interests')} aria-describedby={id('interests-hint')}
+          data-cf-validate="group" data-cf-msg="Pick at least one, or choose “Not sure yet”.">
+          <legend class="field__label">What would you like help with?</legend>
+          <p class="field__hint" id={id('interests-hint')}>Pick any that apply.</p>
+          <p class="field__error" id={id('interests-err')} hidden><Icon name="circle-alert" /><span></span></p>
+          <div class="cform__checks">
+            {interests.map((it, i) => (
+              <label class="check cform__check">
+                <input type="checkbox" name="interests" value={it.value} id={i === 0 ? id('interest-first') : undefined} />
+                <span class="cform__check-text">{it.label}<small>{it.sub}</small></span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div class="field cform__wide">
+          <label class="field__label" for={id('message')}>Where does your team lose the most time? <span class="optional">(optional)</span></label>
+          <textarea class="textarea" id={id('message')} name="message" rows="5" aria-describedby={id('message-hint')}
+            placeholder="For example: we answer the same questions by phone all day, or month-end reporting takes a week."></textarea>
+          <p class="field__hint" id={id('message-hint')}>A sentence or two is plenty.</p>
+        </div>
+
+        <fieldset class="field cform__wide cform__set">
+          <legend class="field__label">How should we reach you?</legend>
+          <div class="cform__radios">
+            <label class="check"><input type="radio" name="preferred_contact" value="Email" checked data-cf-contact />Email</label>
+            <label class="check"><input type="radio" name="preferred_contact" value="Phone" data-cf-contact />Phone call</label>
+          </div>
+        </fieldset>
+
+        <div class="field cform__phone" data-cf-phone>
+          <label class="field__label" for={id('phone')}>Phone <span class="optional" data-cf-phone-optional>(optional)</span></label>
+          <input class="input" id={id('phone')} name="phone" type="tel" autocomplete="tel" inputmode="tel"
+            aria-describedby={id('phone-hint')} data-cf-validate="phone" data-cf-msg="Please enter a phone number we can call, or choose email." />
+          <p class="field__hint" id={id('phone-hint')}>Only if you’d rather we call.</p>
+          <p class="field__error" id={id('phone-err')} hidden><Icon name="circle-alert" /><span></span></p>
+        </div>
+
+        {endpoint && (
+          <Fragment>
+            <input type="hidden" name="_subject" value={subject} />
+            <div class="cform__trap" aria-hidden="true">
+              <label>Leave this empty <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" /></label>
+            </div>
+          </Fragment>
+        )}
+        <input type="hidden" name="source" value="Contact page" data-cf-source />
+      </div>
+
+      <div class="cform__submit">
+        <Button type="submit" size="lg" icon="arrow-right" class="cform__btn" data-cf-submit>Request my free assessment</Button>
+        <p class="cform__privacy">We use your details only to respond to your request and prepare for the call. We don’t sell or share them.</p>
+      </div>
+
+      <div class="cform__status" data-cf-status aria-live="polite">
+        <div data-cf-mailto hidden>
+          <Callout variant="note" icon="mail" title="Your email app should open with your request.">
+            Press send and we’ll reply within one business day. Nothing opened? Email us at <a href={`mailto:${site.email}`}>{site.email}</a>.
+          </Callout>
+        </div>
+        <div data-cf-unconnected hidden>
+          <Callout variant="note" title="Thanks. Online requests open very soon.">
+            This form isn’t connected to our inbox yet, so nothing was sent. Please check back shortly.
+          </Callout>
+        </div>
+      </div>
+      <div data-cf-error hidden role="alert">
+        <Callout variant="danger" icon="circle-alert">
+          Something went wrong on our end. Please try again, or email us at <a href={`mailto:${site.email}`}>{site.email}</a>.
+        </Callout>
+      </div>
+    </form>
+  </div>
+
+  <div class="cform__done" data-cf-done hidden tabindex="-1" role="status">
+    <span class="cform__done-mark"><Icon name="check" size={22} /></span>
+    <h2 class="type-h3 cform__done-title"><span data-cf-thanks>Thanks. We’ve got it.</span></h2>
+    <p class="cform__done-lead">We’ll reply within one business day to find a time for your call. Look for an email from {site.email}.</p>
+    <Callout variant="tip" title="While you wait:" class="cform__done-tip">
+      if you can, jot down one example of work that eats your team’s time: a report, a common customer question or an inbox you dread.
+    </Callout>
+  </div>
+</div>
+
+<style>
+  .cform { padding: clamp(22px, 3vw, 40px); }
+  .cform__head { padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+  .cform__intro { margin-top: 8px; font-size: 0.9375rem; color: var(--fg-3); }
+  .cform__calc { margin-top: 22px; }
+  .cform__form { margin-top: 26px; }
+  .cform__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 20px; align-items: start; }
+  .cform__wide { grid-column: 1 / -1; }
+  .cform__set { min-width: 0; margin: 0; padding: 0; border: 0; }
+  .cform__set > legend { margin-bottom: 6px; padding: 0; }
+  .cform__checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+  .cform__check { min-height: 48px; padding: 12px 14px; border-radius: var(--radius-control); background: var(--color-paper-raised); box-shadow: inset 0 0 0 1px var(--color-rule-strong); transition: box-shadow 0.15s, background-color 0.15s; }
+  .cform__check:hover { box-shadow: inset 0 0 0 1px var(--color-ink-2); }
+  .cform__check:has(input:checked) { background: var(--color-paper); box-shadow: inset 0 0 0 1.5px var(--color-ink); }
+  .cform__check-text { display: grid; gap: 1px; font-weight: 500; }
+  .cform__check-text small { font-size: 0.8125rem; font-weight: 400; color: var(--color-ink-3); }
+  /* A failed group shows one message and a red legend, not seven red tiles. */
+  .cform__set[aria-invalid="true"] > legend { color: var(--color-danger); }
+  /* "Not sure yet" is a different kind of answer: it takes the full row instead of sitting beside an empty cell. */
+  .cform__checks > .cform__check:last-child { grid-column: 1 / -1; }
+  .cform__radios { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 4px; }
+  .cform__radios .check { min-height: 44px; align-items: center; }
+  .cform__radios .check > input { margin-top: 0; }
+  /* With JS the phone field shows only when "Phone call" is chosen; without JS it stays visible (optional). */
+  :global(html.js) .cform__phone:not(.is-on) { display: none; }
+  .cform__trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+  .cform__submit { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .cform__privacy { flex: 1 1 16rem; max-width: 46ch; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .cform__status:not(:empty) { margin-top: 0; }
+  [data-cf-mailto], [data-cf-error] { margin-top: 20px; }
+  .cform__done { padding: clamp(8px, 2vw, 16px) 0; outline: none; }
+  .cform__done-mark { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: var(--color-success); background: var(--color-success-wash); }
+  .cform__done-title { margin-top: 20px; }
+  .cform__done-lead { margin-top: 10px; max-width: 52ch; font-size: 1.0625rem; line-height: 1.6; color: var(--fg-2); }
+  .cform__done :global(.cform__done-tip) { margin-top: 24px; max-width: 60ch; }
+
+  @media (width < 48rem) {
+    .cform__grid, .cform__checks { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (width < 40rem) {
+    .cform__submit :global(.cform__btn) { width: 100%; }
+  }
+</style>
+
+<script>
+  import { computeRoi, roiInputs } from '@/data/roi';
+  import { currency, number } from '@/lib/format';
+
+  type Control = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  /** Calculator hand-off: query param -> roi.ts input id, with how each value reads in the message. */
+  const CALC: { param: string; id: string; fmt: (n: number) => string }[] = [
+    { param: 'team', id: 'teamSize', fmt: (n) => number(n) },
+    { param: 'hourly', id: 'hourlyCost', fmt: (n) => currency(n) },
+    { param: 'hours', id: 'repetitiveHours', fmt: (n) => number(n) },
+    { param: 'share', id: 'aiSharePct', fmt: (n) => `${number(n)}%` },
+    { param: 'inquiries', id: 'monthlyInquiries', fmt: (n) => number(n) },
+  ];
+
+  function calculatorMessage(params: URLSearchParams): string | null {
+    if (params.get('source') !== 'calculator') return null;
+    const values: Record<string, number> = {};
+    const lines: string[] = [];
+    let complete = true;
+    for (const c of CALC) {
+      const spec = roiInputs.find((r) => r.id === c.id);
+      const raw = params.get(c.param);
+      const n = raw === null || raw.trim() === '' ? NaN : Number(raw);
+      if (!spec || !Number.isFinite(n)) { complete = false; continue; }
+      const v = Math.min(spec.max, Math.max(spec.min, Math.round(n / spec.step) * spec.step));
+      values[c.id] = v;
+      lines.push(`- ${spec.label}: ${c.fmt(v)}`);
+    }
+    if (complete) {
+      const r = computeRoi(values);
+      lines.push(`- Estimated hours back: ${number(r.hoursPerMonth)} a month`);
+      lines.push(`- Estimated value of that time: ${currency(r.annualValue)} a year`);
+    } else {
+      const annual = Number(params.get('annual'));
+      if (Number.isFinite(annual) && annual > 0) lines.push(`- Estimated value of that time: ${currency(Math.round(annual))} a year`);
+    }
+    if (!lines.length) return null;
+    return `From the savings calculator (a modeled estimate, not a quote):\n${lines.join('\n')}\n\n`;
+  }
+
+  function init(form: HTMLFormElement) {
+    const root = form.closest<HTMLElement>('[data-contact-form-root]');
+    if (!root || form.dataset.cfBound) return;
+    form.dataset.cfBound = '1';
+    form.noValidate = true;
+
+    const toEmail = form.dataset.email || '';
+    const subject = form.dataset.subject || 'Free AI assessment request';
+    const submit = form.querySelector<HTMLButtonElement>('[data-cf-submit]');
+    const submitLabel = submit?.querySelector('span');
+    const mailtoNote = form.querySelector<HTMLElement>('[data-cf-mailto]');
+    const errorNote = form.querySelector<HTMLElement>('[data-cf-error]');
+    const panel = root.querySelector<HTMLElement>('[data-cf-panel]');
+    const done = root.querySelector<HTMLElement>('[data-cf-done]');
+    const phoneWrap = form.querySelector<HTMLElement>('[data-cf-phone]');
+    const phoneOptional = form.querySelector<HTMLElement>('[data-cf-phone-optional]');
+    const phoneHint = phoneWrap?.querySelector<HTMLElement>('.field__hint');
+    const message = form.querySelector<HTMLTextAreaElement>('textarea[name="message"]');
+    const source = form.querySelector<HTMLInputElement>('[data-cf-source]');
+    let attempted = false;
+
+    // ---- Calculator prefill (never overwrite what the visitor already typed) ----
+    const prefill = calculatorMessage(new URLSearchParams(window.location.search));
+    if (prefill && message && !message.value.trim()) {
+      message.value = prefill;
+      message.rows = Math.min(14, prefill.split(/\r?\n/).length + 2);
+      if (source) source.value = 'Savings calculator';
+      root.querySelector<HTMLElement>('[data-cf-calc]')?.removeAttribute('hidden');
+    }
+
+    // ---- Preferred contact: phone field appears (and becomes required) for "Phone call" ----
+    const wantsPhone = () => form.querySelector<HTMLInputElement>('input[name="preferred_contact"]:checked')?.value === 'Phone';
+    const syncPhone = () => {
+      const on = wantsPhone();
+      phoneWrap?.classList.toggle('is-on', on);
+      const input = phoneWrap?.querySelector<HTMLInputElement>('input');
+      if (input) {
+        if (on) input.setAttribute('aria-required', 'true'); else input.removeAttribute('aria-required');
+        if (!on) clearError(input);
+      }
+      if (phoneOptional) phoneOptional.hidden = on;
+      if (phoneHint) phoneHint.textContent = on ? 'The best number to reach you, with the area code.' : 'Only if you’d rather we call.';
+    };
+    // ---- Validation ----
+    const targets = () => Array.from(form.querySelectorAll<HTMLElement>('[data-cf-validate]'));
+    const errorEl = (el: HTMLElement) => document.getElementById(`${el.id}-err`);
+    const describe = (el: HTMLElement, errId: string, on: boolean) => {
+      const ids = (el.getAttribute('aria-describedby') || '').split(/\s+/).filter((x) => x && x !== errId);
+      if (on) ids.push(errId);
+      if (ids.length) el.setAttribute('aria-describedby', ids.join(' ')); else el.removeAttribute('aria-describedby');
+    };
+    function setError(el: HTMLElement, msg: string) {
+      const err = errorEl(el);
+      if (!err) return;
+      const text = err.querySelector('span');
+      if (text) text.textContent = msg;
+      err.hidden = false;
+      el.setAttribute('aria-invalid', 'true');
+      describe(el, err.id, true);
+      if (el.tagName === 'FIELDSET') el.querySelectorAll('input').forEach((i) => i.setAttribute('aria-invalid', 'true'));
+    }
+    function clearError(el: HTMLElement) {
+      const err = errorEl(el);
+      if (err) { err.hidden = true; describe(el, err.id, false); }
+      el.removeAttribute('aria-invalid');
+      if (el.tagName === 'FIELDSET') el.querySelectorAll('input').forEach((i) => i.removeAttribute('aria-invalid'));
+    }
+    function isValid(el: HTMLElement): boolean {
+      const rule = el.dataset.cfValidate;
+      if (rule === 'group') return !!el.querySelector('input:checked');
+      const v = (el as Control).value.trim();
+      if (rule === 'required') return v.length > 0;
+      if (rule === 'email') return EMAIL.test(v);
+      if (rule === 'phone') return !wantsPhone() || v.replace(/\D/g, '').length >= 7;
+      return true;
+    }
+    function check(el: HTMLElement): boolean {
+      const ok = isValid(el);
+      if (ok) clearError(el); else setError(el, el.dataset.cfMsg || 'Please check this field.');
+      return ok;
+    }
+    const focusTarget = (el: HTMLElement) => (el.tagName === 'FIELDSET' ? el.querySelector<HTMLElement>('input') : el);
+
+    targets().forEach((el) => {
+      const evt = el.tagName === 'FIELDSET' || el.tagName === 'SELECT' ? 'change' : 'input';
+      el.addEventListener(evt, () => { if (attempted || el.getAttribute('aria-invalid') === 'true') check(el); });
+      // Catch a mistyped email as soon as the visitor leaves the field, but only once they've typed something.
+      if (el.dataset.cfValidate === 'email') el.addEventListener('blur', () => { if ((el as Control).value.trim()) check(el); });
+    });
+
+    form.querySelectorAll<HTMLInputElement>('[data-cf-contact]').forEach((r) => r.addEventListener('change', () => {
+      syncPhone();
+      if (wantsPhone()) phoneWrap?.querySelector<HTMLInputElement>('input')?.focus();
+    }));
+    syncPhone();
+
+    // ---- Collect and send ----
+    function collect() {
+      const fd = new FormData(form);
+      const get = (k: string) => String(fd.get(k) ?? '').trim();
+      return {
+        name: get('name'),
+        email: get('email'),
+        company: get('company'),
+        company_size: get('company_size'),
+        interests: fd.getAll('interests').map(String),
+        message: get('message'),
+        preferred_contact: get('preferred_contact') || 'Email',
+        phone: wantsPhone() ? get('phone') : '',
+        source: get('source'),
+      };
+    }
+
+    function emailBody(d: ReturnType<typeof collect>): string {
+      const lines = [
+        `Name: ${d.name}`,
+        `Work email: ${d.email}`,
+        `Company: ${d.company}`,
+        `Company size: ${d.company_size}`,
+        `Help with: ${d.interests.join(', ')}`,
+        `Preferred contact: ${d.preferred_contact}${d.phone ? `, ${d.phone}` : ''}`,
+      ];
+      if (d.message) lines.push('', 'Where we lose the most time:', d.message);
+      return lines.join('\n');
+    }
+
+    // aria-disabled (not disabled) while sending, so keyboard focus stays on the button.
+    let busy = false;
+    function setBusy(on: boolean) {
+      busy = on;
+      form.setAttribute('aria-busy', on ? 'true' : 'false');
+      if (on) submit?.setAttribute('aria-disabled', 'true'); else submit?.removeAttribute('aria-disabled');
+      if (submitLabel) submitLabel.textContent = on ? 'Sending…' : 'Request my free assessment';
+    }
+
+    function showDone(firstName: string) {
+      const thanks = done?.querySelector('[data-cf-thanks]');
+      if (thanks) thanks.textContent = firstName ? `Thanks, ${firstName}. We’ve got it.` : 'Thanks. We’ve got it.';
+      if (panel) panel.hidden = true;
+      if (done) { done.hidden = false; done.focus({ preventScroll: true }); }
+      root?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (busy) return;
+      attempted = true;
+      if (errorNote) errorNote.hidden = true;
+      const invalid = targets().filter((el) => !check(el));
+      if (invalid.length) {
+        focusTarget(invalid[0])?.focus();
+        return;
+      }
+      const data = collect();
+      const subj = `${subject}: ${data.company}`;
+      const endpoint = form.dataset.endpoint || '';
+
+      if (!endpoint && form.dataset.emailReady !== 'true') {
+        // site.email is still the placeholder: never open an email addressed to it.
+        const unconnected = form.querySelector<HTMLElement>('[data-cf-unconnected]');
+        if (unconnected) unconnected.hidden = false;
+        return;
+      }
+
+      if (!endpoint) {
+        // Open the visitor's email app with the request written out (a real link click, so it behaves
+        // like any mailto: link), then say what to expect.
+        const link = document.createElement('a');
+        link.href = `mailto:${toEmail}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(emailBody(data))}`;
+        link.hidden = true;
+        form.append(link);
+        link.click();
+        link.remove();
+        if (mailtoNote) mailtoNote.hidden = false;
+        return;
+      }
+
+      setBusy(true);
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ ...data, _subject: subj, _replyto: data.email, _gotcha: String(new FormData(form).get('_gotcha') ?? '') }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        showDone(data.name.split(/\s+/)[0] || '');
+      } catch {
+        if (errorNote) errorNote.hidden = false;
+      } finally {
+        setBusy(false);
+      }
+    });
+  }
+
+  document.querySelectorAll<HTMLFormElement>('form[data-contact-form]').forEach(init);
+</script>

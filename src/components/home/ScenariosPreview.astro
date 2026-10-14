@@ -1,0 +1,50 @@
+---
+// OWNER: results
+// Home "Illustrative examples" (COPY.md §2.7 with CRITIQUE.md edit 9): three industry scenarios from
+// @/data/scenarios as a hairline stat ledger, each linking to its full math on /results/, plus a link
+// to all six. Suggested trio from content/SCENARIOS.md: home services, dental group, distributor.
+// Keep id="examples": COPY.md anchors and other pages link here.
+import Icon from '@/components/ui/Icon.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import ScenarioCard from '@/components/results/ScenarioCard.astro';
+import { homeNum } from '@/components/home/story/sections';
+import { scenarios } from '@/data/scenarios';
+import { number } from '@/lib/format';
+import { url } from '@/lib/url';
+
+interface Props {
+  /** Section number in the home sequence (defaults to homeNum.examples in home/story/sections.ts, 04). */
+  num?: string;
+}
+const { num = homeNum.examples } = Astro.props;
+
+const featured = ['home-services', 'dental', 'industrial-distributor']
+  .map((id) => scenarios.find((s) => s.id === id))
+  .filter((s): s is (typeof scenarios)[number] => !!s);
+const smallest = Math.min(...scenarios.map((s) => s.employees));
+const largest = Math.max(...scenarios.map((s) => s.employees));
+---
+<section id="examples" data-section="examples" class="section" aria-labelledby="examples-title">
+  <div class="wrap">
+    <SectionHeader
+      num={num}
+      eyebrow="Illustrative examples"
+      titleId="examples-title"
+      subtitle={`Six fictional businesses, from ${number(smallest)} to ${number(largest)} staff. Each shows which agents it uses, how long they take to go live and every line of the math.`}
+    ><span slot="title" data-motion="split">Find a business like yours, with the math shown.</span></SectionHeader>
+    <div class="stat-ledger sc-preview" style={`--cols: ${featured.length}`} data-reveal data-motion="stagger">
+      {featured.map((s) => <ScenarioCard scenario={s} variant="compact" />)}
+    </div>
+    <div class="sc-preview__foot" data-reveal>
+      <p class="sc-preview__note">Fictional businesses. Modeled estimates, not client results.</p>
+      <a class="link-arrow" href={url('/results/#examples')}><span>See all six scenarios and their assumptions</span><Icon name="arrow-right" /></a>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* 3-up figures: the reference's .ex-grid size, so $169,275 fits a third of the column. */
+  .sc-preview :global(.stat__fig) { font-size: clamp(3rem, 2.4rem + 2vw, 4rem); }
+  .sc-preview__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; margin-top: 18px; }
+  .sc-preview__note { font-size: 0.8125rem; color: var(--fg-3); }
+</style>

@@ -1,0 +1,88 @@
+---
+// Day story, 9:40 am: a website chat becomes a booked job. OWNER: home-daystory.
+// Left: what the customer sees (the client's chat widget, .aw-doc paper). Right: the agent's steps.
+// Prices come from the Customer Agent demo's price book (DEMOS.md §1); people from its dispatch board.
+import Icon from '@/components/ui/Icon.astro';
+import { business } from './day-data';
+
+const msgs: { who: 'them' | 'ai'; text: string }[] = [
+  { who: 'them', text: 'My AC buzzes when it starts and the fan is slow. Can someone come today?' },
+  { who: 'ai', text: 'Sorry about that. Quick safety check first: any burning smell or smoke near the unit?' },
+  { who: 'them', text: 'No smell, no smoke.' },
+  { who: 'ai', text: 'Sounds like a capacitor or contactor. The diagnostic visit is $89, credited to the repair. Alicia T. is free today, 1 to 3 pm. Book it?' },
+  { who: 'them', text: 'Yes please.' },
+];
+const acts = [
+  { t: 'Safety check', d: 'Not triggered' },
+  { t: 'Price book', d: 'Diagnostic visit · $89' },
+  { t: 'Dispatch calendar', d: 'Today 1–3 pm open' },
+  { t: 'Booking created', d: '#BK-4131 · Alicia T.' },
+  { t: 'Text confirmation', d: 'Sent at 9:43 am' },
+];
+---
+<div class="sc">
+  <div class="sc__doc aw-doc">
+    <div class="sc-widget">
+      <span class="sc-widget__dot" aria-hidden="true"></span>
+      <span class="sc-widget__name"><b>{business.name}</b><span>AI assistant · Replies instantly</span></span>
+    </div>
+    <div class="sc-msgs">
+      {msgs.map((m) => <p class:list={['sc-msg', `sc-msg--${m.who}`]} data-ds="msg">{m.text}</p>)}
+      <div class="sc-booked" data-ds="booked">
+        <Icon name="calendar-check" size={18} />
+        <span><b>Booked: AC repair, today 1:00–3:00 pm</b><span>Alicia T. · Confirmation sent by text</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sc__side">
+    <p class="aw-label">Behind the scenes</p>
+    <ol class="sc-acts" role="list">
+      {acts.map((a) => (
+        <li data-ds="act">
+          <span class="sc-acts__ic"><Icon name="check" /></span>
+          <span><b>{a.t}</b><span>{a.d}</span></span>
+        </li>
+      ))}
+    </ol>
+    <p class="sc-rule"><Icon name="user-check" />Complaints and custom quotes go to Renee K.</p>
+  </div>
+</div>
+
+<style>
+  .sc { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 16px; height: 100%; min-height: 0; }
+
+  .sc__doc { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .sc-widget { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--color-rule); }
+  .sc-widget__dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); }
+  .sc-widget__name { display: grid; min-width: 0; line-height: 1.3; }
+  .sc-widget__name b { font-size: 0.8125rem; font-weight: 600; color: var(--color-ink); }
+  .sc-widget__name span { font-size: 0.75rem; color: var(--color-ink-3); }
+
+  /* Bottom-aligned like a real chat: if the window is short, the oldest message clips at the top. */
+  .sc-msgs { display: flex; flex: 1; flex-direction: column; justify-content: flex-end; gap: 8px; min-height: 0; overflow: hidden; padding: 12px 14px 14px; }
+  .sc-msg { max-width: 86%; padding: 8px 12px; border-radius: 12px; font-size: 0.8125rem; line-height: 1.45; }
+  .sc-msg--them { align-self: flex-end; border-bottom-right-radius: 4px; background: var(--color-ink); color: var(--color-paper-raised); }
+  .sc-msg--ai { align-self: flex-start; border-bottom-left-radius: 4px; background: var(--color-paper-sunken); color: var(--color-ink); }
+  .sc-booked { display: flex; align-items: flex-start; gap: 10px; margin-top: 2px; padding: 10px 12px; border-radius: var(--radius-tile); background: var(--chip-done-bg); color: var(--chip-done); box-shadow: inset 0 0 0 1px var(--line); }
+  .sc-booked > span { display: grid; line-height: 1.35; }
+  .sc-booked b { font-size: 0.8125rem; font-weight: 600; }
+  .sc-booked span span { font-size: 0.75rem; color: var(--color-ink-2); }
+
+  .sc__side { display: flex; flex-direction: column; gap: 12px; min-height: 0; padding: 14px; border-radius: var(--radius-tile); background: var(--color-navy-850); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .sc-acts { display: grid; gap: 4px; }
+  .sc-acts li { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; }
+  .sc-acts li + li { border-top: 1px solid var(--color-rule-dark); }
+  .sc-acts__ic { display: grid; flex: none; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: var(--chip-done); background: var(--chip-done-bg); box-shadow: inset 0 0 0 1px var(--chip-done-ring); }
+  .sc-acts__ic .icon { width: 12px; height: 12px; stroke-width: 2; }
+  .sc-acts li > span:last-child { display: grid; min-width: 0; line-height: 1.35; }
+  .sc-acts b { font-size: 0.8125rem; font-weight: 550; color: var(--color-on); }
+  .sc-acts li > span:last-child span { font-size: 0.75rem; color: var(--color-on-3); }
+  .sc-rule { display: flex; align-items: flex-start; gap: 8px; margin-top: auto; font-size: 0.75rem; line-height: 1.4; color: var(--color-sky); }
+  .sc-rule .icon { flex: none; width: 14px; height: 14px; margin-top: 1px; }
+
+  @container (width < 520px) {
+    .sc { grid-template-columns: minmax(0, 1fr); }
+    .sc__side { display: none; }
+  }
+</style>

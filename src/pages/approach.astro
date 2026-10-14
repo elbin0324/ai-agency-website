@@ -1,0 +1,58 @@
+---
+// OWNER: pages-misc
+// How we work (content/COPY.md §10, tightened; CRITIQUE.md edits applied). Section ids: hero, process,
+// engagements, security (linked site-wide), controls, what-we-need, faq, cta. §10.2 "Principles" is cut
+// per CRITIQUE.md ("restates the pillars"); the trust strip sits at the top of the page (DESIGN.md §6.17).
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import TrustStrip from '@/components/blocks/TrustStrip.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Container from '@/components/ui/Container.astro';
+import SpecWindow from '@/components/approach/SpecWindow.astro';
+import Process from '@/components/approach/Process.astro';
+import Engagements from '@/components/approach/Engagements.astro';
+import Security from '@/components/approach/Security.astro';
+import Controls from '@/components/approach/Controls.astro';
+import WhatWeNeed from '@/components/approach/WhatWeNeed.astro';
+import ApproachFaq from '@/components/approach/ApproachFaq.astro';
+import { site } from '@/config/site';
+
+const title = 'How we work';
+const description =
+  'Prove it on one job, then scale what works. Our process, engagement models, security practices and the controls that keep your team in charge.';
+---
+<BaseLayout title={title} description={description}>
+  <PageHero
+    crumbs={[{ label: 'Approach' }]}
+    eyebrow="How we work"
+    title="Prove it on one job. Then *scale what works.*"
+    subtitle="We start with the work that costs you the most, prove an agent on your real tasks with your people in control, and expand only when the numbers say so."
+    secondary={{ label: 'See engagement models', href: '#engagements' }}
+    micro={site.cta.microcopy}
+  >
+    <SpecWindow slot="art" />
+  </PageHero>
+
+  <Container>
+    <TrustStrip class="approach-trust" />
+  </Container>
+
+  <Process />
+  <Engagements />
+  <Security />
+  <Controls />
+  <WhatWeNeed />
+  <ApproachFaq />
+
+  <CtaBand
+    eyebrow="Free AI assessment"
+    title="Start with a conversation, not a contract."
+    subtitle="Thirty minutes, no cost. You get a written summary of where AI would pay off first, and what it would take."
+    secondary={site.ctas.calculator}
+    micro="Prefer email? Write to {email}."
+  />
+</BaseLayout>
+
+<style>
+  :global(.approach-trust) { border-top: 1px solid var(--line); }
+</style>

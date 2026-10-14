@@ -1,0 +1,90 @@
+---
+// Marketing Director demo: ad accounts audited, waste found, experiments run, budget moved inside the
+// guardrails, cost per new patient tracked over 8 weeks (content/DEMOS.md §4). OWNER: demo-marketing.
+// Renders the demo only: the page supplies the <section>, heading and anchor (it appears on /, /demos/ and
+// /services/marketing/). Steps: ./marketing/marketing-demo.ts. Data: ./marketing/data.ts.
+//
+// The markup is the FINAL state (no JS and reduced motion show exactly this): the Trend tab, the KPI strip in
+// week 8 mode and the feed with the Week 8 report on top. data-* attributes say how each piece starts.
+import AppWindow from '@/components/demo/AppWindow.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+import KpiStrip from './marketing/KpiStrip.astro';
+import CampaignsView from './marketing/CampaignsView.astro';
+import ExperimentsView from './marketing/ExperimentsView.astro';
+import BudgetView from './marketing/BudgetView.astro';
+import TrendView from './marketing/TrendView.astro';
+import Feed from './marketing/Feed.astro';
+import { business, microcopy, resultMetrics, resultNote } from './marketing/data';
+import demo from './marketing/marketing-demo';
+import './marketing/marketing.css';
+
+interface Props {
+  /** false: never autoplay (DemoTheater drives it with demo:play). */
+  autoplay?: boolean;
+  class?: string;
+}
+const { autoplay = true, class: className } = Astro.props;
+
+const tabs = [
+  { id: 'campaigns', label: 'Campaigns', icon: 'list' },
+  { id: 'experiments', label: 'Experiments', icon: 'workflow' },
+  { id: 'budget', label: 'Budget', icon: 'sliders-horizontal' },
+  { id: 'trend', label: 'Trend', icon: 'chart-line' },
+] as const;
+---
+<AppWindow
+  demo={demo.id}
+  steps={demo.steps}
+  title={`${site.name} Marketing Director · ${business}`}
+  columns="minmax(0, 68fr) minmax(0, 32fr)"
+  tabs={[{ id: 'work', label: 'Workspace' }, { id: 'feed', label: 'Agent feed' }]}
+  height={540}
+  mobileHeight={520}
+  ticker="Week 8 report ready for Dr. Park"
+  tickerStart="Reading the ad accounts"
+  autoplay={autoplay}
+  class={['md-demo', className].filter(Boolean).join(' ')}
+  result={{ metrics: resultMetrics, label: 'Illustrative example', note: resultNote }}
+  microcopy={microcopy}
+>
+  <!-- Workspace (68%): KPI strip, in-app tabs, then one view at a time -->
+  <section class="aw-pane md-work is-active" data-pane="work" data-el="work">
+    <KpiStrip />
+
+    <div class="md-toolbar" data-el="toolbar">
+      <span class="aw-seg md-tabs">
+        {tabs.map((t) => (
+          <span
+            class:list={[t.id === 'trend' && 'is-on']}
+            data-el={`tab-${t.id}`}
+            data-initial-class={t.id === 'campaigns' ? 'is-on' : undefined}
+            data-final-class={t.id === 'trend' ? 'is-on' : undefined}
+          >
+            <Icon name={t.icon} />{t.label}
+            {t.id === 'experiments' && <span class="md-stamp" data-el="stamp-wk4" data-hide>Week 4</span>}
+          </span>
+        ))}
+      </span>
+      <!-- Connected accounts, in plain text: no color keys here, or the single-series trend line (--viz-1)
+           would read as "Google Ads". The Channel column carries its own keys. -->
+      <p class="md-accounts"><Icon name="plug" /><span>Google Ads</span><span aria-hidden="true">·</span><span>Meta Ads</span></p>
+    </div>
+
+    <div class="demo-stack md-views">
+      <CampaignsView />
+      <ExperimentsView />
+      <BudgetView />
+      <TrendView />
+    </div>
+  </section>
+
+  <!-- Agent feed (32%): pinned guardrails, then timestamped notes -->
+  <Feed />
+</AppWindow>
+
+<script>
+  import { mountDemos } from '@/scripts/demo-engine';
+  import demo from './marketing/marketing-demo';
+  mountDemos(demo);
+</script>

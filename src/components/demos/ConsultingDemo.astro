@@ -1,0 +1,217 @@
+---
+// Consulting demo: a P&L becomes a ranked plan (content/DEMOS.md §6). OWNER: demo-consulting.
+// Render the demo only: the page supplies the <section> and its anchor (it appears on /demos/ and
+// /services/consulting/). Steps and timing: ./consulting/consulting-demo.ts. Rows and numbers: ./consulting/data.ts.
+//
+// The markup is the final state of the run: Findings on the left, the 90-day roadmap on the canvas.
+// The reduced-motion view (DEMOS.md §6) swaps in the waterfall + ranked opportunities on the canvas and the
+// roadmap list on the left (the `final` hook and data-final-only); without JavaScript the run's final state shows.
+import AppWindow from '@/components/demo/AppWindow.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { site } from '@/config/site';
+import { ours } from '@/data/consulting';
+import PnlTable from './consulting/PnlTable.astro';
+import Opportunities from './consulting/Opportunities.astro';
+import Waterfall from './consulting/Waterfall.astro';
+import Roadmap from './consulting/Roadmap.astro';
+import { business, findings, sources } from './consulting/data';
+import demo from './consulting/consulting-demo';
+
+interface Props {
+  autoplay?: boolean;
+  class?: string;
+}
+const { autoplay = true, class: className } = Astro.props;
+// Source ids (cons-26, pnl-15) never break at their hyphen: a word joiner (U+2060) follows it.
+const WJ = String.fromCharCode(0x2060);
+const ids = (s: string) => s.replace(/\b([a-z]+)-(\d+)\b/g, `$1-${WJ}$2`);
+---
+<AppWindow
+  demo={demo.id}
+  steps={demo.steps}
+  title={`${site.name} Consulting · Margin review · ${business.name}`}
+  columns="30% 70%"
+  tabs={[{ id: 'panel', label: 'Sources & findings' }, { id: 'canvas', label: 'Analysis' }]}
+  activeTab="canvas"
+  height={540}
+  mobileHeight={470}
+  ticker="90-day roadmap ready for your review"
+  tickerStart="Connecting 8 sources · read-only"
+  autoplay={autoplay}
+  class={className}
+  result={{
+    metrics: [
+      {
+        value: '2 days',
+        unit: 'vs ~8 weeks',
+        label: 'Data to findings',
+        basis: ids('Our estimate for data pull, analysis and review, vs a fast traditional provider for the same scope (cons-26, cons-31).'),
+      },
+      {
+        value: '$39,600',
+        unit: 'a year',
+        label: 'Counted savings',
+        basis: ids('Half of the $79,200 identified (pnl-15, pnl-18), because each depends on your decisions or a negotiation.'),
+      },
+      {
+        value: '7.50%',
+        unit: 'from 6.40%',
+        label: 'EBITDA margin',
+        basis: ids('EBITDA $230,400 → $270,000 on $3.6M, counting half; levers at base rates (pnl-19, pnl-22, pnl-25).'),
+      },
+    ],
+    label: ['Illustrative example', 'Modeled estimate'],
+    // Calendar time vs effort (CRITIQUE.md #11, and the /services/consulting/ FAQ): "2 days" is the analysis;
+    // kickoff to readout runs longer, mostly gathering data. Without this the two figures read as a contradiction.
+    // Kept to one mono line (~88 characters) on desktop.
+    note: `${ours.time}, mostly gathering data. Not a guarantee.`,
+  }}
+  microcopy={`Simulated demo. ${business.name} and the people named are fictional. Figures are modeled estimates.`}
+>
+  <Fragment slot="meta">
+    <span class="demo-stack demo-hide-m cd-status">
+      <span class="chip chip-running" data-el="st-run" data-placeholder hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>Analyzing</span>
+      <span class="chip chip-attention" data-el="st-review" data-hide><Icon name="user-check" />Ready for your review</span>
+    </span>
+  </Fragment>
+
+  <!-- Left panel: Sources (steps 1–2), then Findings (steps 3–6). Reduced motion: the roadmap as a list. -->
+  <section class="aw-pane aw-pane--sunk cd-panel" data-pane="panel" data-autoscroll>
+    <div class="demo-stack cd-panel__stack">
+      <div class="cd-src" data-el="src" data-placeholder hidden>
+        <div class="cd-head">
+          <span class="aw-label">Sources</span>
+          <span class="chip chip-done"><Icon name="lock" />Connected · read-only</span>
+        </div>
+        <ul class="cd-src__list">
+          {sources.map((s) => (
+            <li class="cd-src__row" data-el="src-row" data-hide>
+              <span class="cd-src__ico" aria-hidden="true"><Icon name={s.icon as IconName} /></span>
+              <span class="cd-src__txt"><b>{s.name}</b><small>{s.detail}</small></span>
+              <span class="demo-check" data-check data-el="src-chk"><Icon name="check" /></span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="cd-find" data-el="findings" data-hide>
+        <div class="cd-head">
+          <span class="aw-label">Findings</span>
+          <span class="cd-head__meta">Traced to source</span>
+        </div>
+        <ol class="cd-find__list">
+          {findings.map((f, i) => (
+            <li class="cd-find__row" data-finding={i + 1} data-hide>
+              <span class="demo-check" data-check><Icon name="check" /></span>
+              <span class="cd-find__txt">
+                <small>{f.did}</small>
+                <span>{f.found}<span class="marker">{i + 1}</span></span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div class="cd-roadlist" data-final-only>
+        <div class="cd-head"><span class="aw-label">90-day roadmap</span></div>
+        <Roadmap animate={false} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Canvas: P&L → Opportunities → EBITDA margin → 90-day roadmap (views crossfade in one cell). -->
+  <section class="aw-pane cd-canvas is-active" data-pane="canvas" data-el="canvas">
+    <div class="cd-canvas__bar demo-hide-m">
+      <div class="aw-seg cd-tabs" aria-hidden="true">
+        <span data-el="tab-pnl" data-initial-class="is-on">P&amp;L · trailing 12 months</span>
+        <span data-el="tab-opps" data-hide>Opportunities</span>
+        <span data-el="tab-wf" data-hide>EBITDA margin</span>
+        <span class="is-on" data-el="tab-road" data-hide data-final-class="is-on">90-day roadmap</span>
+      </div>
+    </div>
+    <div class="demo-stack cd-views" data-el="views" data-autoscroll>
+      <div class="cd-skel" data-el="canvas-skel" data-placeholder hidden>
+        <div class="skel"><span class="skel__label">Reading the books</span><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="cd-view cd-view--pnl" data-el="v-pnl" data-hide hidden>
+        <p class="cd-view__title">P&amp;L · trailing 12 months</p>
+        <PnlTable />
+      </div>
+      <div class="cd-view cd-view--opps" data-el="v-opps" data-hide hidden>
+        <p class="cd-view__title">Opportunities</p>
+        <Opportunities />
+      </div>
+      <div class="cd-view cd-view--wf" data-el="v-wf" data-hide hidden>
+        <Waterfall />
+      </div>
+      <div class="cd-view cd-view--road" data-el="v-road" data-hide>
+        <p class="cd-view__title">90-day roadmap</p>
+        <Roadmap />
+      </div>
+    </div>
+  </section>
+</AppWindow>
+
+<script>
+  import { mountDemos } from '@/scripts/demo-engine';
+  import demo from './consulting/consulting-demo';
+  mountDemos(demo);
+</script>
+
+<style>
+  /* Shared pane head: mono label left, chip or meta right */
+  .cd-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; margin-bottom: 12px; }
+  .cd-head__meta { font-size: 0.75rem; color: var(--fg-3); white-space: nowrap; }
+
+  /* Left panel */
+  .cd-panel__stack { height: 100%; }
+  .cd-src__list { display: grid; }
+  .cd-src__row { display: grid; grid-template-columns: 30px minmax(0, 1fr) 18px; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--color-rule-dark); }
+  .cd-src__row:last-child { border-bottom: 0; }
+  .cd-src__ico { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--radius-control); color: var(--color-on-2); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .cd-src__ico :global(.icon) { width: 15px; height: 15px; }
+  .cd-src__txt { display: grid; min-width: 0; }
+  .cd-src__txt b { font-weight: 550; color: var(--color-on); }
+  .cd-src__txt small { overflow: hidden; font-size: 0.75rem; line-height: 1.4; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
+
+  .cd-find__list { display: grid; }
+  .cd-find__row { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--color-rule-dark); }
+  .cd-find__row:last-child { border-bottom: 0; }
+  .cd-find__row .demo-check { margin-top: 1px; }
+  .cd-find__txt { display: grid; gap: 3px; min-width: 0; }
+  .cd-find__txt small { font-size: 0.75rem; line-height: 1.4; color: var(--color-on-3); }
+  .cd-find__txt > span { line-height: 1.45; color: var(--color-on); }
+  .cd-find__txt .marker { width: 18px; height: 18px; margin: 0 0 0 6px; vertical-align: 0; }
+
+  /* Canvas */
+  .cd-canvas { display: flex; flex-direction: column; gap: 16px; }
+  .cd-canvas__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 32px; }
+  .cd-tabs > span { white-space: nowrap; }
+  .cd-views { flex: 1; min-height: 0; overflow: hidden; }   /* scroll box: follows new rows on short screens (data-autoscroll) */
+  .cd-view { min-width: 0; }
+  .cd-view__title { display: none; margin-bottom: 12px; font-size: 0.875rem; font-weight: 600; line-height: 1.35; color: var(--color-on); }
+  .cd-skel { padding-top: 6px; }
+  .cd-skel .skel { gap: 14px; }
+
+  /* Tablets and small laptops: a wider panel, and no status chip (the centered title needs the room) */
+  @media (width < 70rem) {
+    .cd-status { display: none !important; }
+  }
+  @media (48rem <= width < 64rem) {
+    :global([data-demo="consulting"] .aw-scene--grid) { grid-template-columns: 36% 64%; }
+  }
+  @media (width < 48rem) {
+    .cd-view__title { display: block; }
+    .cd-src__row { padding: 6px 0; }
+    .cd-find__row { padding: 8px 0; }
+  }
+
+  /* Reduced-motion view: the waterfall on top, the ranked opportunities below (set by the `final` hook) */
+  .cd-canvas.is-static .cd-canvas__bar { display: none; }
+  .cd-canvas.is-static .cd-views { display: flex; flex-direction: column; gap: 32px; }
+  .cd-canvas.is-static .cd-view--wf { order: -1; }
+  .cd-canvas.is-static .cd-view__title { display: block; }
+  /* Without JavaScript the run's final state shows, so the static-only roadmap list stays out */
+  :global(html.no-js) .cd-roadlist { display: none; }
+</style>

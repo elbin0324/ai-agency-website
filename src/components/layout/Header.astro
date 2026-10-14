@@ -6,7 +6,7 @@
 import Logo from '@/components/ui/Logo.astro';
 import Icon from '@/components/ui/Icon.astro';
 import type { IconName } from '@/components/ui/icons';
-import { site, type NavItem } from '@/config/site';
+import { site, emailReady, type NavItem } from '@/config/site';
 import { agentRoles } from '@/data/services';
 import { url, isActive } from '@/lib/url';
 
@@ -109,9 +109,11 @@ const current = (href: string, section = false) => (isActive(href, path, { secti
     <span>{site.cta.label}</span><Icon name="arrow-right" class="btn__icon btn__icon--arrow" />
   </a>
   <p class="mt-3 text-center text-caption text-fg-3">{site.footer.ctaMicrocopy}</p>
-  <p class="mt-6 text-center text-small text-fg-2">
-    {site.footer.contactLine} <a class="link" href={`mailto:${site.email}`}>{site.email}</a>
-  </p>
+  {emailReady && (
+    <p class="mt-6 text-center text-small text-fg-2">
+      {site.footer.contactLine} <a class="link" href={`mailto:${site.email}`}>{site.email}</a>
+    </p>
+  )}
 </nav>
 
 <style>

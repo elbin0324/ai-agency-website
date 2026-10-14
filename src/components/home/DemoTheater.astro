@@ -1,0 +1,239 @@
+---
+// OWNER: theater. Home "See it work" (#demos): six pill tabs over one demo at a time (DESIGN.md §6.12).
+// Copy: content/COPY.md §2.5, tightened; per-demo lines in src/components/demos-page/demo-copy.ts.
+// Behavior (DEMO_ENGINE.md "Programmatic control"):
+//   - Only the selected demo plays. On tabs:change the old demo gets demo:pause and the new one demo:play
+//     (a paused demo resumes when its tab comes back; a finished one replays).
+//   - About 4 s after the selected demo's demo:ended, the next tab is selected, unless the visitor has
+//     interacted with the theater (click, tap, key or focus). The next tab fills in while it counts down;
+//     the countdown holds while the pointer is over the theater, the theater is out of view or the page is
+//     hidden. It stops after the last demo and never runs with reduced motion.
+//   - Phones: the tab strip scrolls sideways, fades the edge that has more tabs and keeps the selected one in view.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Tabs from '@/components/blocks/Tabs.astro';
+import CustomerAgentDemo from '@/components/demos/CustomerAgentDemo.astro';
+import AnalystDemo from '@/components/demos/AnalystDemo.astro';
+import AssistantDemo from '@/components/demos/AssistantDemo.astro';
+import MarketingDemo from '@/components/demos/MarketingDemo.astro';
+import SalesDemo from '@/components/demos/SalesDemo.astro';
+import ConsultingDemo from '@/components/demos/ConsultingDemo.astro';
+import { demoCopy } from '@/components/demos-page/demo-copy';
+import { homeNum } from '@/components/home/story/sections';
+import { site } from '@/config/site';
+import { url } from '@/lib/url';
+
+/** Home section number from home/story/sections.ts, the agreed page order (02 Services · 03 See it work · 04 Illustrative examples …). */
+const NUM = homeNum.demos;
+const PREFIX = 'theater';
+
+const components = {
+  customer: CustomerAgentDemo,
+  analyst: AnalystDemo,
+  assistant: AssistantDemo,
+  marketing: MarketingDemo,
+  sales: SalesDemo,
+  consulting: ConsultingDemo,
+};
+const panelId = (id: string) => `${PREFIX}-panel-${id}`;
+const tabId = (id: string) => `${PREFIX}-tab-${id}`;
+---
+<Section id="demos" tone="sunken" aria-labelledby="demos-title">
+  <SectionHeader num={NUM} eyebrow="See it work" titleId="demos-title"><span slot="title" data-motion="split">Don’t take our word for it. Watch the work.</span>
+    <p>Six short simulations, one per job. Each runs from the first message to the finished result, with the checks and handoffs we build in.</p>
+    <a class="link-arrow mt-3" href={url(site.ctas.demos.href)}><span>See all six demos</span><Icon name="arrow-right" /></a>
+  </SectionHeader>
+
+  <div class="theater" data-theater data-reveal>
+    <Tabs
+      label="Demos"
+      idPrefix={PREFIX}
+      panels={false}
+      tabs={demoCopy.map((d) => ({ id: d.id, label: d.label, icon: d.icon, panelId: panelId(d.id) }))}
+    />
+    {demoCopy.map((d, i) => {
+      const Demo = components[d.id];
+      return (
+        <div
+          role="tabpanel"
+          id={panelId(d.id)}
+          aria-labelledby={tabId(d.id)}
+          class="theater__panel"
+          data-theater-panel={d.id}
+          hidden={i !== 0}
+        >
+          <div class="theater__intro">
+            <p class="theater__line"><b>{d.label}.</b> {d.intro}</p>
+            <a class="link-arrow theater__link" href={url(d.link.href)}><span>{d.link.label}</span><Icon name="arrow-right" /></a>
+          </div>
+          <Demo />
+        </div>
+      );
+    })}
+  </div>
+</Section>
+
+<style>
+  .theater__intro {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 24px;
+    margin-bottom: 14px;
+  }
+  .theater__line { min-width: 0; max-width: 72ch; font-size: var(--text-body); line-height: 1.5; color: var(--fg-2); }
+  .theater__line b { font-weight: 600; color: var(--fg); }
+  .theater__link { flex: none; }
+
+  /* The strip sits flush with the copy column (Tabs.astro pads it 4px for focus rings). */
+  .theater :global(.demo-tabs) { margin-bottom: 20px; }
+
+  /* Countdown to the next demo: the next tab fills with the hover tint, then becomes the selected tab. */
+  .theater :global(.demo-tab) { position: relative; isolation: isolate; overflow: hidden; }
+  .theater :global(.demo-tab.is-next)::after {
+    content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+    background: color-mix(in srgb, var(--color-ink) 8%, transparent);
+    transform-origin: left center;
+    animation: theater-next-fill var(--advance, 4000ms) linear forwards;
+  }
+  .theater[data-holding] :global(.demo-tab.is-next)::after { animation-play-state: paused; }
+  @keyframes theater-next-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  /* Phones: fade the edge of the strip that has more tabs. */
+  .theater :global(.demo-tabs[data-more-end]) { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 56px), transparent); }
+  .theater :global(.demo-tabs[data-more-start]) { -webkit-mask-image: linear-gradient(90deg, transparent, #000 56px); mask-image: linear-gradient(90deg, transparent, #000 56px); }
+  .theater :global(.demo-tabs[data-more-start][data-more-end]) {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+  }
+
+  @media (width < 48rem) {
+    .theater__intro { margin-bottom: 12px; }
+    .theater__line { font-size: var(--text-small); }
+    .theater__link { min-height: 40px; font-size: var(--text-small); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .theater :global(.demo-tab.is-next)::after { animation: none; }
+  }
+</style>
+
+<script>
+  import { selectTab, type TabsChangeDetail } from '@/components/blocks/tabs';
+
+  const ADVANCE_MS = 4000;
+
+  function initTheater(theater: HTMLElement) {
+    if (theater.hasAttribute('data-theater-ready')) return;
+    const tabsRoot = theater.querySelector<HTMLElement>('[data-tabs]');
+    const list = tabsRoot?.querySelector<HTMLElement>('[role="tablist"]');
+    if (!tabsRoot || !list) return;
+    theater.setAttribute('data-theater-ready', '');
+    theater.style.setProperty('--advance', `${ADVANCE_MS}ms`);
+
+    const tabs = Array.from(list.querySelectorAll<HTMLElement>('[role="tab"]'));
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const panelOf = (id: string | null) => (id ? theater.querySelector<HTMLElement>(`[data-theater-panel="${id}"]`) : null);
+    const demoOf = (id: string | null) => panelOf(id)?.querySelector<HTMLElement>('[data-demo]') ?? null;
+    const send = (el: HTMLElement | null, type: 'demo:play' | 'demo:pause') => el?.dispatchEvent(new CustomEvent(type));
+
+    // ---- Tab strip on phones: edge fades and keep the selected tab in view
+    const edges = () => {
+      const max = list.scrollWidth - list.clientWidth;
+      list.toggleAttribute('data-more-start', max > 1 && list.scrollLeft > 4);
+      list.toggleAttribute('data-more-end', max > 1 && max - list.scrollLeft > 4);
+    };
+    const keepInView = (tab: HTMLElement) => {
+      if (list.scrollWidth - list.clientWidth < 2) return;
+      const l = list.getBoundingClientRect();
+      const t = tab.getBoundingClientRect();
+      const pad = 48;
+      const dx = t.left < l.left + pad ? t.left - l.left - pad : t.right > l.right - pad ? t.right - l.right + pad : 0;
+      if (dx) list.scrollBy({ left: dx, behavior: reduced.matches ? 'auto' : 'smooth' });
+    };
+    list.addEventListener('scroll', edges, { passive: true });
+    if ('ResizeObserver' in window) new ResizeObserver(edges).observe(list);
+    edges();
+
+    // ---- Auto-advance after demo:ended
+    let interacted = false;
+    let next: HTMLElement | null = null;
+    let timer = 0;
+    let startedAt = 0;
+    let remaining = 0;
+    const holds = new Set<string>();
+
+    const stopCountdown = () => {
+      window.clearTimeout(timer);
+      timer = 0;
+      next?.classList.remove('is-next');
+      next = null;
+    };
+    const advance = () => {
+      const tab = next;
+      stopCountdown();
+      if (tab && !interacted) selectTab(tabsRoot, tab.dataset.tab ?? '');
+    };
+    const run = () => {
+      if (!next || timer || holds.size) return;
+      startedAt = performance.now();
+      timer = window.setTimeout(advance, Math.max(0, remaining));
+    };
+    const hold = (why: string, on: boolean) => {
+      if (on) holds.add(why);
+      else holds.delete(why);
+      theater.toggleAttribute('data-holding', holds.size > 0);
+      if (holds.size && timer) {
+        window.clearTimeout(timer);
+        timer = 0;
+        remaining -= performance.now() - startedAt;
+      } else run();
+    };
+    const startCountdown = (tab: HTMLElement) => {
+      stopCountdown();
+      next = tab;
+      remaining = ADVANCE_MS;
+      tab.classList.add('is-next');
+      run();
+    };
+    const interact = () => {
+      interacted = true;
+      stopCountdown();
+    };
+
+    // Any click, tap, key press or focus inside the theater means the visitor is driving.
+    theater.addEventListener('pointerdown', interact);
+    theater.addEventListener('keydown', interact);
+    theater.addEventListener('focusin', interact);
+    theater.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && hold('hover', true));
+    theater.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && hold('hover', false));
+    document.addEventListener('visibilitychange', () => hold('page', document.hidden));
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(
+        ([e]) => {
+          const vh = e.rootBounds?.height ?? window.innerHeight;
+          const seen = e.isIntersecting ? e.intersectionRect.height / Math.min(e.boundingClientRect.height, vh) : 0;
+          hold('offscreen', seen < 0.5);
+        },
+        { threshold: [0, 0.25, 0.5, 0.75, 1] },
+      ).observe(theater);
+    }
+
+    theater.addEventListener('demo:ended', (e) => {
+      if (interacted || reduced.matches) return;
+      const panel = (e.target as Element).closest<HTMLElement>('[data-theater-panel]');
+      if (!panel || panel.hidden) return;
+      const i = tabs.findIndex((t) => t.dataset.tab === panel.dataset.theaterPanel);
+      const tab = tabs[i + 1];
+      if (tab) startCountdown(tab);
+    });
+
+    // Only the selected demo plays.
+    tabsRoot.addEventListener('tabs:change', (e) => {
+      const d = (e as CustomEvent<TabsChangeDetail>).detail;
+      stopCountdown();
+      send(demoOf(d.previousId), 'demo:pause');
+      send(demoOf(d.id), 'demo:play');
+      keepInView(d.tab);
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-theater]').forEach(initTheater);
+</script>

@@ -67,9 +67,11 @@ html.no-js .aw-demo .aw-stage::after { display: none; }
 /* Under the window: transcript disclosure + microcopy (DEMOS.md §0.1.6) */
 .demo-under { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; margin-top: 14px; }
 .demo-under .fig-caption { max-width: 70ch; }
-.demo-under .aw-transcript[open] { flex-basis: 100%; }
+.demo-under .aw-transcript[open] { flex-basis: 100%; min-width: 0; }
 .aw-transcript[open] .aw-transcript__show, .aw-transcript:not([open]) .aw-transcript__hide { display: none; }
-.aw-transcript__lines { display: grid; gap: 4px; margin-top: 6px; font-size: 0.875rem; line-height: 1.5; color: var(--fg-3); }
+/* minmax(0, 1fr) + overflow-wrap: a formula such as "=SUMIFS(Clean!$K:$K,…)" wraps instead of widening the page */
+.aw-transcript__lines { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; margin-top: 6px; font-size: 0.875rem; line-height: 1.5; color: var(--fg-3); }
+.aw-transcript__lines > li { min-width: 0; overflow-wrap: anywhere; }
 .aw-transcript__result { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
 .aw-transcript__result .ledger-rows dd { text-align: right; }
 
@@ -88,6 +90,12 @@ html.no-js .aw-demo .aw-stage::after { display: none; }
 .demo-pointer.is-pressing { scale: 0.86; }
 .aw-scene .is-pressed { scale: 0.96; filter: brightness(1.08); transition: scale 0.15s, filter 0.15s; }
 .aw-demo.is-paused .aw-stage *, .aw-demo.is-paused .aw-stage *::before, .aw-demo.is-paused .aw-stage *::after { animation-play-state: paused !important; }
+/* Mobile ticker marker (DESIGN.md §2.4): typing dots while running, the sage check once an action is done */
+.aw-ticker__mark { display: inline-grid; flex: none; place-items: center; width: 16px; height: 16px; }
+.aw-ticker__mark > * { grid-area: 1 / 1; }
+.aw-ticker__mark .typing-dots { color: var(--color-on-3); }
+.aw-ticker.is-done .aw-ticker__mark .typing-dots, .aw-ticker:not(.is-done) .aw-ticker__mark .icon { display: none; }
+.aw-demo.is-paused .aw-ticker .typing-dots > i { animation-play-state: paused; }
 .typing-dots--lg { gap: 4px; }
 .typing-dots--lg > i { width: 6px; height: 6px; }
 .demo-dots__bubble { display: inline-flex; align-items: center; min-height: 34px; }
@@ -128,7 +136,10 @@ html.no-js .aw-demo .aw-stage::after { display: none; }
 .chat-bubble > :is(p, ul, ol, div) + :is(p, ul, ol, div) { margin-top: 6px; }
 .chat-meta { margin-top: 4px; padding: 0 4px; font-size: 0.75rem; color: var(--fg-3); }
 .chat-composer { display: flex; flex: none; align-items: flex-end; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
-.chat-composer__field { flex: 1; min-width: 0; max-height: calc(1.45em * 3 + 18px); min-height: 38px; padding: 9px 12px; overflow: hidden; border-radius: var(--radius-control); font-size: 0.8125rem; line-height: 1.45; white-space: pre-wrap; color: var(--fg); background: var(--chat-field-bg); box-shadow: inset 0 0 0 1px var(--chat-field-ring); }
+/* The 9px top and bottom are opaque borders, not padding: overflow clips at the padding box, so a line
+   scrolled half out of a long message is hidden under the border instead of showing as a cut line.
+   The outline draws the ring at the outer edge (an inset shadow would sit inside the borders). */
+.chat-composer__field { flex: 1; min-width: 0; max-height: calc(1.45em * 3 + 18px); min-height: 38px; padding: 0 12px; overflow: hidden; border-block: 9px solid var(--chat-field-bg); border-radius: var(--radius-control); font-size: 0.8125rem; line-height: 1.45; white-space: pre-wrap; color: var(--fg); background: var(--chat-field-bg); outline: 1px solid var(--chat-field-ring); outline-offset: -1px; }
 .chat-composer__field:empty::before { content: attr(data-placeholder); color: var(--fg-3); }
 .chat-composer__send { display: grid; flex: none; place-items: center; width: 38px; height: 38px; border-radius: var(--radius-control); color: var(--chat-user-fg); background: var(--chat-user-bg); }
 .chat-composer__send .icon { width: 15px; height: 15px; }

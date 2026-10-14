@@ -1,0 +1,173 @@
+---
+// The 216px mini window that opens each service column (DESIGN.md §6.6), tagged "Illustrative".
+// Decorative (aria-hidden): the column copy carries the meaning. Every figure is taken from a demo
+// script or a worked example, never invented:
+//   ai-agents   agents on shift: the Customer Agent's 9:49 pm booking (DEMOS.md §1) and the
+//               Executive Assistant's 5 drafted replies (DEMOS.md §3)
+//   marketing   week-5 budget moves from the Marketing Director demo (DEMOS.md §4 step 6, read from the
+//               demo's data module), capped at 20% a week
+//   sales       the Sales Agent's first email to Hollis & Grant, two sourced facts (DEMOS.md §5)
+//   consulting  year-one savings by lever, ranked, from the AI Consulting example (src/data/worth.ts)
+import Badge from '@/components/ui/Badge.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import type { ServiceSlug } from '@/data/services';
+import { getWorth } from '@/data/worth';
+import { budget as marketingBudget, budgetCap } from '@/components/demos/marketing/data';
+
+interface Props {
+  slug: ServiceSlug;
+}
+const { slug } = Astro.props;
+
+const titles: Record<ServiceSlug, string> = {
+  'ai-agents': 'Agents on shift',
+  marketing: 'Budget moves',
+  sales: 'First email',
+  consulting: 'Savings, $K',
+};
+
+const agents: { icon: IconName; name: string; line: string; chip: 'done' | 'attention'; status: string }[] = [
+  { icon: 'message-square', name: 'Customer Agent', line: 'Job booked at 9:49 pm', chip: 'done', status: 'Booked' },
+  { icon: 'chart-column', name: 'Analyst Agent', line: 'Weekly numbers ready', chip: 'done', status: 'Ready' },
+  { icon: 'inbox', name: 'Executive Assistant', line: '5 replies drafted', chip: 'attention', status: 'Your OK' },
+];
+
+// Marketing Director demo, step 6: week 4 to week 5 budgets for four of its campaigns (the demo's own data).
+const picks: [string, string][] = [['Dentist near me', 'Near me'], ['Dental implants', 'Implants'], ['new-patient exam', 'Exam offer'], ['Emergency dentist', 'Emergency']];
+const rowsPicked = picks
+  .map(([match, label]) => ({ label, row: marketingBudget.find((r) => r.name.includes(match)) }))
+  .filter((p): p is { label: string; row: (typeof marketingBudget)[number] } => !!p.row);
+const maxBudget = Math.max(...rowsPicked.map((p) => p.row.w5));
+const bars = rowsPicked.map(({ label, row }) => {
+  const change = Math.round((row.w5 / row.w4 - 1) * 100);
+  return { label, change, pct: (row.w5 / maxBudget) * 100, up: change > 0 };
+});
+const signed = (n: number) => (n > 0 ? `+${n}%` : n < 0 ? `−${Math.abs(n)}%` : '0%');
+
+// AI Consulting example: counted year-one savings per lever, ranked, then the total.
+const consulting = getWorth('consulting');
+const money = (s = '') => Number(s.replace(/[^0-9.]/g, '')) || 0;
+// [math-row prefix, short axis label, full axis label]: the full word shows once the window is 340px wide.
+const leverNames: [string, string, string][] = [['Pricing', 'Price', 'Pricing'], ['Overtime', 'OT', 'Overtime'], ['Materials', 'Mat.', 'Materials'], ['Freight', 'Frt.', 'Freight'], ['Software', 'SW', 'Software']];
+const levers = leverNames
+  .map(([prefix, label, long]) => ({ label, long, k: money(consulting?.math.find((r) => r.label.startsWith(prefix))?.value) / 1000 }))
+  .filter((l) => l.k > 0)
+  .sort((a, b) => b.k - a.k);
+const totalK = levers.reduce((s, l) => s + l.k, 0);
+let run = 0;
+const steps = levers.map((l) => {
+  const step = { ...l, from: (run / totalK) * 100, h: (l.k / totalK) * 100 };
+  run += l.k;
+  return step;
+});
+const fmtK = (k: number) => (Number.isInteger(k) ? String(k) : k.toFixed(1));
+// EBITDA margin before and after the counted savings (same example).
+const [revenueText = '', ebitdaText = ''] = (consulting?.baseline[0]?.value ?? '').split(';');
+const revenue = money(revenueText);
+const ebitda = money(ebitdaText.split('(')[0]);
+const marginNow = revenue ? (ebitda / revenue) * 100 : 0;
+const marginPlan = revenue ? ((ebitda + totalK * 1000) / revenue) * 100 : 0;
+const pct = (n: number, d: number) => `${n.toFixed(d)}%`;
+---
+<div class="app-window app-window--mini" aria-hidden="true">
+  <div class="aw-bar">
+    <span class="aw-crumb"><b>{titles[slug]}</b></span>
+    <span class="aw-meta"><Badge variant="window">Illustrative</Badge></span>
+  </div>
+
+  {slug === 'ai-agents' && (
+    <div class="vg">
+      <div class="vg-rows">
+        {agents.map((a) => (
+          <div class="vg-row">
+            <span class="vg-glyph"><Icon name={a.icon} /></span>
+            <span class="vg-row__text"><b>{a.name}</b><small>{a.line}</small></span>
+            <Badge variant={a.chip}>{a.status}</Badge>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  {slug === 'marketing' && (
+    <div class="vg">
+      <div class="vg-bars">
+        {bars.map((b) => (
+          <div class="vg-bar">
+            <span>{b.label}</span>
+            <span class="vg-bar__track"><span class:list={['vg-bar__fill', b.up && 'vg-bar__fill--accent']} style={`width:${b.pct.toFixed(1)}%`}></span></span>
+            <span class="vg-bar__val">{signed(b.change)}</span>
+          </div>
+        ))}
+      </div>
+      <p class="vg-note">
+        <span class="vgx-key"><span class="chart__key" style="--k: var(--viz-accent)"></span>Raised this week</span>
+        <span>Capped at {budgetCap}% a week</span>
+      </p>
+    </div>
+  )}
+
+  {slug === 'sales' && (
+    <div class="vg">
+      <div class="aw-doc vgx-mail">
+        <p class="vgx-mail__subject"><span>Subject</span>IT for the new Riverside office</p>
+        <p class="vgx-mail__body">Congratulations on opening the <mark class="mark-ok">Riverside office</mark><span class="marker">1</span> last month. I noticed the role you posted includes <mark class="mark-ok">“handling IT.”</mark><span class="marker">2</span></p>
+      </div>
+      <p class="vg-note vgx-chips"><Badge variant="done">2 facts, sourced</Badge><Badge variant="attention">Your OK</Badge></p>
+    </div>
+  )}
+
+  {slug === 'consulting' && (
+    <div class="vg">
+      <div class="vgx-wf" style={`--cols: ${steps.length + 1}`}>
+        {steps.map((s) => (
+          <div class="vgx-wf__col">
+            <span class="vgx-wf__bar" style={`bottom:${s.from.toFixed(1)}%;height:${s.h.toFixed(1)}%`}></span>
+            <span class="vgx-wf__v" style={`bottom:calc(${(s.from + s.h).toFixed(1)}% + 3px)`}>{fmtK(s.k)}</span>
+          </div>
+        ))}
+        <div class="vgx-wf__col">
+          <span class="vgx-wf__bar vgx-wf__bar--total" style="bottom:0;height:100%"></span>
+          <span class="vgx-wf__v vgx-wf__v--in">{fmtK(totalK)}</span>
+        </div>
+      </div>
+      <div class="vgx-wf__l" style={`--cols: ${steps.length + 1}`}>
+        {steps.map((s) => <span><span class="vgx-s">{s.label}</span><span class="vgx-l">{s.long}</span></span>)}<span>Year 1</span>
+      </div>
+      {revenue > 0 && <p class="vg-note">Margin {pct(marginNow, 1)} → {pct(marginPlan, 1)}</p>}
+    </div>
+  )}
+</div>
+
+<style>
+  /* The window is a size container, so wider columns (2-up laptops and tablets, phones) can show more. */
+  .app-window--mini { container: vg / inline-size; }
+
+  /* Sales: the client's email excerpt (an .aw-doc artifact), set at the 12px floor-plus. The subject
+     line appears only where the window is wide enough to keep the excerpt inside its 216px frame. */
+  .vgx-mail { padding: 10px 12px; font-size: 0.78125rem; line-height: 1.5; }
+  .vgx-mail .marker { width: 18px; height: 18px; }
+  .vgx-mail__subject { display: none; gap: 10px; margin: -2px 0 8px; padding-bottom: 7px; border-bottom: 1px solid var(--color-rule); font-size: 0.75rem; font-weight: 550; color: var(--color-ink); }
+  .vgx-mail__subject span { font-weight: 400; color: var(--color-ink-3); }
+  @container vg (min-width: 340px) { .vgx-mail__subject { display: flex; } }
+  .vgx-chips { gap: 6px; }
+  .vgx-key { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* Consulting: a savings bridge (each lever stacks on the last, the total in the result color).
+     Ported from the reference .vg-wf pattern, with a zero baseline so the bars stay to scale. */
+  .vgx-wf { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 4px; height: 92px; margin-top: 16px; }
+  .vgx-wf__col { position: relative; height: 100%; }
+  .vgx-wf__bar { position: absolute; left: 3px; right: 3px; min-height: 2px; border-radius: 2px 2px 0 0; background: var(--viz-accent); }
+  .vgx-wf__bar--total { background: var(--viz-result); }
+  .vgx-wf__v { position: absolute; left: -6px; right: -6px; text-align: center; font-size: 0.75rem; font-weight: 600; line-height: 1.2; color: var(--color-on); font-variant-numeric: tabular-nums; }
+  .vgx-wf__v--in { top: 4px; color: var(--color-navy-900); }
+  .vgx-wf__l { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 4px; margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--viz-axis); font-size: 0.75rem; line-height: 1.2; text-align: center; white-space: nowrap; color: var(--color-on-3); }
+  .vgx-wf + .vgx-wf__l + .vg-note { margin-top: 8px; }
+  /* Axis labels: abbreviated in the 216px column, full words once the window is wide (2-up, phones). */
+  .vgx-l { display: none; }
+  @container vg (min-width: 340px) {
+    .vgx-s { display: none; }
+    .vgx-l { display: inline; }
+  }
+</style>

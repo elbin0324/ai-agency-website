@@ -1,0 +1,85 @@
+---
+// OWNER: pages-misc
+// /approach/ §10.7 "What we need from you" (id "what-we-need"). The time ask in one strip, read left to
+// right (COPY.md Appendix A #7: a couple of hours in week one, about 30 minutes a week in the pilot,
+// about 30 minutes a month after), then the six things that make an engagement go well.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+
+const time = [
+  { when: 'First week', amount: 'A couple of hours', what: 'Kickoff, rules and access, with your decision-maker' },
+  { when: 'During the pilot', amount: 'About 30 minutes a week', what: 'Quick reviews of the agent’s work, built into the day' },
+  { when: 'Once it’s running', amount: 'About 30 minutes a month', what: 'The monthly review of results in hours and dollars' },
+];
+
+const needs = [
+  { title: 'One decision-maker', body: 'Someone who can approve rules and make calls, so the work never waits on a committee.' },
+  { title: 'Access to your tools', body: 'Admin or delegated access to the systems in scope. We send a checklist and set up least-privilege accounts with you.' },
+  { title: 'Your know-how', body: 'FAQs, price lists, policies, templates and examples of work you’re proud of. Rough is fine.' },
+  { title: 'A rough baseline', body: 'Today’s numbers, like response times, hours spent or cost per lead, so we can measure the change. We’ll help you pull them.' },
+  { title: 'Quick feedback early on', body: 'Fast reviews of the agent’s work in the first two weeks make the biggest difference to quality.' },
+  { title: 'A word to your team', body: 'People do better with change they understand. We’ll help you explain what’s changing and why.' },
+];
+---
+<Section id="what-we-need" aria-labelledby="need-title">
+  <SectionHeader
+    num="05"
+    eyebrow="What we need from you"
+    subtitle="Done for you doesn’t mean done without you. Here’s what makes an engagement go well."
+    titleId="need-title"
+  ><span slot="title" data-motion="split">A little of your time, at the right moments.</span></SectionHeader>
+  <section class="card need__time" aria-labelledby="need-time-title" data-reveal>
+    <h3 class="need__time-head" id="need-time-title"><Icon name="clock" size={18} /><span class="type-label">Your team’s time, typically</span></h3>
+    <ol class="need__phases" role="list">
+      {time.map((t) => (
+        <li class="need__phase">
+          <span class="need__when">{t.when}</span>
+          <span class="need__amount">{t.amount}</span>
+          <span class="need__what">{t.what}</span>
+        </li>
+      ))}
+    </ol>
+  </section>
+  <ol class="need__list" role="list" data-reveal data-reveal-delay="80" data-motion="stagger">
+    {needs.map((n, i) => (
+      <li class="need__item">
+        <span class="need__n">{String(i + 1).padStart(2, '0')}</span>
+        <h3 class="need__title">{n.title}</h3>
+        <p class="need__body">{n.body}</p>
+      </li>
+    ))}
+  </ol>
+</Section>
+
+<style>
+  .need__time-head { display: flex; align-items: center; gap: 10px; }
+  .need__time-head :global(.icon) { color: var(--accent-display); }
+  .need__phases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; border-top: 1px solid var(--line); }
+  .need__phase { display: grid; align-content: start; gap: 6px; padding: 18px 24px 4px; }
+  .need__phase:first-child { padding-left: 0; }
+  .need__phase:last-child { padding-right: 0; }
+  .need__phase + .need__phase { border-left: 1px solid var(--line); }
+  .need__when { font-size: 0.875rem; font-weight: 500; color: var(--fg-3); }
+  .need__amount { font-family: var(--font-serif); font-size: var(--text-h3); font-weight: 420; line-height: 1.2; letter-spacing: -0.014em; color: var(--fg); }
+  .need__what { font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2); }
+
+  .need__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 32px; margin-top: clamp(32px, 4vw, 48px); border-top: 1px solid var(--line-strong); }
+  .need__item { padding: 20px 0 22px; border-bottom: 1px solid var(--line); }
+  .need__n { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--accent); }
+  .need__title { margin-top: 6px; font-size: 1.0625rem; font-weight: 600; line-height: 1.35; color: var(--fg); }
+  .need__body { margin-top: 6px; max-width: 40ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+
+  @media (width < 64rem) {
+    .need__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (width < 48rem) {
+    .need__phases { grid-template-columns: minmax(0, 1fr); }
+    .need__phase, .need__phase:first-child, .need__phase:last-child { padding: 16px 0; }
+    .need__phase + .need__phase { border-left: 0; border-top: 1px solid var(--line); }
+    .need__phase:last-child { padding-bottom: 0; }
+  }
+  @media (width < 40rem) {
+    .need__list { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

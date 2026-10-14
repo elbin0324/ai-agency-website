@@ -1,0 +1,331 @@
+---
+// The client's spreadsheet (left pane, on paper): toolbar, formula bar, the Raw / Clean / Pivot / Chart sheets,
+// sheet tabs and the status bar (content/DEMOS.md §2 Layout). OWNER: demo-analyst.
+//
+// Markup is the FINAL state (the Chart sheet open, DEMOS.md §2 reduced-motion state). Start states are data
+// attributes (DEMO_ENGINE.md §4): sheets that are gone by the end are data-placeholder, sheets that open later
+// data-hide, cleaned cells carry their raw text in data-initial-text, merged Region cells their merged look in
+// data-initial-class. Highlights are added and removed by the steps, so the markup has none.
+import Icon from '@/components/ui/Icon.astro';
+import AnalystChart from './AnalystChart.astro';
+import {
+  cleanHeader, cleanRows, dateIssueRows, labelIssueRows, letters, pivotDollars, pivotPercent, rawHeader, rawRows, tags, textIssueRow, int,
+  type RawRow,
+} from './data';
+
+type Attrs = Record<string, string | undefined>;
+interface Cell {
+  text?: string;
+  cls?: (string | false | undefined)[];
+  attrs?: Attrs;
+  /** Inner value span (for cells whose text flips, fills down or slides in). */
+  span?: { text: string; attrs?: Attrs };
+  /** Merged-block outline layer (D2:D5, D7:D9). */
+  mg?: 'top' | 'mid' | 'bot';
+  tag?: { text: string; tone: string; kind: string };
+}
+interface Row {
+  cells: Cell[];
+  cls?: (string | false | undefined)[];
+  attrs?: Attrs;
+}
+
+const NUM = 'is-num';
+const pending: Attrs = { 'data-initial-class': 'is-pending' };
+const empty = (n: number): Cell[] => Array.from({ length: n }, () => ({}));
+
+// ---------- Raw sheet (rows 1–18; the window shows 16)
+function rawRow(r: RawRow): Row {
+  const isDate = dateIssueRows.includes(r.n);
+  const isLabel = labelIssueRows.includes(r.n);
+  const live = !r.dup && !r.subtotal; // rows that stay in the data and get fixed in place
+  const flipDate = isDate && live && r.date !== r.iso;
+  const flipLabel = isLabel && live && r.line !== r.lineClean;
+  const tag = tags[r.n];
+
+  let region: Cell = { text: r.region };
+  if (r.merge === 'top') region = { text: r.region, mg: 'top', attrs: { 'data-el': 'm-in', 'data-initial-class': 'm-in' } };
+  else if (r.merge === 'mid') region = { mg: 'mid', span: { text: r.regionClean, attrs: { 'data-el': 'fill', 'data-ghost': '' } }, attrs: { 'data-el': 'm-in', 'data-initial-class': 'm-in' } };
+  else if (r.merge === 'bot') region = r.dup ? { mg: 'bot' } : { mg: 'bot', span: { text: r.regionClean, attrs: { 'data-el': 'fill', 'data-ghost': '' } } };
+
+  const isText = r.n === textIssueRow;
+  const cells: Cell[] = [
+    { text: String(r.n), cls: ['ax-n'] },
+    flipDate
+      ? { attrs: { 'data-el': 'iss-date' }, span: { text: r.iso, attrs: { 'data-el': 'fix-date', 'data-initial-text': r.date } } }
+      : { text: r.date, attrs: isDate ? { 'data-el': 'iss-date' } : undefined },
+    { text: r.inv, cls: ['ax-cb'] },
+    { text: r.customer },
+    region,
+    flipLabel
+      ? { attrs: { 'data-el': 'iss-label' }, span: { text: r.lineClean, attrs: { 'data-el': 'fix-label', 'data-initial-text': r.line } } }
+      : { text: r.line, attrs: isLabel ? { 'data-el': 'iss-label' } : undefined },
+    { text: r.sku },
+    { text: r.subtotal ? '' : String(r.qty), cls: [NUM] },
+    isText
+      ? { cls: [NUM], attrs: { 'data-el': 'iss-text', 'data-initial-class': 'is-text' }, span: { text: r.rev.toFixed(2), attrs: { 'data-el': 'fix-text', 'data-initial-text': r.revRaw } } }
+      : { text: r.revRaw, cls: [NUM] },
+    { text: String(r.cogs), cls: [NUM] },
+    { text: String(r.freight), cls: [NUM] },
+    tag ? { cls: ['ax-c--tag'], tag } : {},
+    {},
+  ];
+  const attrs: Attrs = { ...pending };
+  if (r.dup) Object.assign(attrs, { 'data-el': 'r5', 'data-placeholder': '', hidden: '' });
+  if (r.subtotal) Object.assign(attrs, { 'data-el': 'r6', 'data-placeholder': '', hidden: '' });
+  return { cells, attrs };
+}
+
+const rawSheet: Row[] = [
+  { cells: [{ text: '1', cls: ['ax-n'] }, { text: rawHeader[0], cls: ['is-sel'] }, ...rawHeader.slice(1).map((h, i) => ({ text: h, cls: [i === 0 && 'ax-cb', i >= 5 && NUM] })), {}, {}], attrs: pending },
+  ...rawRows.map(rawRow),
+];
+
+// ---------- Clean sheet (rows 1–16)
+const cleanSheet: Row[] = [
+  {
+    cls: ['is-head'],
+    cells: [
+      { text: '1', cls: ['ax-n'] },
+      { text: cleanHeader[0], cls: [NUM], attrs: { 'data-el': 'c-a1', 'data-initial-class': 'is-sel' } },
+      ...cleanHeader.slice(1, 10).map((h, i) => ({ text: h, cls: [i === 0 && 'ax-cb', i >= 5 && NUM] })),
+      { cls: [NUM], span: { text: cleanHeader[10], attrs: { 'data-el': 'kl-head', 'data-ghost': '' } } },
+      { cls: [NUM], span: { text: cleanHeader[11], attrs: { 'data-el': 'kl-head', 'data-ghost': '' } } },
+    ],
+  },
+  ...cleanRows.map((r) => ({
+    cells: [
+      { text: String(r.n), cls: ['ax-n'] },
+      ...r.cells.map((v, i) => ({ text: v, cls: [(i === 0 || i >= 6) && NUM, i === 1 && 'ax-cb'] })),
+      { cls: [NUM], attrs: r.n === 2 ? { 'data-el': 'k2' } : undefined, span: { text: r.k, attrs: { 'data-el': 'kv', 'data-ghost': '' } } },
+      {
+        cls: [NUM, r.n === 2 && 'is-sel'],
+        attrs: r.n === 2 ? { 'data-el': 'l2', 'data-final-class': 'is-sel' } : undefined,
+        span: { text: r.l, attrs: { 'data-el': 'lv', 'data-ghost': '' } },
+      },
+    ],
+  })),
+];
+
+// ---------- Pivot sheet (rows 1–16): gross margin ($) in rows 4–9, gross margin % in rows 11–16, then two
+// empty rows, as a sheet always has more (phones scroll the pivot by whole rows to bring row 16 into view)
+const pivotCols = 9; // A..I
+const pad = (cells: Cell[]) => [...cells, ...empty(pivotCols - cells.length)];
+const pivotHead: Cell[] = [{ text: 'Product line' }, ...['Jul', 'Aug', 'Sep', 'Q3'].map((m) => ({ text: m, cls: [NUM] }))];
+const pivotLabels = letters.slice(0, pivotCols);
+const pivotSheet: Row[] = [
+  { cells: pad([{ text: 'Gross margin by product line and month', cls: ['ax-c--spill', 'is-title'], attrs: { 'data-el': 'p-a1', 'data-initial-class': 'is-sel' } }]) },
+  { cells: pad([]) },
+  { cells: pad([{ text: 'Gross margin ($)', cls: ['ax-c--spill', 'is-label'] }]) },
+  { cls: ['is-head'], cells: pad(pivotHead) },
+  ...pivotDollars.map((p, i) => ({
+    cls: [p.total && 'is-total'],
+    cells: pad([
+      { text: p.label },
+      ...p.values.map((v, j) =>
+        i === 0 && j === 0 ? { text: int(v), cls: [NUM, 'is-sel'], attrs: { 'data-el': 'pv-b5', 'data-final-class': 'is-sel' } } : { text: int(v), cls: [NUM] },
+      ),
+    ]),
+  })),
+  { cells: pad([{ text: 'Gross margin %', cls: ['ax-c--spill', 'is-label'] }]) },
+  { cls: ['is-head'], cells: pad(pivotHead) },
+  ...pivotPercent.map((p) => ({ cls: [p.total && 'is-total'], cells: pad([{ text: p.label }, ...p.values.map((v) => ({ text: v, cls: [NUM] }))]) })),
+  { cells: pad([]) },
+  { cells: pad([]) },
+].map((r, i) => ({ ...r, cells: [{ text: String(i + 1), cls: ['ax-n'] }, ...r.cells], attrs: pending }));
+---
+<section class="aw-pane ax-app ctx-light is-active" data-pane="sheet">
+ <div class="ax-ui">
+  <div class="ax-toolbar demo-hide-m" aria-hidden="true">
+    <Icon name="file-spreadsheet" class="ax-toolbar__ico" />
+    <span class="ax-menu"><span>File</span><span class="is-on">Home</span><span>Insert</span><span>Data</span><span>Formulas</span><span>View</span></span>
+  </div>
+
+  <div class="ax-fbar">
+    <span class="ax-nb" data-el="nb" data-initial-text="A1">Chart 1</span>
+    <span class="ax-fxl" aria-hidden="true">fx</span>
+    <span class="ax-formula" data-el="fx" data-initial-text=""></span>
+  </div>
+
+  <div class="ax-view">
+    <div class="demo-stack ax-sheets">
+      <!-- Raw: the export as it arrived (gone once Clean opens) -->
+      <div class="ax-sheet ax-sheet--grid ax-sheet--raw" data-el="sheet-raw" data-placeholder hidden>
+        <div class="ax-row ax-row--letters"><span class="ax-c ax-n"></span>{letters.map((l) => <span class:list={['ax-c', l === 'B' && 'ax-cb']}>{l}</span>)}</div>
+        {rawSheet.map((row) => (
+          <div class:list={['ax-row', 'ax-row--data', row.cls]} {...row.attrs}>
+            {row.cells.map((c) => (
+              <span class:list={['ax-c', c.cls]} {...c.attrs}>
+                {c.mg && <span class="ax-mg" data-el={`mg-${c.mg}`}></span>}
+                {c.span ? <span class="ax-v" {...c.span.attrs}>{c.span.text}</span> : c.text}
+                {c.tag && <span class:list={['hl-tag', 'ax-tag', c.tag.tone]} data-el={`tag-${c.tag.kind}`} data-hide hidden>{c.tag.text}</span>}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <!-- Clean: the cleaned table, then margin columns K and L -->
+      <div class="ax-sheet ax-sheet--grid ax-sheet--clean" data-el="sheet-clean" data-hide hidden>
+        <div class="ax-row ax-row--letters"><span class="ax-c ax-n"></span>{letters.map((l) => <span class:list={['ax-c', l === 'B' && 'ax-cb']}>{l}</span>)}</div>
+        {cleanSheet.map((row) => (
+          <div class:list={['ax-row', 'ax-row--data', row.cls]}>
+            {row.cells.map((c) => (
+              <span class:list={['ax-c', c.cls]} {...c.attrs}>{c.span ? <span class="ax-v" {...c.span.attrs}>{c.span.text}</span> : c.text}</span>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <!-- Pivot: SUMIFS by product line and month -->
+      <div class="ax-sheet ax-sheet--pivot" data-el="sheet-pivot" data-hide hidden>
+        <div class="ax-row ax-row--letters"><span class="ax-c ax-n"></span>{pivotLabels.map((l) => <span class="ax-c">{l}</span>)}</div>
+        {pivotSheet.map((row) => (
+          <div class:list={['ax-row', 'ax-row--data', row.cls]} {...row.attrs}>
+            {row.cells.map((c) => <span class:list={['ax-c', c.cls]} {...c.attrs}>{c.cls?.includes('ax-c--spill') ? <span class="ax-spill">{c.text}</span> : c.text}</span>)}
+          </div>
+        ))}
+      </div>
+
+      <!-- Chart: the chart sheet (open at the end) -->
+      <div class="ax-sheet ax-sheet--chart" data-el="sheet-chart" data-hide>
+        <AnalystChart />
+      </div>
+    </div>
+  </div>
+
+  <div class="ax-tabs" aria-hidden="true">
+    <span class="ax-tab" data-el="tab-raw" data-initial-class="is-active">Raw</span>
+    <span class="ax-tab" data-el="tab-clean" data-hide>Clean</span>
+    <span class="ax-tab" data-el="tab-log" data-hide>Log</span>
+    <span class="ax-tab" data-el="tab-pivot" data-hide>Pivot</span>
+    <span class="ax-tab is-active" data-el="tab-chart" data-hide data-final-class="is-active">Chart</span>
+    <span class="ax-tab ax-tab--add"><Icon name="plus" /></span>
+  </div>
+
+  <div class="ax-status">
+    <span class="demo-stack">
+      <span data-el="st-ready" data-placeholder hidden>Ready</span>
+      <span data-el="st-raw" data-hide hidden>Raw · 4,318 rows</span>
+      <span data-el="st-clean" data-hide hidden>Clean · 4,222 rows · Sum of Revenue: 5,379,900.00</span>
+      <span data-el="st-pivot" data-hide hidden>Pivot · built from Clean, updates as rows are added</span>
+      <span data-el="st-chart" data-hide>Chart · data from Pivot!A11:D15</span>
+    </span>
+    <span class="ax-status__zoom demo-hide-m">100%</span>
+  </div>
+ </div>
+</section>
+
+<style>
+  /* Tokens only (DESIGN.md §2–§4). The sheet is the client's own document, so it sits on paper. */
+  .ax-app {
+    --rh: 24px;
+    /* Raw and Clean share one column template, so the crossfade between them never moves a column.
+       Widths are the measured text widths + 8px padding; at the 1240px window A:L fit exactly (794px).
+       C (Customer) gives way first in narrower windows; everything else is fixed like a real sheet. */
+    --w-c: clamp(84px, calc(100cqw - 679px), 116px);
+    --cols-data: 28px 80px 52px var(--w-c) 50px 82px 61px 32px 60px 52px 52px 86px 44px;
+    --cols-pivot: 28px 132px 84px 84px 84px 92px 84px 84px 84px 84px;
+    padding: 0;
+    color: var(--color-ink);
+    background: var(--color-paper-sunken);
+  }
+  .ax-ui { display: flex; flex-direction: column; height: 100%; background: var(--color-paper-raised); }
+
+  /* Static views (reduced motion, no JavaScript) list the whole report beside the sheet, so the scene grows.
+     The spreadsheet keeps its playback height and stays in view while the report scrolls past. */
+  @media (prefers-reduced-motion: reduce) {
+    .ax-ui { position: sticky; top: calc(var(--header-h, 72px) + 12px); height: var(--aw-h, 540px); }
+  }
+  :global(html.no-js) .ax-ui { position: sticky; top: calc(var(--header-h, 72px) + 12px); height: var(--aw-h, 540px); }
+
+  /* Toolbar and formula bar */
+  .ax-toolbar { display: flex; flex: none; align-items: center; gap: 14px; height: 34px; padding: 0 12px; border-bottom: 1px solid var(--color-rule); background: var(--color-paper-sunken); font-size: 0.75rem; color: var(--color-ink-3); }
+  .ax-toolbar :global(.ax-toolbar__ico) { width: 15px; height: 15px; color: var(--color-ink-2); }
+  .ax-menu { display: flex; align-self: stretch; gap: 16px; }
+  .ax-menu > span { display: inline-flex; align-items: center; }
+  .ax-menu > .is-on { font-weight: 600; color: var(--color-ink); box-shadow: inset 0 -2px 0 var(--color-ink); }
+  .ax-fbar { display: flex; flex: none; align-items: stretch; height: 34px; border-bottom: 1px solid var(--color-rule-strong); background: var(--color-paper-raised); }
+  .ax-nb { display: flex; flex: none; align-items: center; width: 74px; padding: 0 10px; border-right: 1px solid var(--color-rule); font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-ink-2); white-space: nowrap; }
+  .ax-fxl { display: grid; flex: none; place-items: center; width: 32px; border-right: 1px solid var(--color-rule); font-size: 0.75rem; font-style: italic; font-weight: 500; color: var(--color-ink-3); }
+  .ax-formula { flex: 1; min-width: 0; padding: 0 10px; overflow: hidden; font-family: var(--font-mono); font-size: 0.75rem; line-height: 33px; color: var(--color-ink); white-space: nowrap; text-overflow: ellipsis; }
+
+  /* Sheets */
+  .ax-view { position: relative; flex: 1; min-height: 0; container-type: inline-size; }
+  .ax-sheets { height: 100%; }
+  .ax-sheet { height: 100%; min-height: 0; overflow: hidden; background: var(--color-paper-raised); }
+  .ax-sheet--grid { --cols: var(--cols-data); }
+  .ax-sheet--pivot { --cols: var(--cols-pivot); }
+  .ax-row { display: grid; grid-template-columns: var(--cols); width: max-content; min-width: 100%; height: var(--rh); background: var(--color-paper-raised); }
+  .ax-c {
+    position: relative; min-width: 0; height: var(--rh); padding: 0 4px; overflow: hidden;
+    border-right: 1px solid var(--color-rule); border-bottom: 1px solid var(--color-rule);
+    font-size: 0.75rem; line-height: calc(var(--rh) - 1px); white-space: nowrap; text-overflow: ellipsis;
+    color: var(--color-ink); font-variant-numeric: tabular-nums lining-nums;
+    transition: color 0.18s var(--ease-out-soft);
+  }
+  .ax-c.is-num { text-align: right; }
+  .ax-v { display: block; overflow: hidden; text-overflow: ellipsis; }
+  .ax-n { position: sticky; left: 0; z-index: 2; padding: 0; text-align: center; color: var(--color-ink-3); background: var(--color-paper-sunken); }
+  /* Column letters are frozen, as in any spreadsheet: they stay put when a sheet scrolls down */
+  .ax-row--letters { position: sticky; top: 0; z-index: 4; }
+  .ax-row--letters .ax-c { text-align: center; font-weight: 500; color: var(--color-ink-3); background: var(--color-paper-sunken); border-bottom-color: var(--color-rule-strong); }
+  .ax-row.is-head .ax-c:not(.ax-n) { font-weight: 600; border-bottom-color: var(--color-rule-strong); }
+  .ax-row.is-total .ax-c:not(.ax-n) { font-weight: 600; box-shadow: inset 0 1px 0 var(--color-rule-strong); }
+
+  /* Loading: rows exist (gridlines, row numbers) and their text fades in row by row */
+  .ax-row.is-pending .ax-c:not(.ax-n) { color: transparent; }
+  .ax-row.is-pending .ax-c::before, .ax-row.is-pending .ax-spill { visibility: hidden; }
+
+  /* Active cell (DEMOS.md "2 px accent border") with the fill handle */
+  .ax-c.is-sel { box-shadow: inset 0 0 0 2px var(--focus); }
+  .ax-c.is-sel::after { content: ""; position: absolute; right: 0; bottom: 0; width: 5px; height: 5px; background: var(--focus); }
+
+  /* Raw-export details: a number stored as text (left-aligned, green corner), merged Region blocks */
+  .ax-c.is-text { text-align: left; }
+  .ax-c.is-text::before { content: ""; position: absolute; left: 0; top: 0; border-style: solid; border-width: 6px 6px 0 0; border-color: var(--color-success) transparent transparent transparent; }
+  .ax-c.m-in { border-bottom: 0; }
+  .ax-row.is-pending .ax-c.m-in { border-bottom: 1px solid var(--color-rule); }
+  .ax-mg { position: absolute; inset: 0; pointer-events: none; }
+  .ax-mg.hl { border-radius: 0; }
+  .ax-mg.g-top { box-shadow: inset 1.5px 0 0 var(--hl), inset -1.5px 0 0 var(--hl), inset 0 1.5px 0 var(--hl); border-radius: 3px 3px 0 0; }
+  .ax-mg.g-mid { box-shadow: inset 1.5px 0 0 var(--hl), inset -1.5px 0 0 var(--hl); }
+  .ax-mg.g-bot { box-shadow: inset 1.5px 0 0 var(--hl), inset -1.5px 0 0 var(--hl), inset 0 -1.5px 0 var(--hl); border-radius: 0 0 3px 3px; }
+  .ax-row.hl { position: relative; z-index: 1; }
+
+  /* Floating issue tags sit in the empty columns K:L of their row */
+  .ax-c--tag { z-index: 3; overflow: visible; }
+  .ax-tag { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); box-shadow: 0 1px 2px rgb(14 33 54 / 0.18); }
+
+  /* Pivot */
+  .ax-c--spill { z-index: 2; overflow: visible; }
+  .ax-spill { position: relative; z-index: 1; padding-right: 6px; background: var(--color-paper-raised); }
+  .ax-c.is-title { font-weight: 600; }
+  .ax-c.is-sel .ax-spill { background: none; }
+  .ax-c.is-label { font-weight: 600; color: var(--color-ink-2); }
+
+  /* Chart sheet */
+  .ax-sheet--chart { display: flex; flex-direction: column; padding: 16px 22px 12px; }
+
+  /* Sheet tabs and status bar */
+  .ax-tabs { display: flex; flex: none; align-items: stretch; gap: 2px; height: 32px; padding: 0 8px; border-top: 1px solid var(--color-rule-strong); background: var(--color-paper-sunken); font-size: 0.75rem; color: var(--color-ink-3); }
+  .ax-tab { display: inline-flex; align-items: center; padding: 0 14px; border-radius: 0 0 6px 6px; white-space: nowrap; }
+  .ax-tab.is-active { font-weight: 600; color: var(--color-ink); background: var(--color-paper-raised); box-shadow: inset 0 -2px 0 var(--color-ink), 0 1px 2px rgb(14 33 54 / 0.08); }
+  .ax-tab--add { padding: 0 10px; }
+  .ax-tab--add :global(.icon) { width: 13px; height: 13px; }
+  .ax-status { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 12px; height: 26px; padding: 0 12px; border-top: 1px solid var(--color-rule); background: var(--color-paper-sunken); font-size: 0.75rem; color: var(--color-ink-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ax-status > .demo-stack { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .ax-status__zoom { font-family: var(--font-mono); }
+
+  /* Phones: no toolbar; column B (Inv #) is hidden, so A–F fit and the rest fades at the right edge.
+     The pivot keeps all ten tracks (row number + A–I, or its cells would wrap into a phantom row): A–D fit
+     and Q3 starts under the same right-edge fade (DEMOS.md §0.8). */
+  @media (width < 48rem) {
+    .ax-app { --w-c: 88px; --cols-data: 26px 80px var(--w-c) 50px 82px 61px 32px 60px 52px 52px 86px 44px; --cols-pivot: 26px 84px 64px 64px 64px 76px 64px 64px 64px 64px; }
+    .ax-cb { display: none !important; }
+    .ax-sheet--grid:not(.is-panned), .ax-sheet--pivot { -webkit-mask-image: linear-gradient(90deg, black 84%, transparent); mask-image: linear-gradient(90deg, black 84%, transparent); }
+    .ax-sheet--chart { padding: 12px 12px 8px; }
+    .ax-tab { padding: 0 11px; }
+    .ax-ui { position: static !important; height: var(--aw-h-m, 480px) !important; }
+  }
+</style>

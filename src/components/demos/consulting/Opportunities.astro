@@ -1,0 +1,104 @@
+---
+// Consulting demo, step 4: five opportunities ranked by dollars a year (DEMOS.md §6). OWNER: demo-consulting.
+// Rows cascade (150 ms stagger) while Identified and Counted count up; the Total row and the note fade in
+// last. Effort is a neutral pill with a three-step meter (Low = 1, Medium = 2), always with its word.
+// Each row's evidence runs on a second line under the opportunity. Phones keep #, name, the two dollar
+// columns and effort; margin, time and evidence stay in the transcript.
+import { currency } from '@/lib/format';
+import { opportunities, opportunityNote, opportunityTotal } from './data';
+
+interface Props {
+  /** Start-state attributes for the engine (default true). */
+  animate?: boolean;
+}
+const { animate = true } = Astro.props;
+const start = (name: string) => (animate ? { 'data-el': name, 'data-hide': '' } : {});
+const level = { Low: 1, Medium: 2 } as const;
+const max = Math.max(...opportunities.map((o) => o.identified));
+---
+<div class="opps-wrap">
+<div class="opps" role="table" aria-label="Five opportunities, ranked by dollars a year">
+  <div class="opps__row opps__row--head" role="row">
+    <span class="opps__rank" role="columnheader">#</span>
+    <span class="opps__h-name" role="columnheader">Opportunity</span>
+    <span class="opps__num opps__h-id" role="columnheader">Identified / yr</span>
+    <span class="opps__num opps__h-ct" role="columnheader">Counted (50%)</span>
+    <span class="opps__num opps__wide" role="columnheader">Margin (counted)</span>
+    <span class="opps__effhead" role="columnheader">Effort<small>Time to impact</small></span>
+  </div>
+  {opportunities.map((o, i) => (
+    <div class="opps__row" role="row" data-opp={i + 1} {...start('opp-row')}>
+      <span class="opps__rank" role="cell">{i + 1}</span>
+      <span class="opps__name" role="cell"><b>{o.area}:</b> {o.action}</span>
+      <span class="opps__num opps__id" role="cell">
+        <span data-count={animate ? '' : undefined}>{currency(o.identified)}</span>
+        <i class="opps__bar" style={`--v:${(o.identified / max).toFixed(4)}`} aria-hidden="true"></i>
+      </span>
+      <span class="opps__num opps__ct" role="cell"><span data-count={animate ? '' : undefined}>{currency(o.counted)}</span></span>
+      <span class="opps__num opps__wide" role="cell">{o.margin}</span>
+      <span class="opps__pill" role="cell">
+        <span class="effort" data-level={level[o.effort]}><span class="effort__m" aria-hidden="true"><i></i><i></i><i></i></span>{o.effort}</span>
+      </span>
+      <span class="opps__ev opps__wide" role="cell">{o.evidence}</span>
+      <span class="opps__time" role="cell">{o.time}</span>
+    </div>
+  ))}
+  <div class="opps__row opps__row--total" role="row" {...start('opp-total')}>
+    <span class="opps__rank" role="cell"></span>
+    <span class="opps__name" role="cell">Total</span>
+    <span class="opps__num opps__id" role="cell">{currency(opportunityTotal.identified)}</span>
+    <span class="opps__num opps__ct" role="cell">{currency(opportunityTotal.counted)}</span>
+    <span class="opps__num opps__wide" role="cell">{opportunityTotal.margin}</span>
+  </div>
+</div>
+<p class="opps__note" {...start('opp-note')}>{opportunityNote}</p>
+</div>
+
+<style>
+  .opps-wrap { container-type: inline-size; }
+  .opps { font-size: 0.8125rem; line-height: 1.4; color: var(--color-on-2); font-variant-numeric: tabular-nums lining-nums; }
+  /* Two lines per opportunity: name, dollars, margin and effort; then the evidence and the time to impact */
+  .opps__row {
+    display: grid; grid-template-columns: 1.25rem minmax(0, 1fr) 5rem 5rem 5rem 5.5rem; column-gap: 12px; row-gap: 3px; align-items: center;
+    padding: 8px 2px 9px; border-bottom: 1px solid var(--color-rule-dark);
+  }
+  .opps__row--head { padding-top: 0; padding-bottom: 7px; align-items: end; font-size: 0.75rem; font-weight: 500; line-height: 1.3; color: var(--color-on-3); border-bottom-color: var(--color-rule-dark-strong); }
+  /* The header stays put when the views box follows new rows on short screens, so both dollar columns keep their names */
+  .opps__row--head { position: sticky; top: 0; z-index: 1; background: var(--color-navy-800); }
+  .opps__effhead { display: grid; }
+  .opps__effhead small { font-size: 0.75rem; }
+  .opps__rank { font-size: 0.75rem; color: var(--color-on-3); text-align: center; }
+  .opps__name { min-width: 0; color: var(--color-on-2); }
+  .opps__name b { font-weight: 600; color: var(--color-on); }
+  .opps__num { text-align: right; color: var(--color-on); }
+  .opps__id { display: grid; justify-items: end; gap: 4px; }
+  .opps__bar { display: block; width: calc(var(--v) * 100%); min-width: 4px; height: 3px; border-radius: 2px; background: var(--viz-1); }
+  .opps__ev { grid-column: 2 / 6; font-size: 0.75rem; line-height: 1.45; color: var(--color-on-3); }
+  .opps__time { grid-column: 6; padding-left: 2px; font-size: 0.75rem; line-height: 1.45; color: var(--color-on-3); white-space: nowrap; }
+  .opps__row--total { padding-top: 10px; border-top: 1px solid var(--color-rule-dark-strong); border-bottom: 0; font-weight: 600; }
+  .opps__row--total .opps__name { color: var(--color-on); }
+
+  .effort { display: inline-flex; align-items: center; gap: 7px; height: 22px; padding: 0 9px 0 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 550; line-height: 1; white-space: nowrap; color: var(--color-on-2); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+  .effort__m { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; }
+  .effort__m > i { width: 3px; border-radius: 1px; background: var(--color-rule-dark-strong); }
+  .effort__m > i:nth-child(1) { height: 4px; }
+  .effort__m > i:nth-child(2) { height: 7px; }
+  .effort__m > i:nth-child(3) { height: 10px; }
+  .effort[data-level="1"] .effort__m > i:nth-child(-n + 1),
+  .effort[data-level="2"] .effort__m > i:nth-child(-n + 2) { background: var(--color-on-2); }
+
+  .opps__note { margin-top: 10px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.55; color: var(--color-on-3); }
+
+  /* Narrow (phones, tablets): the name on its own line, then the dollars, effort and time below it */
+  @container (width < 40rem) {
+    .opps__row { grid-template-columns: 1rem minmax(0, 1fr) minmax(0, 1fr) 5.5rem 4.5rem; column-gap: 10px; row-gap: 6px; }
+    .opps__wide, .opps__effhead, .opps__h-name, .opps__bar { display: none; }
+    .opps__name { grid-column: 2 / -1; grid-row: 1; }
+    .opps__rank { grid-row: 1; }
+    .opps__id, .opps__h-id { grid-column: 2; justify-items: start; text-align: left; }
+    .opps__ct, .opps__h-ct { grid-column: 3; text-align: left; }
+    .opps__row:not(.opps__row--head) :is(.opps__id, .opps__ct) { grid-row: 2; }
+    .opps__pill { grid-column: 4; grid-row: 2; }
+    .opps__time { grid-column: 5; grid-row: 2; text-align: right; }
+  }
+</style>

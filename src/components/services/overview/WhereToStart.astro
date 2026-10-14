@@ -1,0 +1,57 @@
+---
+// OWNER: services-a
+// Hero art for /services/: "Where to start" (COPY.md §3.2) as a selector card. Each row is a pain in
+// the owner's words and links straight to the service or agent role that fixes it.
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { agentRoles, getService } from '@/data/services';
+import { url } from '@/lib/url';
+
+const role = (id: 'customer' | 'analyst' | 'assistant') => agentRoles.find((r) => r.id === id)!;
+const svc = (slug: 'marketing' | 'sales' | 'consulting') => getService(slug)!;
+
+const rows: { pain: string; name: string; icon: IconName; href: string }[] = [
+  { pain: 'Calls, chats and emails go unanswered after hours.', name: role('customer').name, icon: role('customer').icon, href: role('customer').href },
+  { pain: 'Reports take days, and nobody trusts the spreadsheet.', name: role('analyst').name, icon: role('analyst').icon, href: role('analyst').href },
+  { pain: 'My inbox runs my day.', name: 'Executive Assistant', icon: role('assistant').icon, href: role('assistant').href },
+  { pain: 'We spend on ads but can’t say what’s working.', name: svc('marketing').name, icon: svc('marketing').icon, href: svc('marketing').href },
+  { pain: 'New business depends on referrals and luck.', name: svc('sales').name, icon: svc('sales').icon, href: svc('sales').href },
+  { pain: 'Margins are thin, and I’m not sure why.', name: svc('consulting').name, icon: svc('consulting').icon, href: svc('consulting').href },
+];
+---
+<nav class="card wts" aria-labelledby="wts-title">
+  <p class="type-label wts__k">Where to start</p>
+  <p class="wts__title" id="wts-title">Find the line that sounds like your week.</p>
+  <ul class="wts__list" role="list">
+    {rows.map((r) => (
+      <li>
+        <a class="wts__row" href={url(r.href)}>
+          <span class="wts__pain">“{r.pain}”</span>
+          <span class="wts__to"><Icon name={r.icon} size={14} /><span>{r.name}</span><Icon name="arrow-right" size={14} class="wts__arrow" /></span>
+        </a>
+      </li>
+    ))}
+  </ul>
+  <p class="wts__foot">More than one? Start with the one that costs you the most time today.</p>
+</nav>
+
+<style>
+  .wts { padding: clamp(20px, 2.4vw, 28px) clamp(20px, 2.4vw, 28px) 20px; }
+  .wts__k { color: var(--accent); }
+  .wts__title { margin-top: 8px; font-family: var(--font-serif); font-size: 1.375rem; font-weight: 420; line-height: 1.2; letter-spacing: -0.014em; color: var(--fg); text-wrap: balance; }
+  .wts__list { margin-top: 16px; border-top: 1px solid var(--line-strong); }
+  .wts__list > li { border-bottom: 1px solid var(--line); }
+  .wts__row {
+    display: grid; gap: 3px; margin: 0 -10px; padding: 11px 10px; border-radius: var(--radius-tile);
+    text-decoration: none; color: inherit; transition: background-color 0.2s;
+  }
+  .wts__row:hover { background: var(--color-paper-sunken); }
+  .wts__row:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; }
+  .wts__pain { font-size: 0.9375rem; line-height: 1.45; font-weight: 500; color: var(--fg); }
+  .wts__to { display: inline-flex; align-items: center; gap: 7px; font-size: 0.8125rem; line-height: 1.4; color: var(--fg-2); }
+  .wts__to > :global(.icon:first-child) { color: var(--accent); }
+  .wts__to :global(.wts__arrow) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
+  .wts__row:hover .wts__to { color: var(--fg); }
+  .wts__row:hover :global(.wts__arrow) { transform: translateX(3px); }
+  .wts__foot { margin-top: 14px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+</style>

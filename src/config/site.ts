@@ -145,6 +145,11 @@ export const site = {
 
 export type Site = typeof site;
 
+/** False while site.email is still a reserved placeholder (example.com / .org / .net). Every mailto and
+ *  "people you can reach" line checks it, so a dead address never ships. Set site.email to the real
+ *  business inbox before launch (DECISIONS.md: never a personal address). */
+export const emailReady = !/@example\.(com|org|net)$/i.test(site.email);
+
 /** "{Page} | {site.name}" (COPY.md §1.5). Pass nothing for the home title. */
 export function pageTitle(page?: string): string {
   return page ? `${page} | ${site.name}` : site.homeTitle;

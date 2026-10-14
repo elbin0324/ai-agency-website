@@ -1,0 +1,209 @@
+---
+// OWNER: services-b
+// The Sales page centerpiece: the same prospect, two emails (content/COPY.md §6.3, word for word).
+// Left: a generic AI email on a muted card, flagged phrases in red (.mark-flag + .marker--flag) and the
+// two merge fields outlined (.hl-gray dashed). Right: the Sales Agent's email on a raised card, the two
+// researched facts tinted green (.mark-ok, green .marker) and tied to their sources (DEMOS.md §5 dossier),
+// every other craft choice numbered on a neutral disc (.marker.is-note). Then the summary table
+// (ComparisonTable, our column on navy).
+// Markers are aria-hidden: each note quotes its phrase, so the list reads on its own.
+import Icon from '@/components/ui/Icon.astro';
+import ComparisonTable from '@/components/blocks/ComparisonTable.astro';
+
+const genericNotes = [
+  { quote: 'Partnership opportunity.', text: 'The subject line announces a pitch before the email is even opened.' },
+  { quote: 'I hope this email finds you well!', text: 'Filler every reader skips.' },
+  { quote: 'Commitment to excellence.', text: 'Flattery that fits any firm on earth, and proof that no research happened.' },
+  { quote: 'Innovative, end-to-end… drive growth.', text: 'Buzzwords about the sender. Not one line about the reader.' },
+  { quote: 'A quick 15-minute call.', text: 'Asks a stranger for their time before offering anything.' },
+  { quote: 'The whole email.', text: 'It could go to 5,000 firms with only the name changed, and it reads that way. No postal address, no way to opt out.' },
+];
+
+const oursNotes = [
+  { quote: 'The subject line.', text: 'Names something real and specific to them.' },
+  { quote: 'Opening the Riverside office last month.', text: 'A recent, verifiable trigger.', source: 'Hollis & Grant news page · Sep 8' },
+  { quote: '“Handling IT and vendor relationships.”', text: 'Quoted from their careers page. This is what real homework looks like.', source: 'Job posting, firm careers page · Sep 29' },
+  { quote: 'Password resets, laptop setups… backup.', text: 'A likely pain, framed as a common pattern rather than a guess about them.' },
+  { quote: '11 law and accounting offices.', text: 'From the sender’s approved claims list. The agent never invents credentials.' },
+  { quote: 'One-page checklist. No call needed.', text: 'Something useful first. An easy yes.' },
+  { quote: 'The signature.', text: 'A postal address and a plain opt-out line. Plain text, 89 words before the signature, no images, no links.' },
+];
+
+// Inline annotation helpers. The marker is glued to the last word (no orphaned marker at a line start).
+// Marker kinds (DESIGN.md §6.25): 'ok' (green) is a sourced fact, 'flag' (red) a problem, and 'note' a
+// neutral ink disc for craft choices, so green only ever means "linked to the dossier".
+type MarkKind = 'ok' | 'flag' | 'note';
+const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const markClass: Record<MarkKind, string> = { ok: 'marker', flag: 'marker marker--flag', note: 'marker is-note' };
+const marker = (n: number, kind: MarkKind = 'ok') => `<span class="${markClass[kind]}" aria-hidden="true">${n}</span>`;
+const glue = (word: string, n: number, kind: MarkKind = 'note') => `<span class="ec__nw">${esc(word)}${marker(n, kind)}</span>`;
+const hit = (text: string, n: number, kind: 'ok' | 'flag') => {
+  const cls = kind === 'ok' ? 'mark-ok' : 'mark-flag';
+  const i = text.lastIndexOf(' ');
+  const head = i > 0 ? `<mark class="${cls}">${esc(text.slice(0, i + 1))}</mark>` : '';
+  return `${head}<span class="ec__nw"><mark class="${cls}">${esc(text.slice(i + 1))}</mark>${marker(n, kind)}</span>`;
+};
+const merge = (t: string) => `<span class="hl hl-gray hl--dashed ec__merge">${esc(t)}</span>`;
+
+const genericSubject = `<mark class="mark-flag">Partnership opportunity</mark> for <span class="ec__nw">${merge('Hollis & Grant')}${marker(1, 'flag')}</span>`;
+const genericBody = [
+  `Hi ${merge('Dana')},`,
+  `${hit('I hope this email finds you well!', 2, 'flag')} I came across ${merge('Hollis & Grant')} and was really impressed by your firm’s ${hit('commitment to excellence and client satisfaction.', 3, 'flag')}`,
+  `At Parkline IT, we provide ${hit('innovative, end-to-end managed IT solutions that help businesses like yours streamline operations, enhance security and drive growth.', 4, 'flag')} Our team of experts is passionate about delivering world-class service tailored to your unique needs.`,
+  `I’d love to set up ${hit('a quick 15-minute call', 5, 'flag')} to explore how we can add value to your organization. Are you available this Thursday or Friday?`,
+  'Looking forward to connecting!',
+];
+const oursSubject = `IT for the new Riverside ${glue('office', 1)}`;
+const oursBody = [
+  'Hi Dana,',
+  `Congratulations on ${hit('opening the Riverside office last month.', 2, 'ok')}`,
+  `I noticed the office manager role you posted includes ${hit('“handling IT and vendor relationships.”', 3, 'ok')} At a two-office firm, that usually turns into password resets, laptop setups and quietly wondering whether last night’s backup ${glue('ran.', 4)}`,
+  `We look after IT for 11 law and accounting offices in the ${glue('county,', 5)} including secure remote access for attorneys who split time between locations.`,
+  `Would it help if I sent the one-page checklist we use when a firm opens a second office? No call ${glue('needed.', 6)}`,
+];
+const oursSig = `Sam Ortiz<br /><span class="ec__sig-l">Parkline IT · 400 Example Avenue, Suite 2, Riverside</span><br /><span class="ec__sig-l">Not the right person, or not interested? Reply “no thanks” and I won’t email ${glue('again.', 7)}</span>`;
+
+const no = (text: string) => ({ mark: 'no' as const, text });
+const yes = (text: string) => ({ mark: 'yes' as const, text });
+const rows = [
+  { label: 'Research', cells: [no('None'), yes('A 10-point dossier')] },
+  { label: 'Facts about the prospect', cells: [no('None'), yes('Two, each linked to its source')] },
+  { label: 'Reason to write now', cells: [no('None'), yes('A new office and a telling job post')] },
+  { label: 'The ask', cells: [no('15 minutes from a stranger'), yes('A useful checklist, no call')] },
+  { label: 'Claims about the sender', cells: [no('Buzzwords'), yes('One specific, approved proof point')] },
+  { label: 'Postal address and opt-out', cells: [no('Missing'), yes('Included')] },
+  { label: 'Volume', cells: [no('As many as the tool allows'), yes('Small batches, capped per inbox')] },
+];
+---
+<div class="ec">
+  <p class="ec__setup" data-reveal>
+    <span class="type-label ec__setup-k">Same sender, same prospect</span>
+    <span class="ec__setup-v"><b>Parkline IT</b>, a managed IT provider for small offices, writes to <b>Dana Whitaker</b>, managing partner at Hollis &amp; Grant, a 22-person law firm. Both businesses and both people are fictional.</span>
+  </p>
+
+  <div class="ec__grid" data-reveal>
+    <!-- A · generic -->
+    <figure class="ec__side ec__side--generic">
+      <figcaption class="ec__head">
+        <span class="chip chip-blocked"><Icon name="x" />Generic AI email</span>
+        <span class="ec__meta">From an AI writing tool</span>
+      </figcaption>
+      <div class="card-quiet ec__mail">
+        <span class="marker marker--flag ec__whole" aria-hidden="true">6</span>
+        <dl class="ec__rows">
+          <div><dt>To</dt><dd>Dana Whitaker</dd></div>
+          <div><dt>Subject</dt><dd set:html={genericSubject} /></div>
+        </dl>
+        <div class="ec__body">
+          {genericBody.map((p) => <p set:html={p} />)}
+          <p class="ec__sig">Best regards,<br />Sam</p>
+        </div>
+        <p class="ec__legend">
+          <span class="hl-tag hl-gray">{'{first_name}'}</span><span class="hl-tag hl-gray">{'{company}'}</span>
+          <span>The only personal details are two merge fields. Everything else goes to every recipient.</span>
+        </p>
+      </div>
+      <ol class="ec__notes" aria-label="What's wrong with the generic email">
+        {genericNotes.map((n, i) => (
+          <li><span class="marker marker--flag" aria-hidden="true">{i + 1}</span><p><b>{n.quote}</b> {n.text}</p></li>
+        ))}
+      </ol>
+    </figure>
+
+    <!-- B · ours -->
+    <figure class="ec__side ec__side--ours">
+      <figcaption class="ec__head">
+        <span class="chip chip-done"><Icon name="check" />Written by the Sales Agent</span>
+        <span class="ec__meta">89 words · 2 facts, both sourced</span>
+      </figcaption>
+      <div class="card ec__mail">
+        <dl class="ec__rows">
+          <div><dt>To</dt><dd>Dana Whitaker</dd></div>
+          <div><dt>Subject</dt><dd set:html={oursSubject} /></div>
+        </dl>
+        <div class="ec__body">
+          {oursBody.map((p) => <p set:html={p} />)}
+          <p class="ec__sig" set:html={oursSig} />
+        </div>
+        <p class="ec__legend">
+          <span class="hl-tag hl-green">Sourced</span>
+          <span>Each fact links back to its source in the prospect’s dossier, so anyone can check it in one click.</span>
+        </p>
+      </div>
+      <ol class="ec__notes" aria-label="Why the Sales Agent's email works">
+        {oursNotes.map((n, i) => (
+          <li>
+            <span class:list={['marker', !n.source && 'is-note']} aria-hidden="true">{i + 1}</span>
+            <p>
+              <b>{n.quote}</b> {n.text}
+              {n.source && <span class="ec__src"><Icon name="globe" />Source: {n.source}</span>}
+            </p>
+          </li>
+        ))}
+      </ol>
+    </figure>
+  </div>
+
+  <ComparisonTable
+    class="ec__table"
+    caption="Side by side"
+    rowHeaderLabel="What we compared"
+    columns={[{ label: 'Generic AI email', short: 'Generic AI email' }, { label: 'Written by the Sales Agent', short: 'Sales Agent', us: true }]}
+    rows={rows}
+  />
+</div>
+
+<style>
+  .ec__setup { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px 24px; align-items: baseline; padding: 18px 0; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line); }
+  .ec__setup-k { grid-column: 1 / span 3; }
+  .ec__setup-v { grid-column: 4 / span 9; max-width: 80ch; font-size: 1rem; line-height: 1.6; color: var(--fg-2); }
+  .ec__setup-v b { font-weight: 600; color: var(--fg); }
+
+  .ec__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 32px; margin-top: 36px; }
+  .ec__side { display: flex; flex-direction: column; min-width: 0; margin: 0; }
+  .ec__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 14px; }
+  .ec__meta { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.04em; color: var(--fg-3); }
+
+  .ec__mail { position: relative; padding: 0; overflow: visible; }
+  .ec__side--generic .ec__mail { color: var(--color-ink-2); }
+  .ec__whole { position: absolute; top: -10px; right: -10px; z-index: 1; box-shadow: 0 0 0 3px var(--color-paper-sunken); }
+  .ec__rows { padding: 4px 22px; border-bottom: 1px solid var(--line); }
+  .ec__rows > div { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 12px; padding: 9px 0; font-size: 0.875rem; line-height: 1.5; }
+  .ec__rows > div + div { border-top: 1px solid var(--line); }
+  .ec__rows dt { color: var(--fg-3); }
+  .ec__rows dd { margin: 0; font-weight: 600; color: var(--fg); }
+  .ec__body { padding: 18px 22px 20px; font-size: 0.9375rem; line-height: 1.68; color: var(--color-ink); }
+  .ec__side--generic .ec__body { color: var(--color-ink-2); }
+  .ec__body > p + p { margin-top: 12px; }
+  .ec__sig { color: var(--fg-2); }
+  .ec__sig :global(.ec__sig-l) { font-size: 0.875rem; color: var(--fg-3); }
+  .ec__mail :global(mark) { color: inherit; }
+  .ec__mail :global(.marker) { margin: 0 0 0 4px; }
+  /* Craft notes: a neutral ink disc (6.9:1), so the green marker stays reserved for sourced facts */
+  .ec :global(.marker.is-note) { background: var(--color-ink-2); color: var(--color-paper-raised); }
+  .ec__mail :global(.ec__nw) { white-space: nowrap; }
+  .ec__mail :global(.ec__merge) { padding: 0 3px; white-space: nowrap; }
+  .ec__legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 22px; padding: 14px 0 16px; border-top: 1px solid var(--line); font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .ec__legend > span:last-child { flex: 1 1 24ch; margin-left: 4px; }
+
+  .ec__notes { display: grid; gap: 0; margin-top: 18px; border-top: 1px solid var(--line); }
+  .ec__notes > li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .ec__notes .marker { margin: 1px 0 0; }
+  .ec__notes p { font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .ec__notes b { font-weight: 600; color: var(--fg); }
+  .ec__src { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.5; letter-spacing: 0.02em; color: var(--color-success); }
+  .ec__src > :global(.icon) { width: 12px; height: 12px; }
+
+  .ec :global(.ec__table) { margin-top: clamp(48px, 5vw, 64px); }
+
+  @media (width < 64rem) {
+    .ec__grid { grid-template-columns: minmax(0, 1fr); }
+    .ec__setup-k, .ec__setup-v { grid-column: 1 / -1; }
+  }
+  @media (width < 40rem) {
+    .ec__rows { padding: 4px 16px; }
+    .ec__body { padding: 16px 16px 18px; }
+    .ec__legend { margin: 0 16px; }
+    .ec__whole { right: -6px; }
+  }
+</style>

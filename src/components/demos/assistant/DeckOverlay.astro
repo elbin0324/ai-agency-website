@@ -1,0 +1,44 @@
+---
+// Step 6 overlay: a presentation window (70% of the window, over the mail and assistant panes) with the data
+// sources across the top, a filmstrip of six thumbnails and the active slide. Phones show a 2 × 3 grid.
+// OWNER: demo-assistant. Hidden in the final state: the deck ends up attached to the event card instead.
+import Icon from '@/components/ui/Icon.astro';
+import Slide from './Slide.astro';
+import Thumb from './Thumb.astro';
+import { deckSources, event, slides } from './data';
+---
+<div class="ea-scrim" data-el="scrim" data-hide hidden></div>
+<div class="app-window app-window--mini ea-deck" data-el="deck" data-hide hidden>
+  <div class="aw-bar">
+    <span class="ea-deck__file"><Icon name="presentation" />{event.file}</span>
+    <span class="aw-meta">
+      <span class="demo-stack">
+        <span class="chip chip-running" data-el="deck-run" data-placeholder hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>Building</span>
+        <span class="chip chip-done" data-el="deck-done" data-hide><Icon name="check" />{slides.length} slides</span>
+      </span>
+    </span>
+  </div>
+  <ul class="ea-deck__srcs">
+    {deckSources.map((s) => <li class="ea-pill" data-el="deck-src" data-ghost><Icon name={s.icon} />{s.text}</li>)}
+  </ul>
+  <div class="ea-deck__body">
+    <ol class="ea-strip">
+      {slides.map((s) => (
+        <li class="ea-thumb" data-el={`thumb-${s.n}`}>
+          <span class="ea-thumb__n">{s.n}</span>
+          <span class="ea-thumb__box">
+            <span class="skel ea-thumb__skel" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="ea-thumb__art" data-el={`thumb-art-${s.n}`} data-ghost><Thumb kind={s.kind} /></span>
+          </span>
+          <span class="ea-thumb__t"><b>{s.n}</b>{s.title}</span>
+        </li>
+      ))}
+    </ol>
+    <div class="ea-stage demo-stack">
+      <div class="ea-slide ea-slide--skel ctx-light" data-el="slide-0" data-placeholder hidden>
+        <div class="skel"><span class="skel__label">Company template</span><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      {slides.map((s) => <Slide kind={s.kind} n={s.n} title={s.title} el={`slide-${s.n}`} />)}
+    </div>
+  </div>
+</div>

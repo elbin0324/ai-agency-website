@@ -1,0 +1,65 @@
+---
+// Campaigns · last 28 days: the ads-manager table (DEMOS.md §4 steps 1–2). OWNER: demo-marketing.
+// Rows cascade in step 1. In step 2 each flagged row opens its detail popover (.chart-tip), which docks into
+// the Flag column as a chip; then the waste total appears in the header. Gone at the end (data-placeholder).
+import Icon from '@/components/ui/Icon.astro';
+import { currency } from '@/lib/format';
+import { campaigns, campaignTotal, campaignFootnote, cpb, wasteLine } from './data';
+---
+<div class="md-view md-campaigns" data-el="view-campaigns" data-placeholder hidden>
+  <div class="md-head">
+    <p class="md-head__title">Campaigns <span>· last 28 days</span></p>
+    <span class="chip chip-blocked md-waste" data-el="waste" data-ghost><Icon name="circle-alert" /><b>{wasteLine.strong}</b>{wasteLine.rest}</span>
+  </div>
+
+  <div class="md-card md-table md-camp" data-el="camp-card">
+    <div class="md-tr md-tr--head">
+      <span class="md-c-n">#</span>
+      <span class="md-c-name">Campaign</span>
+      <span class="md-c-chan">Channel</span>
+      <span class="md-num md-c-spend">Spend</span>
+      <span class="md-num md-c-book">Bookings</span>
+      <span class="md-num md-c-cpb">Cost per booking</span>
+      <span class="md-num md-c-roas">Est. ROAS</span>
+      <span class="md-c-flag">Flag</span>
+    </div>
+    {campaigns.map((c) => (
+      <div class:list={['md-tr', c.flag && 'has-flag']} data-el="camp-row" data-row={c.n} data-ghost>
+        <span class="md-c-n">{c.n}</span>
+        <span class="md-c-name" title={c.name}>{c.name}</span>
+        <span class="md-c-chan"><i class="md-key" style={`--k:var(--viz-${c.channel === 'Google' ? 1 : 2})`}></i>{c.channel}</span>
+        <span class="md-num md-c-spend">{currency(c.spend)}</span>
+        <span class="md-num md-c-book">{c.bookings}</span>
+        <span class="md-num md-c-cpb">{cpb(c.spend, c.bookings)}</span>
+        <span class="md-num md-c-roas">{c.roas}</span>
+        <span class="md-c-flag">
+          {c.flag && <span class="chip chip-blocked" data-el={`flag-${c.n}`} data-ghost><Icon name="circle-alert" />{c.flag.label}</span>}
+        </span>
+        {c.flag && (
+          <div class="chart-tip md-pop" data-el={`pop-${c.n}`} hidden>
+            <p class="md-pop__head"><Icon name="circle-alert" /><b>{c.flag.label}</b><span>{c.short}</span></p>
+            <p class="md-pop__lead">{c.flag.lead}{c.flag.amount && <> <b>{c.flag.amount}</b></>}</p>
+            {c.flag.rows && (
+              <dl class="md-pop__rows">
+                {c.flag.rows.map(([term, v]) => <div><dt>{term}</dt><dd>{v}</dd></div>)}
+              </dl>
+            )}
+            {c.flag.lines?.map((l) => <p class="md-pop__line">{l}</p>)}
+          </div>
+        )}
+      </div>
+    ))}
+    <div class="md-tr md-tr--total" data-el="camp-total" data-ghost>
+      <span class="md-c-n"></span>
+      <span class="md-c-name">Total</span>
+      <span class="md-c-chan"></span>
+      <span class="md-num md-c-spend">{currency(campaignTotal.spend)}</span>
+      <span class="md-num md-c-book">{campaignTotal.bookings}</span>
+      <span class="md-num md-c-cpb">{cpb(campaignTotal.spend, campaignTotal.bookings)}</span>
+      <span class="md-num md-c-roas">{campaignTotal.roas}</span>
+      <span class="md-c-flag"></span>
+    </div>
+  </div>
+
+  <p class="md-foot">{campaignFootnote}</p>
+</div>

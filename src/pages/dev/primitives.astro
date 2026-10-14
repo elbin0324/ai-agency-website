@@ -1,0 +1,136 @@
+---
+// Internal test page for the UI primitives (excluded from the sitemap; noindex).
+// OWNER: foundation. Other engineers may add their own /dev/ pages.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Button from '@/components/ui/Button.astro';
+import Badge from '@/components/ui/Badge.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import Card from '@/components/ui/Card.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Logo from '@/components/ui/Logo.astro';
+import StatTile from '@/components/ui/StatTile.astro';
+import { iconNames } from '@/components/ui/icons';
+import { services } from '@/data/services';
+import { currency, number, percent, compact, hours, multiple } from '@/lib/format';
+import { url, isActive } from '@/lib/url';
+---
+<BaseLayout title="UI primitives" noindex>
+  <main id="main">
+    <Section id="intro" size="tight">
+      <div class="flex flex-wrap items-center justify-between gap-6">
+        <Logo />
+        <span class="math">url('/services/') = <b>{url('/services/')}</b> · active: <b>{String(isActive('/dev/', Astro.url.pathname, { section: true }))}</b></span>
+      </div>
+      <Eyebrow class="mt-10">Foundation test page</Eyebrow>
+      <h1 class="type-h1 mt-4">Primitives, on paper and <em>on navy</em>.</h1>
+      <p class="type-lead mt-5">Every UI primitive from COMPONENTS.md, rendered with the DESIGN.md classes. <b>No new styles</b> live here.</p>
+      <div class="mt-8 flex flex-wrap items-center gap-4">
+        <Button href="/contact/" size="lg" icon="arrow-right">Book a free AI assessment</Button>
+        <Button href="/demos/" variant="secondary">See the demos</Button>
+        <Button variant="ghost" icon="play">Watch the agents work</Button>
+        <Button href="https://example.com" variant="secondary" size="sm">External link</Button>
+        <Button size="sm" disabled>Disabled</Button>
+      </div>
+    </Section>
+
+    <Section id="headers" tightTop>
+      <SectionHeader num="01" eyebrow="Services" title="Four ways to put AI to work." subtitle="Start with the one that pays off fastest and add the next when you're ready. One team designs, builds, runs and measures all of it." />
+      <div class="grid gap-6 md:grid-cols-3">
+        <Card>
+          <span class="icon-tile icon-tile--sm"><Icon name="user-check" size={18} /></span>
+          <h3 class="type-h4 mt-4">Default card</h3>
+          <p class="mt-2 text-fg-2">You set the approval rules and hard limits.</p>
+          <div class="tag-row mt-4"><IllustrativeLabel /><IllustrativeLabel kind="Modeled estimate" /></div>
+        </Card>
+        <Card variant="quiet">
+          <h3 class="type-h4">Quiet card</h3>
+          <p class="mt-2 text-fg-2">For the muted side of a comparison.</p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <Badge variant="done">Booked</Badge>
+            <Badge variant="attention">Your OK</Badge>
+            <Badge variant="handoff">Handed off</Badge>
+            <Badge variant="blocked">Failed check</Badge>
+            <Badge variant="running">Drafting</Badge>
+            <Badge variant="count">2</Badge>
+          </div>
+        </Card>
+        <Card href="/services/">
+          <h3 class="type-h4">Link card</h3>
+          <p class="mt-2 text-fg-2">The whole card is the link; it rises 2px on hover.</p>
+          <p class="math mt-4">{currency(12400)} · {compact(4200, { currency: true })} · {hours(18.46)} · {percent(0.12)} · {multiple(2.14)} ROAS · {number(1234567)}</p>
+        </Card>
+      </div>
+    </Section>
+
+    <Section id="stats" tone="sunken">
+      <SectionHeader num="02" eyebrow="Stat tiles" title="Every number says what kind of number it is." align="left" />
+      <div class="stat-ledger" style="--cols: 2">
+        <StatTile
+          context="AI Agents · plumbing and HVAC, 18 staff"
+          value="36"
+          unit="hours a month"
+          description="back from routine calls and chats, valued at loaded cost."
+          bars={[{ label: 'By hand', value: '62 h', pct: 100 }, { label: 'With the agent', value: '26 h', pct: 42, accent: true }]}
+          math={['<b>36 h</b> × $38.40 loaded cost ≈ <b>$1,382</b> / month']}
+          link={{ label: 'See the math', href: '/results/#examples' }}
+        />
+        <StatTile
+          label="Modeled estimate"
+          context="Test figure"
+          value="$60 → $50"
+          unit="per lead"
+          description="for the same spend (test data for this page only)."
+          math="Same budget ÷ $50 instead of $60 per lead"
+        />
+      </div>
+    </Section>
+
+    <Section id="navy" tone="navy">
+      <SectionHeader num="03" eyebrow="On navy" title="The same primitives inside a navy band." subtitle="Role utilities flip automatically: text, rules, tags and chips." />
+      <div class="grid gap-6 lg:grid-cols-2">
+        <div class="app-window">
+          <div class="aw-bar">
+            <span class="aw-dots"><i></i><i></i><i></i></span>
+            <span class="aw-title">Agent activity</span>
+            <span class="aw-meta"><Badge variant="window">Simulated demo</Badge></span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 p-4">
+            <StatTile variant="kpi" context="Hours back this week" value="27.5" unit="h" delta={{ value: '3.0 h', note: 'vs last week' }} />
+            <StatTile variant="kpi" context="Cost per lead" value="$50" delta={{ value: '$10', direction: 'down', good: true, note: 'vs April' }} />
+          </div>
+          <div class="flex flex-wrap gap-2 px-4 pb-4">
+            <Badge variant="done">Sent</Badge>
+            <Badge variant="attention">Waiting on you</Badge>
+            <Badge variant="blocked">Failed check</Badge>
+            <Badge variant="running">Drafting</Badge>
+          </div>
+        </div>
+        <div>
+          <Logo variant="dark" />
+          <div class="tag-row mt-6"><IllustrativeLabel /><IllustrativeLabel kind="Modeled estimate" link={false} /></div>
+          <Card class="mt-6">
+            <h3 class="type-h4">Card on navy</h3>
+            <p class="mt-2 text-fg-2">Dark ring, navy-700 fill.</p>
+          </Card>
+          <div class="mt-6 flex flex-wrap gap-4">
+            <Button variant="brass" icon="arrow-right">Get your real numbers</Button>
+            <Button variant="outline-dark">See how we work</Button>
+          </div>
+        </div>
+      </div>
+    </Section>
+
+    <Section id="icons">
+      <SectionHeader num="04" eyebrow="Icons" title={`${iconNames.length} inline icons.`} align="left" />
+      <ul class="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:grid-cols-6">
+        {iconNames.map((n) => (
+          <li class="flex items-center gap-3 text-small text-fg-2"><Icon name={n} size={18} class="text-fg" />{n}</li>
+        ))}
+      </ul>
+      <p class="math mt-8">Services: {services.map((s) => s.name).join(' · ')}</p>
+    </Section>
+  </main>
+</BaseLayout>

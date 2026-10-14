@@ -158,7 +158,8 @@ const ld = jsonLd && trail.length > 1
   }
   .page-hero__ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
   .page-hero__chip-link { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+  /* Phones: primary and secondary stack full width, like the CTA band; a ghost link keeps its own width. */
   @media (width < 40rem) {
-    .page-hero__ctas :global(.page-hero__primary) { width: 100%; }
+    .page-hero__ctas > :global(.btn:not(.btn-ghost)) { width: 100%; }
   }
 </style>

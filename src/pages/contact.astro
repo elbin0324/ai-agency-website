@@ -1,0 +1,53 @@
+---
+// OWNER: pages-misc
+// Book a free AI assessment (content/COPY.md §11, tightened; CRITIQUE.md applied: a shorter form, a
+// "good fit" answer, booking link and phone when configured). Section ids: hero, form (with
+// what-happens-next and assessment beside it), faq (with contact-details).
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import Section from '@/components/ui/Section.astro';
+import ContactForm from '@/components/contact/ContactForm.astro';
+import NextSteps from '@/components/contact/NextSteps.astro';
+import ContactFaq from '@/components/contact/ContactFaq.astro';
+
+const title = 'Book a free AI assessment';
+const description =
+  'A free 30-minute call and a written summary of your top AI opportunities, ranked by value. No cost, no obligation.';
+---
+<BaseLayout title={title} description={description}>
+  <PageHero
+    crumbs={[{ label: 'Contact' }]}
+    eyebrow="Free AI assessment"
+    title="Book your *free AI assessment.*"
+    subtitle="Tell us a little about your business. We’ll come prepared, and you’ll leave with a written plan, whether or not you work with us."
+    chips={['A 30-minute call, video or phone', 'Written summary in about 3 business days', 'No cost, no obligation']}
+    chipsLabel="What the assessment includes"
+    primary={false}
+    class="contact-hero"
+  />
+
+  <Section id="form" size="none" class="contact-form-sec" aria-labelledby="form-title">
+    <div class="contact-grid">
+      <div class="contact-grid__form">
+        <ContactForm />
+      </div>
+      <div class="contact-grid__aside">
+        <NextSteps />
+      </div>
+    </div>
+  </Section>
+
+  <ContactFaq />
+</BaseLayout>
+
+<style>
+  :global(.contact-hero) { padding-bottom: clamp(32px, 4vw, 48px); }
+  :global(.contact-form-sec) { padding-bottom: var(--spacing-section); }
+  .contact-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 40px 24px; align-items: start; }
+  .contact-grid__form { grid-column: 1 / span 7; min-width: 0; }
+  .contact-grid__aside { grid-column: 9 / span 4; position: sticky; top: calc(var(--header-h) + 32px); }
+  @media (width < 64rem) {
+    .contact-grid__form, .contact-grid__aside { grid-column: 1 / -1; }
+    .contact-grid__aside { position: static; max-width: 40rem; }
+  }
+</style>

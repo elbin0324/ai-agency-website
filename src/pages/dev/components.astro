@@ -1,0 +1,551 @@
+---
+// Internal kitchen sink: every UI primitive and every shared block, on paper, sunken and navy bands.
+// noindex and excluded from the sitemap (astro.config.mjs filters /dev/). OWNER: blocks engineer.
+// Sample copy comes from content/COPY.md; figures come from the data modules (worth.ts, integrations.ts,
+// industries.ts, services.ts), never typed here.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Button from '@/components/ui/Button.astro';
+import Badge from '@/components/ui/Badge.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import Card from '@/components/ui/Card.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Logo from '@/components/ui/Logo.astro';
+import StatTile from '@/components/ui/StatTile.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import Steps from '@/components/blocks/Steps.astro';
+import ComparisonTable from '@/components/blocks/ComparisonTable.astro';
+import FaqAccordion from '@/components/blocks/FaqAccordion.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import WorthExample from '@/components/blocks/WorthExample.astro';
+import Marquee from '@/components/blocks/Marquee.astro';
+import Callout from '@/components/blocks/Callout.astro';
+import Tabs from '@/components/blocks/Tabs.astro';
+import LedgerRows from '@/components/blocks/LedgerRows.astro';
+import LedgerList from '@/components/blocks/LedgerList.astro';
+import MathLedger from '@/components/blocks/MathLedger.astro';
+import StatLedger from '@/components/blocks/StatLedger.astro';
+import TrustStrip from '@/components/blocks/TrustStrip.astro';
+import { site } from '@/config/site';
+import { agentRoles } from '@/data/services';
+import { industries } from '@/data/industries';
+import { integrations, integrationsMore, integrationsCopy } from '@/data/integrations';
+import { worthExamples, getWorth, type WorthExample as Worth } from '@/data/worth';
+import { currency, number } from '@/lib/format';
+import { url } from '@/lib/url';
+
+const worth = (id: string) => getWorth(id) as Worth;
+const customer = worth('customer');
+const analyst = worth('analyst');
+const assistant = worth('assistant');
+const consulting = worth('consulting');
+
+// Hero art: the consulting example's five levers, counted in year one (values parsed from worth.ts).
+const toNum = (v: string) => Number(v.replace(/[^0-9.]/g, ''));
+const levers = consulting.math
+  .filter((r) => /:/.test(r.label) && /count half|client's control/.test(r.formula ?? ''))
+  .map((r) => ({ label: r.label.split(':')[0], value: toNum(r.value) }))
+  .sort((a, b) => b.value - a.value);
+const leverMax = Math.max(...levers.map((l) => l.value));
+const identified = consulting.math.find((r) => r.label === 'Identified')?.value;
+const counted = consulting.math.find((r) => r.label === 'Counted in year one')?.value;
+
+const roleIcon = { customer: 'message-square', analyst: 'chart-column', assistant: 'inbox' } as const;
+const statTiles = [customer, analyst, assistant].map((ex) => {
+  const hoursBack = ex.hoursPerMonth ?? 0;
+  return {
+    label: 'Modeled estimate' as const,
+    context: ex.service.replace('AI Agents · ', ''),
+    value: number(hoursBack),
+    unit: 'hours back a month',
+    description: `${ex.business}: ${currency(ex.monthlyValue)} a month in modeled value.`,
+    math: [`<b>${currency(ex.monthlyValue)}</b> × 12 = <b>${currency(ex.annualValue)}</b> a year`],
+    link: { label: 'See the math', href: '/results/#examples' },
+  };
+});
+
+const homeFaq = [
+  { q: 'How is this different from using ChatGPT ourselves?', a: "Chat tools are good at helping one person with one question. An agent does a job. It's connected to your systems, follows your rules, takes action and knows when to hand off to a person." },
+  { q: 'Do we need technical staff or new software?', a: "No. We do the technical work, and agents work inside the tools you already use. What we need is a decision-maker who can arrange access and review the agent's early work." },
+  { q: 'Is our data safe?', a: `Least-privilege access that's read-only by default, human approval for sensitive actions, audit logs of everything agents do, and business-grade AI providers whose terms exclude training on your data. <a href="${url('/approach/#security')}">How we handle data</a>.` },
+  { q: 'Do you have case studies or references?', a: ["Not yet, and we won't invent them.", 'Instead we show working demos, worked examples with the math visible, and a pilot with a success measure agreed in writing.'] },
+];
+const approachFaq = [
+  { q: 'Do we have to sign a long-term contract?', a: 'No long-term commitment is needed to start. A Pilot has a fixed scope and ends with a results report and a go, adjust or stop recommendation. If you continue, we agree the terms in writing.' },
+  { q: 'Who will we work with?', a: "The people who design and build your agents. You get one named lead who knows your business and answers your questions directly. There's no handoff from a sales team to a support queue." },
+  { q: 'What if the pilot misses its target?', a: "We tell you plainly, explain why and recommend whether to adjust the approach, try a different job or stop. You decide, and you're under no obligation to continue." },
+];
+---
+<BaseLayout title="Components and blocks" noindex>
+  <main id="main">
+    <!-- PageHero: the page's h1, paper tone, no art -->
+    <PageHero
+      id="hero"
+      crumbs={[{ label: 'Dev', href: '/dev/primitives/' }, { label: 'Components' }]}
+      eyebrow="Kitchen sink"
+      title="Every primitive and block, *on one page*."
+      subtitle="The shared building blocks from COMPONENTS.md, rendered with the DESIGN.md classes on paper, sunken and navy bands. Copy comes from the copy deck; figures come from the data modules."
+      chips={['Prop-driven', 'Base-aware links', 'Tokens only', 'Reveal on scroll']}
+      secondary={{ label: 'See the primitives page', href: '/dev/primitives/' }}
+      micro="Internal page: noindex, kept out of the sitemap."
+      jsonLd={false}
+    />
+
+    <!-- ============ PRIMITIVES ============ -->
+    <Section id="primitives" tightTop>
+      <SectionHeader num="01" eyebrow="Primitives" title="The UI primitives these blocks are made of." subtitle="Button, Badge, IllustrativeLabel, Card, Icon, Logo, StatTile, Eyebrow and SectionHeader." />
+      <div class="grid gap-10">
+        <div>
+          <p class="math dev-label">Button · primary · secondary · ghost · sizes · disabled · external</p>
+          <div class="flex flex-wrap items-center gap-4">
+            <Button href={site.cta.href} size="lg" icon="arrow-right">{site.cta.label}</Button>
+            <Button href={site.ctas.demos.href} variant="secondary">{site.ctas.demos.label}</Button>
+            <Button variant="ghost" icon="play">Watch the agents work</Button>
+            <Button href={site.ctas.calculator.href} variant="secondary" size="sm">{site.ctas.calculator.label}</Button>
+            <Button size="sm" disabled>Disabled</Button>
+          </div>
+        </div>
+        <div class="grid gap-6 md:grid-cols-3">
+          <Card>
+            <span class="icon-tile icon-tile--sm"><Icon name="user-check" size={18} /></span>
+            <h3 class="type-h4 mt-4">People in control</h3>
+            <p class="mt-2 text-fg-2">You set the approval rules and the hard limits.</p>
+            <div class="tag-row mt-4"><IllustrativeLabel /><IllustrativeLabel kind="Modeled estimate" /></div>
+          </Card>
+          <Card variant="quiet">
+            <h3 class="type-h4">What generic AI tools send</h3>
+            <p class="mt-2 text-fg-2">The muted side of a comparison uses the quiet card.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <Badge variant="done">Booked</Badge>
+              <Badge variant="attention">Your OK</Badge>
+              <Badge variant="handoff">Handed off</Badge>
+              <Badge variant="blocked">Failed check</Badge>
+              <Badge variant="running">Drafting</Badge>
+              <Badge variant="count">2</Badge>
+            </div>
+          </Card>
+          <Card href="/services/sales/">
+            <h3 class="type-h4">AI Sales Agent</h3>
+            <p class="mt-2 text-fg-2">Researched, personal outreach that starts real conversations.</p>
+            <p class="mt-4 inline-flex items-center gap-3"><Logo size={22} href={null} /></p>
+          </Card>
+        </div>
+        <div>
+          <p class="math dev-label">Icon · fixed mapping (DESIGN.md §8.1)</p>
+          <ul class="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3 lg:grid-cols-6" role="list">
+            {([['message-square', 'Customer Agent'], ['chart-column', 'Analyst'], ['inbox', 'Executive Assistant'], ['target', 'Marketing Director'], ['send', 'Sales Agent'], ['trending-up', 'Consulting'], ['user-check', 'Approval'], ['key-round', 'Least privilege'], ['list', 'Audit log'], ['database', 'Your data'], ['power', 'Off switch'], ['clock', 'Time']] as const).map(([n, l]) => (
+              <li class="flex items-center gap-3 text-small text-fg-2"><Icon name={n} size={18} class="text-accent-display" />{l}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p class="math dev-label">SectionHeader · align="left" · size="h3" · level=3</p>
+          <SectionHeader title="A sub-section heading." subtitle="Stacked aside at most 60 characters wide, for sub-sections inside a section." align="left" size="h3" level={3} />
+        </div>
+      </div>
+    </Section>
+
+    <Section id="primitives-navy" tone="navy">
+      <SectionHeader num="02" eyebrow="On navy" title="The same primitives in a navy band." subtitle="Role utilities flip automatically: text, rules, tags, chips and the brass CTA." />
+      <div class="grid items-start gap-8 lg:grid-cols-2">
+        <div class="app-window">
+          <div class="aw-bar">
+            <span class="aw-dots"><i></i><i></i><i></i></span>
+            <span class="aw-title">Customer Agent · {customer.business}</span>
+            <span class="aw-meta"><Badge variant="window">Illustrative</Badge></span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 p-4">
+            <StatTile variant="kpi" context="Staff hours back a month" value={number(customer.hoursPerMonth ?? 0)} unit="h" />
+            <StatTile variant="kpi" context="Modeled value a month" value={currency(customer.monthlyValue)} />
+          </div>
+          <div class="flex flex-wrap gap-2 px-4 pb-4">
+            <Badge variant="done">Booked</Badge>
+            <Badge variant="attention">Waiting on you</Badge>
+            <Badge variant="blocked">Failed check</Badge>
+            <Badge variant="running">Drafting</Badge>
+          </div>
+        </div>
+        <div>
+          <Logo variant="dark" href={null} />
+          <div class="tag-row mt-6"><IllustrativeLabel /><IllustrativeLabel kind="Modeled estimate" /></div>
+          <Card class="mt-6">
+            <h3 class="type-h4">Card on navy</h3>
+            <p class="mt-2 text-fg-2">Dark ring and a navy-700 fill. Marketing copy stays on paper.</p>
+          </Card>
+          <div class="mt-6 flex flex-wrap gap-4">
+            <Button href={site.cta.href} variant="brass" icon="arrow-right">Get your real numbers</Button>
+            <Button href={site.ctas.approach.href} variant="outline-dark">{site.ctas.approach.label}</Button>
+          </div>
+        </div>
+      </div>
+    </Section>
+
+    <!-- ============ PAGE HERO (split, sunken) ============ -->
+    <PageHero
+      id="hero-split"
+      level={2}
+      tone="sunken"
+      jsonLd={false}
+      crumbs={[{ label: 'Services', href: '/services/' }, { label: 'AI Consulting' }]}
+      eyebrow="AI Consulting"
+      title="A ranked plan to cut costs and grow your margin."
+      subtitle="An AI-powered review of your financials and operations finds savings, pricing gaps and process waste, then ranks every opportunity by value, effort and payback."
+      chips={['Every number traceable', 'Opportunities ranked by payback', 'A 90-day plan']}
+      secondary={{ label: 'Watch the demo', href: '#worth', icon: 'play' }}
+      micro="Every number traces back to your data. A person reviews every recommendation."
+    >
+      <figure slot="art">
+        <div class="app-window" role="img" aria-label={`Illustration: five savings opportunities for ${consulting.business}, a fictional business, ranked by the amount counted in year one.`}>
+          <div class="aw-bar">
+            <span class="aw-dots"><i></i><i></i><i></i></span>
+            <span class="aw-crumb"><b>Opportunities</b><span class="aw-crumb__sep">/</span><span>Ranked by counted value</span></span>
+            <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+          </div>
+          <div class="aw-pane">
+            <div class="chart">
+              <div class="chart__head">
+                <div><p class="chart__title">Counted in year one</p><p class="chart__sub">{consulting.business}</p></div>
+                <Badge variant="done">{levers.length} found</Badge>
+              </div>
+              <div class="hbars">
+                {levers.map((l) => (
+                  <div class="hbar"><span class="hbar__label">{l.label}</span><span class="hbar__track"><span class="hbar__fill" style={`--v:${((l.value / leverMax) * 100).toFixed(1)}%`}></span></span><span class="hbar__val">{currency(l.value)}</span></div>
+                ))}
+              </div>
+              <p class="chart__note">Counted {counted} of {identified} identified</p>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig-caption mt-3"><b>FIG. 1</b> {consulting.business} is a fictional business. Figures are illustrative.</figcaption>
+      </figure>
+    </PageHero>
+
+    <!-- ============ FEATURE GRID ============ -->
+    <Section id="feature-grid">
+      <SectionHeader num="03" eyebrow="FeatureGrid" title="The difference is who does the work." subtitle="AI tools give you capability. Agencies give you a workflow. We give you a working result, and we stay accountable for it." />
+      <p class="math dev-label">FeatureGrid · variant="cards" · cols={4}</p>
+      <FeatureGrid
+        cols={4}
+        items={[
+          { icon: 'check', title: 'Outcomes, not logins', body: 'You get finished work inside the tools you already use. No new system for your team to learn.' },
+          { icon: 'wrench', title: 'Built for your business', body: 'Agents learn your services, prices, policies and voice, and prove themselves on your past work before they go live.' },
+          { icon: 'user-check', title: 'People in control', body: 'You set the approval rules and the hard limits. Agents earn more autonomy only when the results justify it.' },
+          { icon: 'chart-column', title: 'Accountable for results', body: 'We agree on a baseline up front and report against it every month, in hours and dollars.' },
+        ]}
+      />
+      <p class="math dev-label mt-14">FeatureGrid · variant="cards" · cols={3} · href (whole card links)</p>
+      <FeatureGrid
+        cols={3}
+        items={agentRoles.map((r) => ({ icon: roleIcon[r.id], title: r.name, body: r.short, href: `/services/ai-agents/#${r.anchor}`, linkLabel: 'See what it does' }))}
+      />
+      <p class="math dev-label mt-14">FeatureGrid · variant="guard" · cols={3}</p>
+      <FeatureGrid
+        variant="guard"
+        items={[
+          { icon: 'key-round', title: 'Least-privilege access', body: 'Agents get only the access a job needs, read-only by default.' },
+          { icon: 'user-check', title: 'Human approval for sensitive actions', body: 'Payments, refunds, price changes and bulk sends wait for a person to say yes.' },
+          { icon: 'list', title: 'Audit logs', body: 'Every action an agent takes is recorded: what it did, when and why.' },
+          { icon: 'lock', title: 'Business-grade AI providers', body: 'Built on business-grade AI services whose terms exclude training on your data.' },
+          { icon: 'database', title: 'Only the data a job needs', body: 'We connect what a workflow requires and nothing more.' },
+          { icon: 'power', title: 'An off switch you control', body: 'Pause or turn off any agent at any time. Your team picks up where it left off.' },
+        ]}
+      />
+    </Section>
+
+    <Section id="feature-grid-cells" tone="sunken">
+      <SectionHeader num="04" eyebrow="FeatureGrid on sunken" title="Made for local businesses and growing mid-size companies." subtitle="If your team juggles customers, paperwork and numbers, there's work an agent can take on." />
+      <p class="math dev-label">FeatureGrid · variant="cells" · cols={4} · items from industries.ts</p>
+      <FeatureGrid variant="cells" cols={4} items={industries.map((i) => ({ icon: i.icon, title: i.name, body: i.body }))} />
+    </Section>
+
+    <!-- ============ STEPS ============ -->
+    <Section id="steps">
+      <SectionHeader num="05" eyebrow="Steps" title="Start small. Prove it. Then scale." subtitle="Every engagement follows the same four steps. We prove value on one job, with your team in control, before anything expands." />
+      <p class="math dev-label">Steps · 4 steps · time + get · surface="paper"</p>
+      <Steps
+        steps={[
+          { title: 'Assess', body: 'Free. We learn how your business runs and where the hours go, then send your top opportunities, ranked by value.', time: 'Typically a 30-minute call', get: 'Your top opportunities, ranked, in writing' },
+          { title: 'Design', body: 'We map the workflow, set the guardrails and agree on a baseline and a success measure.', time: 'Typically 1 to 2 weeks', get: 'A written plan with guardrails and a baseline' },
+          { title: 'Build and pilot', body: 'We connect your tools, test on your past work, then go live with approvals switched on.', time: 'Typically 3 to 6 weeks', get: 'An agent working on your real work, with approvals on' },
+          { title: 'Run and improve', body: 'We monitor, tune and report in hours and dollars. Agents take on more only when you approve it.', time: 'Ongoing, monthly review', get: 'A monthly report in hours and dollars' },
+        ]}
+      />
+      <p class="mt-8 text-caption text-fg-3">Timelines depend on scope and on how quickly we can get access to your tools.</p>
+    </Section>
+
+    <Section id="steps-sunken" tone="sunken">
+      <SectionHeader num="06" eyebrow="Steps on sunken" title="From your know-how to a working agent." subtitle="We build each agent around how your business already works, then prove it on your past work before it touches a live customer or file." />
+      <p class="math dev-label">Steps · 5 steps · time only · surface="sunken"</p>
+      <Steps
+        surface="sunken"
+        steps={[
+          { title: 'Learn the job', body: 'We sit with the people who do the work today and gather what the agent needs: FAQs, price book, policies and templates.', time: 'Design, typically 1 to 2 weeks' },
+          { title: 'Connect your tools', body: 'We connect only what the job needs, read-only wherever possible.', time: 'Build, typically 1 to 2 weeks' },
+          { title: 'Test on your past work', body: "We replay recent chats, emails or reports and compare the agent's work with your team's.", time: 'Build phase' },
+          { title: 'Go live with approvals on', body: 'People approve its output until the quality is consistently where you want it.', time: 'Pilot, typically 2 to 4 weeks' },
+          { title: 'Expand and improve', body: 'As accuracy holds, you choose what it can do without approval.', time: 'Ongoing' },
+        ]}
+      />
+    </Section>
+
+    <!-- ============ COMPARISON TABLE ============ -->
+    <Section id="comparison">
+      <SectionHeader num="07" eyebrow="ComparisonTable" title="How the options compare." subtitle="Three alternatives as columns, the highlighted column last. Marks (check, minus, x) can sit beside short text." />
+      <p class="math dev-label">ComparisonTable · 3 columns · text cells, plus marks on two rows</p>
+      <ComparisonTable
+        caption="How the options compare"
+        columns={[{ label: 'DIY AI tools' }, { label: 'Generic automation agency', short: 'Generic agency' }, { label: site.name, us: true }]}
+        rows={[
+          { label: 'Who does the work', cells: ['You and your team, in spare moments', 'They build it, then hand it over', 'We build it, run it and keep it working'] },
+          { label: 'Fit to your business', cells: ['Generic prompts and templates', 'Prebuilt workflows, lightly adapted', 'Designed around your process, data, prices and voice'] },
+          { label: 'Human approval', cells: [{ mark: 'partial', text: 'Up to you' }, { mark: 'partial', text: 'Varies by project' }, { mark: 'yes', text: 'Built in for every sensitive action' }] },
+          { label: 'What gets measured', cells: ['Hard to say', 'Activity: tasks run, emails sent', 'Hours and dollars against an agreed baseline'] },
+          { label: 'When something breaks', cells: [{ mark: 'no', text: 'You troubleshoot' }, { mark: 'partial', text: 'A new ticket or change order' }, { mark: 'yes', text: 'We monitor and fix it as part of the work' }] },
+        ]}
+      >
+        <p class="mt-5 max-w-[70ch] text-caption text-fg-3">DIY tools are a good fit for one person's tasks. They get harder when the work spans systems, people and customers. That's where we come in.</p>
+      </ComparisonTable>
+    </Section>
+
+    <Section id="comparison-sunken" tone="sunken">
+      <SectionHeader num="08" eyebrow="ComparisonTable on sunken" title="Generic AI email vs. ours." subtitle="Same sender, same prospect. One came from a generic AI writing tool; the other came out of the Sales Agent's research." />
+      <p class="math dev-label">ComparisonTable · 2 columns · marks · usMark=false · .cmp-foot in the slot</p>
+      <ComparisonTable
+        usMark={false}
+        columns={[{ label: 'Generic AI email' }, { label: 'Written by the Sales Agent', short: 'Sales Agent', us: true }]}
+        rows={[
+          { label: 'Research', cells: [{ mark: 'no', text: 'None' }, { mark: 'yes', text: 'A researched dossier on the prospect' }] },
+          { label: 'Facts about the prospect', cells: [{ mark: 'no', text: 'None' }, { mark: 'yes', text: 'Each one linked to its source' }] },
+          { label: 'Reason to write now', cells: [{ mark: 'no', text: 'None' }, { mark: 'yes', text: 'A new office and a telling job post' }] },
+          { label: 'The ask', cells: ['15 minutes from a stranger', { mark: 'yes', text: 'A useful checklist, no call' }] },
+          { label: 'Postal address and opt-out', cells: [{ mark: 'no', text: 'Missing' }, { mark: 'yes', text: 'Included' }] },
+        ]}
+      >
+        <div class="cmp-foot"><span class="tag">Illustrative example</span><p>Fictional businesses and people, for illustration. The researched email is the standard every send is held to.</p></div>
+      </ComparisonTable>
+    </Section>
+
+    <!-- ============ FAQ ============ -->
+    <Section id="faq">
+      <SectionHeader num="09" eyebrow="FaqAccordion" />
+      <div class="grid gap-6 lg:grid-cols-12">
+        <div class="lg:col-span-4" data-reveal>
+          <h2 class="type-h2">Straight answers to common questions.</h2>
+          <p class="type-lead mt-4">Don't see yours? Ask us on the free assessment call.</p>
+          <p class="math dev-label mt-6">FaqAccordion · jsonLd · inline links · multi-paragraph answer · one item open</p>
+        </div>
+        <div class="lg:col-span-7 lg:col-start-6">
+          <FaqAccordion jsonLd items={homeFaq.map((f, i) => ({ ...f, open: i === 0 }))} />
+        </div>
+      </div>
+    </Section>
+
+    <!-- ============ WORTH EXAMPLE + TABS ============ -->
+    <Section id="worth" tone="sunken">
+      <SectionHeader num="10" eyebrow="WorthExample in Tabs" title="Put a number on the hours." subtitle="A worked example from our illustrative scenarios: a fictional business, conservative assumptions and every line of math on the page." />
+      <p class="math dev-label">Tabs (pills, panels from slots) · WorthExample × 3 from worth.ts</p>
+      <Tabs
+        label="Worked examples by agent"
+        tabs={[
+          { id: 'customer', label: 'Customer Agent', icon: 'message-square' },
+          { id: 'analyst', label: 'Analyst Agent', icon: 'chart-column' },
+          { id: 'assistant', label: 'Executive Assistant', icon: 'inbox' },
+        ]}
+      >
+        <Fragment slot="customer"><WorthExample example={customer} reveal={false} link={{ label: 'See the full example', href: '/results/#examples' }} /></Fragment>
+        <Fragment slot="analyst"><WorthExample example={analyst} reveal={false} link={{ label: 'See the full example', href: '/results/#examples' }} /></Fragment>
+        <Fragment slot="assistant"><WorthExample example={assistant} reveal={false} link={{ label: 'See the full example', href: '/results/#examples' }} /></Fragment>
+      </Tabs>
+    </Section>
+
+    <Section id="worth-solo">
+      <SectionHeader num="11" eyebrow="WorthExample" title="See how small fixes add up." subtitle="One example on paper, outside tabs: the AI Consulting case, where the plan replaces the agent." align="split" />
+      <p class="math dev-label">WorthExample · example={`getWorth('consulting')`} · afterLabel defaults to "With the plan"</p>
+      <WorthExample example={consulting} />
+    </Section>
+
+    <!-- ============ MARQUEE ============ -->
+    <Section id="marquee" tone="sunken">
+      <SectionHeader num="12" eyebrow="Marquee" title={integrationsCopy.headline} subtitle={integrationsCopy.subhead} />
+      <p class="math dev-label">Marquee · mode="marquee" · {integrations.length} items, duplicated copy aria-hidden · Pause / Play</p>
+      <Marquee />
+      <p class="math dev-label mt-12">Marquee · mode="grid" · integrationsMore</p>
+      <Marquee mode="grid" items={integrationsMore} label="More tools we connect to" />
+      <p class="mt-8 max-w-[80ch] text-caption text-fg-3">{integrationsCopy.microcopy}</p>
+    </Section>
+
+    <!-- ============ CALLOUTS + LEDGERS ============ -->
+    <Section id="callouts">
+      <SectionHeader num="13" eyebrow="Callout and ledgers" title="Notes, disclaimers and the ledger motif." subtitle="Callouts carry a rule and an icon; ledgers divide with hairlines, never boxes." />
+      <div class="grid grid-cols-1 gap-12 lg:grid-cols-2">
+        <div class="grid content-start gap-3">
+          <p class="math dev-label">Callout · note · tip · disclaimer · method · attention · warning · danger</p>
+          <Callout title="Our rule:">nothing sends until a person approves the first email to a new contact.</Callout>
+          <Callout variant="tip" title="Start with one job.">Pick the task that costs your team the most hours each week; add the next agent once it's proven.</Callout>
+          <Callout variant="disclaimer" title="Illustrative example.">Fictional business. Numbers are modeled to show how the math works. <a href={url('/results/#methodology')}>How we estimate</a></Callout>
+          <Callout variant="method" title="How we estimate.">Hours returned × loaded hourly cost × 12 months. Excludes the cost of the engagement.</Callout>
+          <Callout variant="attention" title="Needs a decision.">Two items are waiting for your approval.</Callout>
+          <Callout variant="warning" title="Heads up.">The calculator needs JavaScript. Email your numbers instead.</Callout>
+          <Callout variant="danger" title="Couldn't send." role="alert">Check your connection and try again.</Callout>
+        </div>
+        <div class="grid content-start gap-10">
+          <div>
+            <p class="math dev-label">LedgerRows · inline</p>
+            <LedgerRows title="Send rules" rows={[{ label: 'First email to a new contact', value: 'Needs your OK' }, { label: 'Daily send limit', value: 'Capped per inbox' }, { label: 'Opt-out line', value: 'In every email' }, { label: 'Logs to', value: 'HubSpot' }]} />
+          </div>
+          <div>
+            <p class="math dev-label">LedgerList · ledger · knot</p>
+            <LedgerList items={agentRoles.map((r) => `<b>${r.name}</b>: ${r.short}`)} />
+            <LedgerList class="mt-6" variant="knot" label="What moves the number" items={['How many hours your team spends on calls, chats, email and reports today', 'How many inquiries arrive after hours or wait too long for a reply', "Your team's hourly cost, including taxes and benefits"]} />
+          </div>
+          <div>
+            <p class="math dev-label">MathLedger · rows from worth.ts (analyst)</p>
+            <MathLedger caption="The math" rows={analyst.math} />
+          </div>
+        </div>
+      </div>
+      <div class="mt-16">
+        <p class="math dev-label">StatLedger · 3 StatTiles from worth.ts</p>
+        <StatLedger items={statTiles} />
+      </div>
+      <div class="mt-16">
+        <p class="math dev-label">TrustStrip · defaults from DESIGN.md §6.17</p>
+        <TrustStrip />
+      </div>
+    </Section>
+
+    <!-- ============ TABS ============ -->
+    <Section id="tabs" tone="sunken">
+      <SectionHeader num="14" eyebrow="Tabs" title="One tab pattern, three uses." subtitle="Roving tabindex, arrow keys, Home and End. Panels use the hidden attribute; every change dispatches tabs:change." />
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
+        <div>
+          <p class="math dev-label">Tabs · variant="segmented" inside an app window</p>
+          <div class="app-window">
+            <div class="aw-bar">
+              <span class="aw-dots"><i></i><i></i><i></i></span>
+              <span class="aw-crumb"><b>First email</b><span class="aw-crumb__sep">/</span><span>Hollis &amp; Grant</span></span>
+              <span class="aw-meta"><span class="aw-tag">Simulated demo</span></span>
+            </div>
+            <div class="aw-pane">
+              <Tabs label="Email version" variant="segmented" idPrefix="email-version" tabs={[{ id: 'ours', label: `${site.name} draft` }, { id: 'generic', label: 'Typical AI email' }]}>
+                <div slot="ours" class="aw-doc mt-4">
+                  <div class="aw-doc__row"><span>Subject</span><b>Your Riverside office</b></div>
+                  <div class="aw-doc__body"><p>Congratulations on opening the Riverside office last month. I noticed the office manager role you posted includes "handling IT and vendor relationships."</p><p>Would it help if I sent the one-page checklist we use when a firm opens a second office? No call needed.</p></div>
+                </div>
+                <div slot="generic" class="aw-doc mt-4">
+                  <div class="aw-doc__row"><span>Subject</span><b>Partnership opportunity for Hollis &amp; Grant</b></div>
+                  <div class="aw-doc__body"><p>I hope this email finds you well! I came across Hollis &amp; Grant and was really impressed by your firm's commitment to excellence.</p><p>I'd love to set up a quick 15-minute call to explore how we can add value to your organization.</p></div>
+                </div>
+              </Tabs>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="math dev-label">Tabs · panels=false (tablist drives panels elsewhere) · activation="manual"</p>
+          <Tabs
+            label="Demo picker"
+            panels={false}
+            activation="manual"
+            idPrefix="demo-picker"
+            class="dev-tabs-external"
+            tabs={agentRoles.map((r) => ({ id: r.id, label: r.name, icon: roleIcon[r.id], panelId: `dev-panel-${r.id}` }))}
+          />
+          {agentRoles.map((r, i) => (
+            <Card id={`dev-panel-${r.id}`} role="tabpanel" aria-labelledby={`demo-picker-tab-${r.id}`} hidden={i > 0}>
+              <h3 class="type-h4">{r.name}</h3>
+              <p class="mt-2 text-fg-2">{r.short}</p>
+            </Card>
+          ))}
+          <p class="math mt-4" aria-live="polite">tabs:change → <b data-tabs-log>waiting for a change</b></p>
+        </div>
+      </div>
+    </Section>
+
+    <!-- ============ BLOCKS ON NAVY ============ -->
+    <Section id="navy-blocks" tone="navy">
+      <SectionHeader num="15" eyebrow="Blocks on navy" title="The same blocks inside a navy band." subtitle="Role colors flip; the knots take the band color; the callout keeps its light surface." />
+      <p class="math dev-label">FeatureGrid · variant="guard" · cols={3}</p>
+      <FeatureGrid
+        variant="guard"
+        items={[
+          { icon: 'user-check', title: 'Approval queues', body: 'Early on, people approve drafts before they go out. You choose when routine work can go without review.' },
+          { icon: 'key-round', title: 'Read-only books', body: "The Analyst Agent can read your accounting data but can't post entries, move money or change records." },
+          { icon: 'list', title: 'Reviewed every week', body: "We read samples of every agent's work weekly in the early months and fix the cause of any miss." },
+        ]}
+      />
+      <p class="math dev-label mt-14">Steps · surface="navy" · 3 steps</p>
+      <Steps
+        surface="navy"
+        steps={[
+          { title: 'Book the call', body: 'Pick a time that suits you. Thirty minutes with the people who would build your agents.', time: 'Typically a 30-minute call' },
+          { title: 'Get your plan', body: 'A short written summary of your top opportunities, ranked by value.', time: 'In about 3 business days' },
+          { title: 'Decide', body: 'Start a pilot, ask questions or keep the plan. No obligation either way.', get: 'Yours to keep' },
+        ]}
+      />
+      <div class="mt-16 grid gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <p class="math dev-label">FaqAccordion on navy</p>
+          <FaqAccordion items={approachFaq} />
+        </div>
+        <div class="grid content-start gap-8 lg:col-span-6 lg:col-start-7">
+          <div>
+            <p class="math dev-label">LedgerRows on navy</p>
+            <LedgerRows title="Hours back a month, by agent" rows={[customer, analyst, assistant].map((ex) => ({ label: ex.service.replace('AI Agents · ', ''), value: `${number(ex.hoursPerMonth ?? 0)} h` }))} />
+          </div>
+          <div>
+            <p class="math dev-label">Callout on navy (light surface)</p>
+            <Callout variant="disclaimer" title="Modeled estimate.">Not a quote or a guarantee. Estimates exclude the cost of the engagement.</Callout>
+          </div>
+          <div>
+            <p class="math dev-label">Marquee · grid on navy</p>
+            <Marquee mode="grid" items={integrations.slice(0, 6)} label="Example tools" />
+          </div>
+        </div>
+      </div>
+    </Section>
+
+    <!-- ============ CTA BANDS ============ -->
+    <CtaBand
+      id="cta-light"
+      tone="sunken"
+      eyebrow="Free AI assessment"
+      title="Which agent would give you the most time back?"
+      subtitle="On a 30-minute call we'll look at where your team's hours go and recommend the agent to start with, with a rough estimate of what it's worth."
+      secondary={site.ctas.calculator}
+      micro="No cost, no obligation. Written summary either way."
+    />
+
+    <CtaBand
+      id="cta"
+      eyebrow="Free AI assessment"
+      title="Find out where AI pays off first in your business."
+      subtitle="Thirty minutes with the people who would build your agents. You get a short written plan with your top opportunities, ranked by value. No cost, no obligation."
+      primary={{ label: 'Book your free assessment', href: site.cta.href }}
+      secondary={{ label: 'Estimate your savings first', href: site.ctas.calculator.href }}
+      micro="Prefer email? Write to {email}."
+      leaveWith={[
+        { title: 'Your top three opportunities, ranked', body: 'By estimated value and effort, specific to how your business runs.' },
+        { title: 'A rough savings estimate', body: 'Labeled as a modeled estimate, with the assumptions shown.' },
+        { title: 'A suggested first step', body: 'Yours to keep, whether or not we work together.' },
+      ]}
+      note="The findings are yours to keep, whether or not we work together."
+    />
+  </main>
+</BaseLayout>
+
+<style>
+  .dev-label { margin-bottom: 14px; }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.dev-tabs-external').forEach((root) => {
+    const out = document.querySelector<HTMLElement>('[data-tabs-log]');
+    root.addEventListener('tabs:change', (e) => {
+      const d = (e as CustomEvent<{ id: string; index: number; previousId: string | null }>).detail;
+      if (out) out.textContent = `id "${d.id}", index ${d.index}, previous "${d.previousId}"`;
+    });
+  });
+</script>

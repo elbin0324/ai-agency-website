@@ -1,0 +1,266 @@
+---
+// Sales Agent demo (content/DEMOS.md §5): ideal customer profile, scored prospects, a sourced dossier, a personal
+// email, the generic AI email for contrast, quality checks, Sam's approval and the follow-up plan. OWNER: demo-sales.
+// Renders the demo only: the page supplies the <section> and its anchor (it appears on /, /demos/ and /services/sales/).
+//
+// The markup is the FINAL state (no JavaScript and reduced motion show exactly this). Attributes say how each piece
+// starts (DEMO_ENGINE.md §4); the steps in ./sales/sales-demo.ts animate from there. Copy lives in ./sales/data.ts.
+import AppWindow from '@/components/demo/AppWindow.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+import demo from './sales/sales-demo';
+import MailA from './sales/MailA.astro';
+import MailB from './sales/MailB.astro';
+import { approval, dossier, emailB, followUp, icp, meta, prospects, quality, result, search, why } from './sales/data';
+import './sales/sales-demo.css';
+
+interface Props {
+  /** false: never autoplay (a DemoTheater drives it with demo:play). */
+  autoplay?: boolean;
+  class?: string;
+}
+const { autoplay = true, class: className } = Astro.props;
+const queuePct = `${(approval.queue.used / approval.queue.cap) * 100}%`;
+---
+<AppWindow
+  demo={demo.id}
+  steps={demo.steps}
+  title={`${site.name} Sales Agent · Parkline IT`}
+  label={`${site.name} Sales Agent`}
+  columns="28% 44% 28%"
+  tabs={[
+    { id: 'list', label: 'Prospects' },
+    { id: 'work', label: 'Email' },
+    { id: 'check', label: 'Check & send' },
+  ]}
+  height={540}
+  mobileHeight={470}
+  ticker="Scheduled for 7:40 am · logged in the CRM"
+  tickerStart="Building the prospect list"
+  result={result}
+  microcopy="Simulated demo. Parkline IT, Hollis & Grant and the people named are fictional. Figures are illustrative."
+  autoplay={autoplay}
+  class={['sales-demo', className].filter(Boolean).join(' ')}
+>
+  <Fragment slot="meta">
+    <span class="demo-stack demo-hide-m">
+      <span class="chip chip-running" data-el="st-run" hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span><span data-el="st-run-text">Matching</span></span>
+      <span class="chip chip-done" data-el="st-draft" hidden><Icon name="check" />Draft ready</span>
+      <span class="chip chip-attention" data-el="st-wait" hidden><Icon name="user-check" />Waiting on Sam</span>
+      <span class="chip chip-done" data-el="st-done" data-hide><Icon name="calendar-check" />Scheduled</span>
+    </span>
+  </Fragment>
+
+  <!-- LEFT · the ideal customer profile, then the scored prospect list (steps 1–2) -->
+  <section class="aw-pane aw-pane--sunk sa-pane sa-left is-active" data-pane="list" data-el="list-pane" aria-label="Prospects">
+    <div class="sa-icp is-folded" data-el="icp" data-hide data-final-class="is-folded">
+      <p class="sa-icp__head">
+        <span class="sa-icp__icon"><Icon name="target" /></span>
+        <span class="sa-icp__title">{icp.title}</span>
+        <span class="sa-icp__by">Parkline IT</span>
+        <span class="sa-icp__count">{icp.lines.length} criteria<Icon name="chevron-down" /></span>
+      </p>
+      <dl class="sa-icp__lines" data-el="icp-lines">
+        {icp.lines.map((l) => (
+          <div data-el="icp-line" data-hide><dt>{l.k}:</dt> <dd>{l.v}</dd></div>
+        ))}
+      </dl>
+      <ul class="sa-icp__chips" aria-label="Profile filters">
+        {icp.chips.map((c) => <li data-el="icp-chip" data-hide>{c}</li>)}
+      </ul>
+    </div>
+
+    <p class="sa-stats" data-el="stats" data-hide>
+      <Icon name="search" />
+      <span>Searched <b data-el="searched" data-count>{search.searched}</b> firms · checked against the CRM · <b>{search.matches} match</b></span>
+    </p>
+
+    <ol class="sa-rows" aria-label="Matching firms, by fit score">
+      {prospects.map((p) => (
+        <li
+          class:list={['sa-row', p.pick && 'is-picked', p.desktopOnly && 'demo-hide-m']}
+          data-el="row"
+          data-hide
+          data-pick={p.pick ? '' : undefined}
+          data-final-class={p.pick ? 'is-picked' : undefined}
+        >
+          <span class="sa-fit" aria-label={`Fit ${p.fit} of 100`}>
+            <b class="sa-fit__n" data-el="fit-n" data-count>{p.fit}</b>
+            <span class:list={['sa-fit__track', p.pick && 'is-top']}><i class="sa-fit__bar" style={`--v:${p.fit}%`} data-el="fit-bar" data-grow="x"></i></span>
+          </span>
+          <span class="sa-row__text">
+            <b class="sa-row__firm">{p.firm}</b>
+            <span class="sa-row__meta">{meta(p)}</span>
+            <span class="sa-row__signal">{p.signal}</span>
+          </span>
+        </li>
+      ))}
+    </ol>
+
+    <p class="sa-skip" data-el="skip" data-hide>
+      <span class="sa-skip__icon"><Icon name="minus" /></span>
+      <span>{search.skipped}</span>
+    </p>
+  </section>
+
+  <!-- CENTER · the workspace: the dossier (step 3), then the draft (step 4) -->
+  <section class="aw-pane sa-pane sa-center" data-pane="work" data-el="work-pane" data-autoscroll aria-label="Research and draft">
+    <div class="demo-stack sa-work">
+      <div class="sa-wait" data-el="work-wait" data-placeholder hidden>
+        <div class="skel"><span class="skel__label">Waiting for a prospect</span><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+
+      <div class="sa-dossier" data-el="dossier" data-final-only>
+        <div class="sa-dossier__head">
+          <span class="sa-avatar" aria-hidden="true">{dossier.initials}</span>
+          <span class="sa-dossier__who">
+            <span class="aw-label">{dossier.label}</span>
+            <b>{dossier.person} · {dossier.role}</b>
+          </span>
+          <span class="sa-dossier__check">
+            <span class="sa-dossier__count">10-point check: <b><span data-el="dz-count" data-count>{dossier.checkTotal}</span> of {dossier.checkTotal}</b> complete</span>
+            <span class="sa-segs" aria-hidden="true">
+              {Array.from({ length: dossier.checkTotal }, () => <span><i data-el="dz-seg" data-ghost></i></span>)}
+            </span>
+          </span>
+        </div>
+
+        <ol class="sa-facts">
+          {dossier.facts.map((f, i) => (
+            <li class="sa-fact" data-el="fact" data-hide>
+              <span class="sa-fact__n">{i + 1}</span>
+              <span class="sa-fact__t">{f.fact}</span>
+              <span class="sa-verified"><span class="demo-check" data-check><Icon name="check" /></span>Verified</span>
+              <span class="sa-fact__meta">
+                <span class="sa-fact__src">{f.source}</span>
+                <span class:list={['sa-use', f.inEmail && 'sa-use--email']}>{f.inEmail && <Icon name="mail" />}{f.use}</span>
+              </span>
+            </li>
+          ))}
+          <li class="sa-fact sa-fact--out" data-el="fact-out" data-hide>
+            <span class="sa-fact__x"><Icon name="x" /></span>
+            <span class="sa-fact__t">{dossier.excluded.fact}</span>
+            <span class="sa-fact__meta">
+              <span class="sa-fact__src">{dossier.excluded.note}</span>
+              <span class="sa-use">Left out</span>
+            </span>
+          </li>
+        </ol>
+
+        <p class="sa-also" data-el="also" data-hide><b>Also checked:</b> {dossier.alsoChecked}</p>
+        <div class="aw-note sa-reason" data-el="reason" data-hide>
+          <span class="aw-label">Reason to write now</span>
+          <p>{dossier.reason.charAt(0).toUpperCase() + dossier.reason.slice(1)}</p>
+        </div>
+      </div>
+
+      <div class="sa-draft" data-el="draft" data-hide>
+        <div class="sa-draft__head">
+          <span class="aw-label">Draft<span class="sa-draft__for"> · written for Dana</span></span>
+          <span class="sa-draft__wc"><b data-el="wc" data-count>{emailB.words}</b> words</span>
+          <span class="aw-seg sa-seg" aria-label="Show">
+            <span class="is-on" data-el="seg-b">Sales Agent</span>
+            <span data-el="seg-a">Generic AI</span>
+          </span>
+        </div>
+        <MailB variant="draft" />
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT · checks and sending: quality check (6), approval and schedule (7), follow-up plan (8) -->
+  <section class="aw-pane sa-pane sa-right" data-pane="check" data-el="check-pane" data-autoscroll aria-label="Check and send">
+    <div class="sa-wait" data-el="check-wait" data-placeholder hidden>
+      <div class="skel"><span class="skel__label">Waiting for a draft</span><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="sa-card sa-qc is-folded" data-el="qc" data-hide data-final-class="is-folded">
+      <p class="sa-card__head">
+        <span class="sa-qc__done" aria-hidden="true"><Icon name="check" /></span>
+        <span class="aw-label">{quality.title}</span>
+        <span class="sa-qc__score"><b data-el="qc-count" data-count>{quality.passed}</b> of {quality.passed} passed</span>
+      </p>
+      <div class="sa-qc__body" data-el="qc-body">
+        <ul class="sa-qc__list">
+          {quality.checks.map((c) => (
+            <li data-el="qc-line" data-hide>
+              <span class="demo-check" data-check><Icon name="check" /></span>
+              <span><b>{c.k}:</b> {c.v}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="sa-qc__ready" data-el="qc-ready" data-hide><span class="chip chip-attention"><Icon name="user-check" />{quality.ready}</span></p>
+      </div>
+    </div>
+
+    <div class="sa-card sa-approval" data-el="approval" data-hide>
+      <p class="sa-card__head"><span class="aw-label">{approval.title}</span></p>
+      <div class="demo-stack sa-approval__state">
+        <div class="sa-approval__btns" data-el="ap-btns" data-placeholder hidden>
+          <span class="app-btn app-btn--primary" data-el="approve"><Icon name="check" />Approve</span>
+          <span class="app-btn">Edit</span>
+          <span class="app-btn">Skip</span>
+          <span class="sa-approval__wait"><Icon name="user-check" />Needs Sam’s OK</span>
+        </div>
+        <p class="sa-approval__ok" data-el="ap-ok" data-hide><span class="sa-approval__okicon"><Icon name="check" /></span><span>{approval.approved}</span></p>
+      </div>
+      <ul class="sa-approval__rows" data-el="ap-rows" data-hide>
+        <li data-el="ap-row" data-hide><Icon name="calendar-check" /><span><b>{approval.scheduled.k}:</b> {approval.scheduled.v}</span></li>
+        <li data-el="ap-row" data-hide>
+          <Icon name="send" />
+          <span class="sa-approval__queue">
+            <span><b>{approval.queue.k}:</b> {approval.queue.v}</span>
+            <span class="sa-meter" aria-hidden="true"><i style={`--v:${queuePct}`} data-el="ap-meter" data-grow="x"></i></span>
+          </span>
+        </li>
+        <li data-el="ap-row" data-hide><Icon name="database" /><span><b>{approval.crm.k}:</b> {approval.crm.v}</span></li>
+      </ul>
+    </div>
+
+    <div class="sa-card sa-follow" data-el="follow" data-hide>
+      <p class="sa-card__head"><span class="aw-label">{followUp.title}</span><span class="sa-card__sub">{followUp.condition}</span></p>
+      <ol class="sa-touches">
+        {followUp.touches.map((t) => (
+          <li data-el="touch" data-hide>
+            <span class="sa-touch__when"><span class="sa-touch__day">{t.day}</span> · {t.date}</span>
+            <span class="sa-touch__text">{t.text}</span>
+          </li>
+        ))}
+      </ol>
+      <p class="sa-follow__rules" data-el="rules" data-hide><Icon name="shield-check" /><span>{followUp.rules}</span></p>
+    </div>
+  </section>
+
+  <!-- "Why 94": opens beside the selected row (step 2); phones show it as a bottom sheet -->
+  <div class="sa-why" data-el="why" hidden>
+    <p class="sa-why__title"><b>{why.title}</b><span>Hollis &amp; Grant</span></p>
+    <ul>
+      {why.items.map((item) => <li><Icon name="check" /><span>{item}</span></li>)}
+    </ul>
+  </div>
+
+  <!-- Comparison (step 5): an overlay over the center and right panes. Reduced motion and no JavaScript show it as a
+       static figure under the panes (DEMOS.md §5 "Reduced-motion final state"). -->
+  <div class="sa-compare" data-el="compare" data-final-only role="group" aria-label="The same prospect: a generic AI email beside the Sales Agent's email">
+    <div class="sa-compare__bar">
+      <span class="aw-label">Same sender, same prospect</span>
+      <span class="aw-seg sa-seg sa-compare__toggle" aria-hidden="true"><span class="is-on">Generic</span><span>Sales Agent</span></span>
+    </div>
+    <div class="sa-compare__grid">
+      <div class="sa-compare__col sa-compare__col--a" data-el="cmp-a">
+        <p class="sa-compare__label"><span class="chip chip-blocked"><Icon name="x" />Generic AI email</span></p>
+        <MailA />
+      </div>
+      <div class="sa-compare__col sa-compare__col--b" data-el="cmp-b">
+        <p class="sa-compare__label"><span class="chip chip-done"><Icon name="check" />{emailB.label}</span></p>
+        <MailB variant="compare" />
+      </div>
+    </div>
+  </div>
+</AppWindow>
+
+<script>
+  import { mountDemos } from '@/scripts/demo-engine';
+  import demo from './sales/sales-demo';
+  mountDemos(demo);
+</script>

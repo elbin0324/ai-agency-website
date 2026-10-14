@@ -1,0 +1,66 @@
+---
+// Budget, week 4 → week 5 (DEMOS.md §4 step 6). OWNER: demo-marketing.
+// Week 5 counts up from the week 4 values; each change grows as a diverging bar inside the ±20% cap
+// (the cap ticks are the guardrail, drawn to scale); increases tint green, decreases red, each with an
+// arrow. Then the guardrail check and the queued week 6 step. Hidden at the start and at the end.
+import Icon from '@/components/ui/Icon.astro';
+import { currency } from '@/lib/format';
+import { budget, budgetCap, budgetPct, budgetTotal, guardrailOk, pctLabel, queued } from './data';
+
+const rows = budget.map((r) => {
+  const pct = budgetPct(r);
+  const dir = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
+  return { ...r, pct, dir, v: Math.min(1, Math.abs(pct) / budgetCap) };
+});
+---
+<div class="md-view md-budget" data-el="view-budget" hidden>
+  <div class="md-head">
+    <p class="md-head__title">Weekly budget <span>· week 4 → week 5</span></p>
+    <p class="md-head__aside">Cap: ±{budgetCap}% per campaign per week</p>
+  </div>
+
+  <div class="md-card md-table md-bud">
+    <div class="md-tr md-tr--head">
+      <span class="md-b-name">Campaign</span>
+      <span class="md-num md-b-w4">Week 4</span>
+      <span class="md-num md-b-w5">Week 5</span>
+      <span class="md-b-chg">Change</span>
+      <span class="md-b-why">Why</span>
+    </div>
+    {rows.map((r) => (
+      <div class="md-tr" data-el="budget-row">
+        <span class="md-b-name">{r.name}</span>
+        <span class="md-num md-b-w4 md-muted">{currency(r.w4)}</span>
+        <span class="md-num md-b-w5">
+          {r.dir === 'flat' ? (
+            <span class="md-w5"><span data-el="w5" data-count data-count-from={r.w4}>{currency(r.w5)}</span></span>
+          ) : (
+            <span class={`md-w5 is-${r.dir}`} data-el="chg-cell" data-final-class={`is-${r.dir}`}>
+              <span class="md-w5__arrow" aria-hidden="true" data-ghost>{r.dir === 'up' ? '▲' : '▼'}</span>
+              <span data-el="w5" data-count data-count-from={r.w4}>{currency(r.w5)}</span>
+            </span>
+          )}
+        </span>
+        <span class="md-b-chg md-chg">
+          <span class="md-div" aria-hidden="true">
+            {r.dir !== 'flat' && <i class={`md-div__bar is-${r.dir}`} style={`--v:${r.v.toFixed(3)}`} data-el="chg-bar" data-dir={r.dir} data-grow="x"></i>}
+          </span>
+          <span class="md-chg__v" data-el="chg-pct" data-ghost>{pctLabel(r.pct)}</span>
+        </span>
+        <span class="md-b-why md-why">{r.why}</span>
+      </div>
+    ))}
+    <div class="md-tr md-tr--total">
+      <span class="md-b-name">Total</span>
+      <span class="md-num md-b-w4">{currency(budgetTotal.w4)}</span>
+      <span class="md-num md-b-w5"><span class="md-w5">{currency(budgetTotal.w5)}</span></span>
+      <span class="md-b-chg md-chg"><span class="md-div" aria-hidden="true"></span><span class="md-chg__v">0%</span></span>
+      <span class="md-b-why"></span>
+    </div>
+  </div>
+
+  <div class="md-guardline">
+    <span class="chip chip-done" data-el="guard-ok" data-ghost><Icon name="check" />{guardrailOk}</span>
+    <p class="md-queued" data-el="queued" data-ghost><Icon name="clock" /><span><b>{queued.lead}</b> {queued.text}</span></p>
+  </div>
+</div>

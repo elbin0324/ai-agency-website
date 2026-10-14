@@ -1,0 +1,81 @@
+---
+// Day story, 7:30 am: the Executive Assistant sorts the overnight inbox. OWNER: home-daystory.
+// Rendered inside the moment's app window (DayStory.astro). Final state in the markup; the scroll
+// timeline in day-motion.ts hides the chips and counts first, then plays them in.
+import Icon from '@/components/ui/Icon.astro';
+import { inbox, inboxTotal } from './day-data';
+
+type Row = { who: string; subj: string; status: 'you' | 'done'; label: string };
+const rows: Row[] = [
+  { who: 'Dana Kim, Alder Court HOA', subj: 'Quote for three boiler replacements?', status: 'you', label: 'Needs you' },
+  { who: 'Tom Reyes', subj: 'Can we move Thursday’s maintenance visit?', status: 'you', label: 'Draft · your OK' },
+  { who: 'County Permit Office', subj: 'Permit approved: 418 Birch Rd.', status: 'done', label: 'To Marcus R.' },
+  { who: 'Ridgeline Supply', subj: 'Your Q4 price list is attached', status: 'done', label: 'Filed' },
+  { who: 'Priya Nair', subj: 'Question about invoice #4471', status: 'you', label: 'Draft · your OK' },
+  { who: 'Warranty desk', subj: 'Compressor claim approved, unit 3B', status: 'done', label: 'To Renee K.' },
+];
+const counts = [
+  { n: inbox.needYou, label: 'Need you', you: true },
+  { n: inbox.drafts, label: 'Drafts for your OK', you: true },
+  { n: inbox.tasks, label: 'Tasks assigned', you: false },
+  { n: inbox.filed, label: 'Filed', you: false },
+];
+---
+<div class="sc">
+  <div class="sc-head">
+    <p class="aw-label">Overnight · {inboxTotal} emails</p>
+    <span class="sc-state">
+      <span class="chip chip-running" data-ds="sorting">Sorting<span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+      <span class="chip chip-done" data-ds="sorted"><Icon name="check" />Sorted</span>
+    </span>
+  </div>
+
+  <ul class="sc-counts" role="list">
+    {counts.map((c) => (
+      <li class:list={['sc-count', c.you && 'is-you']}>
+        <b class="num-tab" data-ds-count={c.n}>{c.n}</b>
+        <span>{c.you && <Icon name="user-check" />}{c.label}</span>
+      </li>
+    ))}
+  </ul>
+
+  <ul class="sc-mail" role="list">
+    {rows.map((r) => (
+      <li class="sc-mail__row">
+        <span class="sc-mail__txt"><b>{r.who}</b><span>{r.subj}</span></span>
+        <span class:list={['chip', r.status === 'you' ? 'chip-attention' : 'chip-done']} data-ds="mailchip">
+          <Icon name={r.status === 'you' ? 'user-check' : 'check'} />{r.label}
+        </span>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  .sc { display: flex; flex-direction: column; gap: 14px; min-height: 0; height: 100%; }
+  .sc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .sc-state { display: inline-grid; justify-items: end; }
+  .sc-state > * { grid-area: 1 / 1; }
+  /* Final state: sorted. The scroll timeline swaps "Sorting" in first. */
+  [data-ds="sorting"] { opacity: 0; visibility: hidden; }
+
+  .sc-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .sc-count { display: grid; gap: 4px; padding: 10px 12px; border-radius: var(--radius-tile); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .sc-count b { font-size: var(--text-kpi); font-weight: 600; line-height: 1; letter-spacing: -0.02em; color: var(--color-on); }
+  .sc-count span { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; line-height: 1.3; color: var(--color-on-3); }
+  .sc-count.is-you span { color: var(--color-sky); }
+  .sc-count .icon { width: 12px; height: 12px; stroke-width: 2; }
+
+  .sc-mail { display: grid; min-height: 0; overflow: hidden; border-radius: var(--radius-tile); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .sc-mail__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; padding: 10px 14px; }
+  .sc-mail__row + .sc-mail__row { border-top: 1px solid var(--color-rule-dark); }
+  .sc-mail__txt { display: grid; min-width: 0; }
+  .sc-mail__txt b, .sc-mail__txt span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .sc-mail__txt b { font-size: 0.8125rem; font-weight: 550; color: var(--color-on); }
+  .sc-mail__txt span { font-size: 0.75rem; color: var(--color-on-3); }
+
+  @container (width < 520px) {
+    .sc-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sc-mail__row:nth-child(n + 5) { display: none; }
+  }
+</style>

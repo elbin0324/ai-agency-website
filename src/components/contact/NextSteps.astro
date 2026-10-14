@@ -1,0 +1,83 @@
+---
+// OWNER: pages-misc
+// Beside the form on /contact/: "What happens next" (COPY.md §11.3, id "what-happens-next") as a short
+// vertical run of knots on a brass rule, then the free assessment (§11.4, id "assessment") as
+// "What you leave with". Anchors stay so other pages can link to them.
+import Icon from '@/components/ui/Icon.astro';
+import Button from '@/components/ui/Button.astro';
+import { site } from '@/config/site';
+
+const steps = [
+  { title: 'We reply within one business day', body: 'We find a 30-minute slot that suits you. Video or phone, your choice.' },
+  { title: 'We talk through your business', body: 'How work flows, where the hours go and which tools you use. No preparation needed, though one painful example helps.' },
+  { title: 'You get a written summary', body: 'Typically within 3 business days, from the people who would build your agents. Yours to keep.' },
+];
+
+const leaveWith = [
+  'Your top three AI opportunities, ranked by estimated value and effort',
+  'A rough savings estimate, labeled as a modeled estimate, with the assumptions shown',
+  'A suggested first project and what it would take',
+];
+---
+<div class="nxt">
+  {site.bookingUrl && (
+    <div class="nxt__book">
+      <p class="nxt__book-text">Rather pick a time now?</p>
+      <Button href={site.bookingUrl} variant="secondary" size="sm">Choose a time</Button>
+    </div>
+  )}
+
+  <section id="what-happens-next" class="nxt__block" aria-labelledby="next-title">
+    <p class="type-label nxt__label">What happens next</p>
+    <h2 class="type-h3 nxt__title" id="next-title">Three steps, no pressure.</h2>
+    <ol class="nxt__steps" role="list">
+      {steps.map((s, i) => (
+        <li class="nxt__step">
+          <span class="nxt__knot" aria-hidden="true"></span>
+          <span class="nxt__n">{String(i + 1).padStart(2, '0')}</span>
+          <h3 class="nxt__step-title">{s.title}</h3>
+          <p class="nxt__step-body">{s.body}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section id="assessment" class="nxt__block nxt__block--leave" aria-labelledby="assessment-title">
+    <p class="type-label nxt__label">The free assessment</p>
+    <h2 class="type-h3 nxt__title" id="assessment-title">What you leave with.</h2>
+    <ul class="nxt__leave" role="list">
+      {leaveWith.map((l) => <li><Icon name="check" />{l}</li>)}
+    </ul>
+    <p class="nxt__candid">
+      <b>It isn’t a hard sell.</b> If AI isn’t the right fix for your business right now, we’ll say so and tell you what we’d do instead.
+    </p>
+    <p class="nxt__micro"><Icon name="lock" />Free, with no obligation. We never ask for passwords or system access on the call.</p>
+  </section>
+</div>
+
+<style>
+  .nxt { display: grid; gap: 40px; }
+  .nxt__book { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: var(--radius-tile); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .nxt__book-text { font-size: 0.9375rem; font-weight: 550; color: var(--fg); }
+  .nxt__label { color: var(--accent); }
+  .nxt__title { margin-top: 10px; }
+
+  /* A vertical run of the knots motif (DESIGN.md §7.5), drawn from tokens. */
+  .nxt__steps { margin-top: 24px; }
+  .nxt__step { position: relative; padding: 0 0 26px 28px; border-left: 1px solid color-mix(in srgb, var(--color-brass-500) 45%, transparent); }
+  .nxt__step:last-child { padding-bottom: 0; border-left-color: transparent; }
+  .nxt__knot { position: absolute; left: -6px; top: 2px; width: 11px; height: 11px; border-radius: 50%; background: var(--color-paper); box-shadow: inset 0 0 0 1.5px var(--color-brass-600), 0 0 0 4px var(--color-paper); }
+  .nxt__step:last-child .nxt__knot { background: var(--color-brass-500); }
+  .nxt__n { display: block; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.2; letter-spacing: 0.06em; color: var(--accent); }
+  .nxt__step-title { margin-top: 6px; font-size: 1.0625rem; font-weight: 600; line-height: 1.35; color: var(--fg); }
+  .nxt__step-body { margin-top: 4px; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+
+  .nxt__block--leave { padding-top: 32px; border-top: 1px solid var(--line); }
+  .nxt__leave { display: grid; gap: 12px; margin-top: 20px; }
+  .nxt__leave > li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg); }
+  .nxt__leave :global(.icon) { margin-top: 3px; color: var(--accent); }
+  .nxt__candid { margin-top: 20px; padding: 14px 16px; border-radius: var(--radius-tile); background: var(--color-paper-sunken); box-shadow: inset 2px 0 0 var(--color-brass-500); font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .nxt__candid b { font-weight: 600; color: var(--fg); }
+  .nxt__micro { display: flex; gap: 8px; margin-top: 16px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .nxt__micro :global(.icon) { width: 14px; height: 14px; margin-top: 2px; color: var(--accent-display); }
+</style>

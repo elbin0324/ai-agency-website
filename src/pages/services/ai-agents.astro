@@ -1,0 +1,89 @@
+---
+// OWNER: services-a
+// AI Agents page (content/COPY.md §4, tightened; content/CRITIQUE.md items applied).
+// Order: hero · sticky role nav · Customer, Analyst and Executive Assistant chapters (capabilities,
+// demo, what it's worth, guardrails) · FAQ · closing CTA.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import FaqAccordion from '@/components/blocks/FaqAccordion.astro';
+import Section from '@/components/ui/Section.astro';
+import CustomerAgentDemo from '@/components/demos/CustomerAgentDemo.astro';
+import AnalystDemo from '@/components/demos/AnalystDemo.astro';
+import AssistantDemo from '@/components/demos/AssistantDemo.astro';
+import AgentsConsole from '@/components/services/agents/AgentsConsole.astro';
+import AgentsSubnav from '@/components/services/agents/AgentsSubnav.astro';
+import AgentChapter from '@/components/services/agents/AgentChapter.astro';
+import { getChapter, faqItems } from '@/components/services/agents/content';
+import { getAgentRole } from '@/data/services';
+import { site } from '@/config/site';
+import { url } from '@/lib/url';
+
+const title = 'AI Agents';
+const description =
+  'Customer, Analyst and Executive Assistant agents that answer customers 24/7, do the spreadsheets and handle the inbox. Built and run for you.';
+
+const customer = getAgentRole('customer')!;
+const analyst = getAgentRole('analyst')!;
+const assistant = getAgentRole('assistant')!;
+const faq = faqItems(url('/approach/#controls'));
+---
+<BaseLayout title={title} description={description}>
+  <PageHero
+    crumbs={[{ label: 'Services', href: '/services/' }, { label: 'AI Agents' }]}
+    eyebrow="AI Agents"
+    title="An AI staff for your front desk, *your numbers* and your inbox."
+    subtitle="The Customer Agent talks to your customers. The Analyst Agent works the numbers. The Executive Assistant keeps your inbox, calendar and follow-ups moving. Each one works inside your tools and hands off to a person when it should."
+    secondary={{ label: 'Watch the agents work', href: '#demo-customer-agent', icon: 'play' }}
+    micro="Start with one agent. Add the others when you’re ready."
+  >
+    <AgentsConsole slot="art" />
+  </PageHero>
+
+  <div class="agents-flow">
+    <AgentsSubnav />
+
+    <AgentChapter role={customer} copy={getChapter('customer')} num="01" tightTop>
+      <CustomerAgentDemo slot="demo" />
+    </AgentChapter>
+
+    <AgentChapter role={analyst} copy={getChapter('analyst')} num="02" tone="sunken">
+      <AnalystDemo slot="demo" />
+    </AgentChapter>
+
+    <AgentChapter role={assistant} copy={getChapter('assistant')} num="03">
+      <AssistantDemo slot="demo" />
+    </AgentChapter>
+
+    <Section id="faq" tone="sunken" aria-labelledby="faq-title">
+      <div class="sec-rule" data-reveal>
+        <span class="sec-rule__num">04</span><span class="sec-rule__name">FAQ</span>
+        <span class="sec-rule__line"></span><span class="sec-rule__knot"></span>
+      </div>
+      <div class="faq-grid">
+        <div class="faq-grid__head" data-reveal>
+          <h2 class="type-h2" id="faq-title" data-motion="split">Questions about AI agents.</h2>
+          <p class="type-lead mt-4">Straight answers on disclosure, mistakes, your software and your data. Don’t see yours? Ask us on the free assessment call.</p>
+        </div>
+        <FaqAccordion class="faq-grid__list" jsonLd items={faq} />
+      </div>
+    </Section>
+  </div>
+
+  <CtaBand
+    eyebrow="Free AI assessment"
+    title="Which agent would give you the most time back?"
+    subtitle="On a 30-minute call we’ll look at where your team’s hours go and recommend the agent to start with, with a rough estimate of what it’s worth."
+    secondary={site.ctas.calculator}
+    micro="No cost, no obligation. Written summary either way."
+  />
+</BaseLayout>
+
+<style>
+  .faq-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; }
+  .faq-grid__head { grid-column: 1 / span 4; }
+  .faq-grid :global(.faq-grid__list) { grid-column: 6 / span 7; }
+  @media (width < 64rem) {
+    .faq-grid__head, .faq-grid :global(.faq-grid__list) { grid-column: 1 / -1; }
+  }
+</style>

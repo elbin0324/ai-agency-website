@@ -1,0 +1,34 @@
+---
+// OWNER: results
+// Hero art for /results/: a small paper card that explains the two provenance labels every figure on
+// the site carries (DESIGN.md §6.4, COPY.md §1.3), so readers know what kind of number they are looking at.
+import { url } from '@/lib/url';
+
+const labels = [
+  { tag: 'Modeled estimate', body: 'Calculated from the assumptions shown, like the calculator below. Not a quote, a guarantee or a client result.' },
+  { tag: 'Illustrative example', body: 'A fictional business, modeled end to end with these rules: the six industry scenarios and the worked examples.' },
+];
+---
+<aside class="card label-guide" aria-labelledby="label-guide-title">
+  <p class="type-label label-guide__k" id="label-guide-title">How to read our numbers</p>
+  <ul class="label-guide__list" role="list">
+    {labels.map((l) => (
+      <li>
+        <span class="tag">{l.tag}</span>
+        <p>{l.body}</p>
+      </li>
+    ))}
+  </ul>
+  <p class="label-guide__foot">
+    None of these are client results. Every label links to <a class="link" href={url('/results/#methodology')}>the methodology</a>.
+  </p>
+</aside>
+
+<style>
+  .label-guide { display: grid; gap: 4px; padding: clamp(22px, 2.6vw, 30px); }
+  .label-guide__k { color: var(--fg-2); }
+  .label-guide__list > li { display: grid; gap: 8px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .label-guide__list > li > .tag { justify-self: start; }
+  .label-guide__list p { font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .label-guide__foot { padding-top: 14px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+</style>

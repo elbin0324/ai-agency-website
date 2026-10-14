@@ -193,8 +193,10 @@ export interface DemoContext {
   scroll(container: Target, to?: ScrollTo, opts?: { duration?: number }): Promise<void>;
   /** Mobile: show this pane (data-pane id) unless the visitor picked another one during the step. */
   pane(id: string): void;
-  /** Mobile one-line ticker (AppWindow `ticker` prop): the latest agent action. */
-  ticker(text: string): Promise<void>;
+  /** Mobile one-line ticker (AppWindow `ticker` prop): the latest agent action. The marker turns from the
+   *  neutral typing dots into the sage check for a completed action. `done` defaults to true, except for
+   *  text that reads as still running ("Scanning 4,318 rows", "Writing up…"). */
+  ticker(text: string, opts?: { done?: boolean }): Promise<void>;
   /** Slide the result card up, draw its rule, count its values. Call it in the last step. */
   showResult(): Promise<void>;
 }
@@ -269,6 +271,11 @@ const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t 
 const AUTOPLAY_AT = 0.5; // DEMOS.md §0.2 (DESIGN.md §9.5: DEMOS.md wins on thresholds)
 const PAUSE_BELOW = 0.2;
 const MIN_HOLD = 1200;
+/** Ticker text that reads as still in progress ("Scanning 4,318 rows", "Waiting…"): no check yet (DESIGN.md §2.4). */
+const RUNNING_TEXT = /^\S+ing\b|(?:…|\.\.\.)$/i;
+/** The first play from the idle preview fades the finished scene out and the start state in (ms). */
+const INTRO_OUT = 180;
+const INTRO_IN = 250;
 const NEVER = new Promise<never>(() => {});
 const ZERO = Promise.resolve();
 
@@ -496,6 +503,7 @@ class Player implements DemoController {
   private pointer: SVGSVGElement | null = null;
   private lastSecond = -1;
   private pristine = true; // the scene DOM is still the server-rendered template
+  private introRun: Run | null = null; // the run whose intro fade (idle preview -> start state) is playing
   private ac = new AbortController();
   private io: IntersectionObserver | null = null;
 
@@ -617,16 +625,22 @@ class Player implements DemoController {
 
   // ---------- running
   private begin(mode: 'initial' | 'poster' | 'final'): Run {
+    const run = this.claim();
+    this.restore(mode);
+    return run;
+  }
+  /** A fresh run that has not touched the scene yet (begin() restores it; the intro fade restores it later). */
+  private claim(): Run {
     this.abort();
     const run: Run = { aborted: false };
     this.run = run;
     this.rnd = seeded(hash(this.def.id));
-    this.restore(mode);
     return run;
   }
   private abort() {
     if (this.run) this.run.aborted = true;
     this.run = null;
+    this.introRun = null;
     this.clock.stop();
     this.clock.clear();
     this.anims.forEach((a) => a.cancel());
@@ -635,9 +649,14 @@ class Player implements DemoController {
     this.pointer = null;
   }
   private start(from: number) {
-    const run = this.begin('initial');
+    // Leaving the idle preview (the finished scene), the reset happens inside a short fade, so the demo
+    // reads as starting rather than its content vanishing in one frame. Replay from the result card
+    // (state 'ended'), chapter jumps mid-run and reduced motion reset at once.
+    const intro = this.state === 'idle' && !this.reduced && !!this.stage;
+    const run = intro ? this.claim() : this.begin('initial');
     this.setState('playing');
     void (async () => {
+      if (intro && !(await this.introFade(run))) return;
       for (let i = 0; i < from; i++) await this.execStep(i, run, true);
       for (let i = from; i < this.steps.length; i++) {
         if (run.aborted) return;
@@ -645,6 +664,35 @@ class Player implements DemoController {
       }
       if (!run.aborted) this.finish(run);
     })();
+  }
+  /** Fade the idle preview out (180ms), reset to the start state, fade it in (250ms), then let step 1 start.
+   *  The fades live in `anims`, so Pause freezes them and any abort cancels them (the stage snaps back to
+   *  opacity 1). Resolves false when the run was aborted on the way. */
+  private async introFade(run: Run): Promise<boolean> {
+    const stage = this.stage!;
+    this.introRun = run;
+    const fade = (from: number, to: number, duration: number) => {
+      const anim = stage.animate([{ opacity: from }, { opacity: to }], { duration, easing: EASE_OUT, fill: 'forwards' });
+      this.anims.add(anim);
+      if (this.state === 'paused') anim.pause();
+      return anim;
+    };
+    const settled = (anim: Animation) => anim.finished.then(() => !run.aborted, () => false);
+    const drop = (anim: Animation) => {
+      anim.cancel();
+      this.anims.delete(anim);
+    };
+    const out = fade(1, 0, INTRO_OUT);
+    let ok = await settled(out);
+    if (ok) {
+      this.restore('initial');
+      const into = fade(0, 1, INTRO_IN); // holds opacity 0 from its first frame, so `out` can go now
+      drop(out);
+      ok = await settled(into);
+      drop(into);
+    }
+    if (this.introRun === run) this.introRun = null;
+    return ok && !run.aborted;
   }
   private async playStep(i: number, run: Run) {
     const step = this.steps[i];
@@ -736,6 +784,9 @@ class Player implements DemoController {
     this.pointer = null;
     this.hideResult();
     const scope = this.root;
+    // The ticker element is a scene root itself, so its class is not part of the restored template:
+    // check in the finished scene, neutral typing dots at the start (ctx.ticker() sets it from then on).
+    scope.querySelectorAll('.aw-ticker').forEach((el) => el.classList.toggle('is-done', mode !== 'initial'));
     if (mode === 'initial') {
       this.applyInitial(scope);
       if (this.def.reset) this.safe(() => this.def.reset?.(this.context({ aborted: false }, 0, true)));
@@ -885,7 +936,7 @@ class Player implements DemoController {
     this.timeEl.textContent = `${fmtTime(elapsed)} / ${fmtTime(this.total)}`;
   }
   private onFrame() {
-    if (this.state !== 'playing') return;
+    if (this.state !== 'playing' || this.introRun) return; // the intro fade is not part of step 1's time
     const step = this.steps[this.step];
     if (!step) return;
     const into = this.clock.t - this.stepStart;
@@ -1585,9 +1636,12 @@ class Player implements DemoController {
       pane: (id) => {
         if (!dead()) p.showPane(id, instant ? 'step' : 'ctx');
       },
-      ticker: async (text) => {
+      ticker: async (text, opts) => {
         if (dead()) return NEVER;
-        await swapText(root.querySelector('[data-demo-ticker]'), text, { duration: 200 });
+        const line = root.querySelector<HTMLElement>('[data-demo-ticker]');
+        const done = opts?.done ?? !RUNNING_TEXT.test(text.trim());
+        line?.closest('.aw-ticker')?.classList.toggle('is-done', done); // check = done, typing dots = running
+        await swapText(line, text, { duration: 200 });
       },
       showResult: async () => {
         if (dead()) return NEVER;

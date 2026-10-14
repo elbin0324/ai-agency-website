@@ -53,8 +53,12 @@ const revealAttr = reveal ? { 'data-reveal': '' } : {};
       <span class="step__n">{pad(i + 1)}</span>
       <H class="step__title">{s.title}</H>
       {s.body && <p class="step__body">{s.body}</p>}
-      {s.time && <p class="step__time"><Icon name="clock" />{s.time}</p>}
-      {s.get && <p class="step__get"><span>{getLabel}</span>{s.get}</p>}
+      {(s.time || s.get) && (
+        <div class="step__foot">
+          {s.time && <p class="step__time"><Icon name="clock" />{s.time}</p>}
+          {s.get && <p class="step__get"><span>{getLabel}</span>{s.get}</p>}
+        </div>
+      )}
     </div>
   ))}
 </div>

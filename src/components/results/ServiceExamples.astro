@@ -1,0 +1,89 @@
+---
+// OWNER: results
+// The six per-service worked examples on /results/ (@/data/worth), one tab each in the site's demo
+// order. Each panel: the WorthExample card, then its assumptions (including what isn't counted), the
+// source ids (linked to the methodology list) and the matching demo. Deep links #example-{id}
+// (customer, analyst, assistant, marketing, sales, consulting) select the tab and scroll to it.
+import Tabs from '@/components/blocks/Tabs.astro';
+import WorthExample from '@/components/blocks/WorthExample.astro';
+import { worthExamples } from '@/data/worth';
+import { demos } from '@/data/services';
+import { sourceHref } from './sources';
+
+const items = demos
+  .map((d) => ({ demo: d, ex: worthExamples.find((e) => e.id === d.id) }))
+  .filter((x): x is { demo: (typeof demos)[number]; ex: (typeof worthExamples)[number] } => !!x.ex);
+const tabs = items.map(({ demo }) => ({ id: demo.id, label: demo.label, icon: demo.icon }));
+---
+<div class="svc-ex" data-svc-examples>
+  <Tabs label="Worked examples by service" tabs={tabs} idPrefix="worked" listClass="svc-ex__tabs">
+    {items.map(({ demo, ex }) => (
+      <Fragment slot={demo.id}>
+        <div class="svc-ex__panel">
+          <WorthExample
+            example={ex}
+            id={`example-${ex.id}`}
+            reveal={false}
+            link={{ label: `Watch the ${demo.label} demo`, href: `/demos/#${demo.anchor}` }}
+          />
+          <div class="svc-ex__notes">
+            <div class="svc-ex__assume">
+              <p class="type-label svc-ex__label">Assumptions</p>
+              <ul class="svc-ex__list" role="list">
+                {ex.assumptions.map((a) => {
+                  const notCounted = /^not counted:/i.test(a);
+                  return (
+                    <li class:list={[notCounted && 'is-excluded']}>
+                      {notCounted ? <Fragment><b>Not counted:</b>{a.replace(/^not counted:/i, '')}</Fragment> : a}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <div class="svc-ex__side">
+              <p class="type-label svc-ex__label">Sources</p>
+              <p class="svc-ex__sources">
+                {ex.sources.map((id, i) => <Fragment>{i > 0 && <span aria-hidden="true"> · </span>}<a href={sourceHref(id)}>{id}</a></Fragment>)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </Fragment>
+    ))}
+  </Tabs>
+</div>
+
+<style>
+  .svc-ex :global(.svc-ex__tabs) { flex-wrap: wrap; margin-bottom: 24px; }
+  .svc-ex__panel { display: grid; gap: 28px; }
+  .svc-ex__notes { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 28px 48px; padding: 0 clamp(20px, 3vw, 36px); }
+  .svc-ex__label { padding-bottom: 8px; border-bottom: 1px solid var(--line-strong); color: var(--fg-2); }
+  .svc-ex__list { display: grid; gap: 0; }
+  .svc-ex__list > li { position: relative; padding: 10px 0 10px 20px; border-bottom: 1px solid var(--line); font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .svc-ex__list > li::before { content: ""; position: absolute; left: 1px; top: calc(10px + 0.58em); width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 1.25px var(--accent-line); }
+  .svc-ex__list > li.is-excluded { color: var(--fg-3); }
+  .svc-ex__list b { font-weight: 600; color: var(--fg); }
+  .svc-ex__sources { margin-top: 12px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.8; color: var(--fg-3); }
+  .svc-ex__sources a { white-space: nowrap; color: var(--fg-2); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  .svc-ex__sources a:hover { color: var(--fg); text-decoration-color: currentColor; }
+  @media (width < 64rem) {
+    .svc-ex__notes { grid-template-columns: minmax(0, 1fr); padding: 0; }
+  }
+  @media (width < 40rem) {
+    .svc-ex :global(.svc-ex__tabs) { flex-wrap: nowrap; }
+  }
+</style>
+
+<script>
+  // #example-{id}: select that tab, then scroll to the card.
+  function openFromHash() {
+    const m = window.location.hash.match(/^#example-([\w-]+)$/);
+    if (!m) return;
+    const root = document.querySelector<HTMLElement>('[data-svc-examples] [data-tabs]');
+    if (!root) return;
+    root.dispatchEvent(new CustomEvent('tabs:select', { detail: { id: m[1] } }));
+    requestAnimationFrame(() => document.getElementById(`example-${m[1]}`)?.scrollIntoView({ block: 'start' }));
+  }
+  window.addEventListener('hashchange', openFromHash);
+  openFromHash();
+</script>

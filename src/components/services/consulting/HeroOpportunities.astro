@@ -1,0 +1,72 @@
+---
+// OWNER: services-b
+// Hero art for /services/consulting/: a ranked-opportunities window (reference: design-lab/reference/consulting.html).
+// Figures come from the consulting worked example in @/data/worth (the same business as "What it's worth"
+// lower on the page), never retyped: each lever's counted value, sorted, with the identified total.
+import { getWorth } from '@/data/worth';
+import Icon from '@/components/ui/Icon.astro';
+import { currency } from '@/lib/format';
+
+const ex = getWorth('consulting')!;
+const money = (s: string) => Number(s.replace(/[^0-9.]/g, ''));
+// Lever rows look like "Pricing: reprice quotes on current material costs" with a value such as "$30,000".
+const levers = ex.math
+  .filter((r) => /^[A-Z][a-z]+:/.test(r.label) && !/^Controller/.test(r.label))
+  .map((r) => ({ name: r.label.split(':')[0], detail: r.label.split(':')[1]?.trim() ?? '', value: money(r.value) }))
+  .sort((a, b) => b.value - a.value);
+const max = Math.max(...levers.map((l) => l.value));
+const identified = ex.math.find((r) => /^identified$/i.test(r.label))?.value ?? '';
+const counted = ex.math.find((r) => /^counted in year one$/i.test(r.label))?.value ?? '';
+// The caption reconciles the window's counted total with the annual value lower on the page,
+// which also counts the controller time the plan gives back.
+const controllerHours = ex.hoursPerMonth ?? 0;
+const size = ex.profile.split(':')[1]?.split(/[(,]/)[0]?.trim() ?? '';
+const kind = ex.profile.split(':')[0].replace(/^Fictional\s+/i, '');
+const summary = `Five savings opportunities for ${ex.business}, a fictional ${kind}, ranked by counted value per year: ${levers.map((l) => `${l.name} ${currency(l.value)}`).join(', ')}. ${counted} counted of ${identified} identified.`;
+---
+<figure class="hop">
+  <div class="app-window" role="img" aria-label={summary}>
+    <div class="aw-bar">
+      <span class="aw-dots"><i></i><i></i><i></i></span>
+      <span class="aw-crumb"><b>Opportunities</b><span class="aw-crumb__sep">/</span><span>Ranked by counted value</span></span>
+      <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+    </div>
+    <div class="aw-pane hop__pane">
+      <div class="chart">
+        <div class="chart__head">
+          <div>
+            <p class="chart__title">Counted savings, year one</p>
+            <p class="chart__sub">Half of anything that depends on a negotiation</p>
+          </div>
+          <span class="chip chip-done"><Icon name="check" />{levers.length} found</span>
+        </div>
+        <div class="hbars">
+          {levers.map((l, i) => (
+            <div class="hbar">
+              <span class="hbar__label">{l.name}</span>
+              <span class="hbar__track"><span class:list={['hbar__fill', i > 0 && 'hbar__fill--context']} style={`--v:${((l.value / max) * 100).toFixed(1)}%`}></span></span>
+              <span class="hbar__val">{currency(l.value)}</span>
+            </div>
+          ))}
+        </div>
+        <p class="chart__note">Total: {counted} counted of {identified} identified</p>
+      </div>
+      <div class="hop__review">
+        <span class="chip chip-attention"><Icon name="user-check" />Reviewed by a person</span>
+        <span class="hop__review-t">Every finding links to its source rows</span>
+      </div>
+    </div>
+  </div>
+  <figcaption class="fig-caption hop__cap"><b>FIG. 1</b> Illustrative interface. {ex.business} is a fictional {kind}{size ? `, ${size}` : ''}. The {counted} counted here, plus {controllerHours} controller hours a month, makes the {currency(ex.annualValue)} a year in “What it’s worth” below.</figcaption>
+</figure>
+
+<style>
+  .hop { margin: 0; }
+  .hop__pane { padding: 22px 24px 20px; }
+  .hop .hbars { margin-top: 6px; }
+  .hop__review { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--color-rule-dark); }
+  .hop__review-t { font-size: 0.75rem; color: var(--color-on-3); }
+  .hop__cap { margin-top: 14px; max-width: 56ch; }
+  /* phones: keep the window title to its first crumb rather than truncating mid-word */
+  @media (width < 40rem) { .hop .aw-crumb__sep, .hop .aw-crumb > span:last-child { display: none; } }
+</style>

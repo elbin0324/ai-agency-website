@@ -1,0 +1,98 @@
+---
+// Analyst Agent demo: a messy export becomes cleaned data, formulas, a pivot, a chart and a plain-English report
+// (content/DEMOS.md §2). OWNER: demo-analyst.
+// Render the demo only: the page supplies the <section> and its anchor (the same demo appears on /demos/ and a
+// service page). Steps and captions: ./analyst/analyst-demo.ts. Panes: ./analyst/AnalystSheet.astro (the client's
+// spreadsheet, on paper) and ./analyst/AnalystPanel.astro (the agent, on navy). Engine guide: DEMO_ENGINE.md.
+import AppWindow from '@/components/demo/AppWindow.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+import AnalystSheet from './analyst/AnalystSheet.astro';
+import AnalystPanel from './analyst/AnalystPanel.astro';
+import { business, fileName } from './analyst/data';
+import demo from './analyst/analyst-demo';
+
+interface Props {
+  /** false: never autoplay (page code drives it with demo:play, e.g. DemoTheater). */
+  autoplay?: boolean;
+  class?: string;
+}
+const { autoplay = true, class: className } = Astro.props;
+// Keep source ids whole in the tile bases: a word joiner after the hyphen stops a break at "ai-" / "21"
+// (the same helper the Customer, Sales and Consulting demos use).
+const ids = (s: string) => s.replace(/\b([a-z]+)-(\d+)\b/g, '$1-\u2060$2');
+---
+<AppWindow
+  demo={demo.id}
+  steps={demo.steps}
+  title={`${fileName} · ${business}`}
+  label={`${site.name} Analyst Agent · ${business}`}
+  columns="64% 36%"
+  tabs={[{ id: 'sheet', label: 'Spreadsheet' }, { id: 'agent', label: `${site.name} Analyst` }]}
+  height={540}
+  mobileHeight={480}
+  ticker="Done in 3 min 48 s · ready for review"
+  tickerStart="Waiting for the export"
+  autoplay={autoplay}
+  class={className}
+  result={{
+    metrics: [
+      {
+        // Lead with the modeled saving, not the run time: a big "4 min" read as "6 hours down to 4 minutes" and
+        // contradicted its own basis. The speed story stays in the step-7 caption ("Done in under 4 minutes…").
+        value: '36',
+        unit: 'min',
+        label: 'Modeled time saved this run',
+        basis: ids('The agent ran 3 min 48 s and Priya still reviews the Log, so we count 10% of a ~6-hr manual job, the measured rate for spreadsheet work (ai-23, ai-21).'),
+      },
+      {
+        value: '$46,780',
+        label: 'Q3 margin leaks found',
+        basis: ids('Identified, not yet recovered: freight $23,056 + glove costs $9,724 + expired discount $14,000 (pnl-28, pnl-29).'),
+      },
+      {
+        value: '~$28K',
+        unit: 'a month',
+        label: 'At stake at September’s pace',
+        basis: ids('Sep: freight $15,265 + gloves $8,227 + discount $4,667 (Q3’s $14,000 ÷ 3), on a 25.3% margin (pnl-06, pnl-16).'),
+      },
+    ],
+    label: 'Illustrative example',
+  }}
+  microcopy={`Simulated demo. ${business} and the people named are fictional. Figures are illustrative.`}
+>
+  <Fragment slot="meta">
+    <span class="demo-stack demo-hide-m">
+      <span class="chip chip-running" data-el="st-work" data-hide hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>Working</span>
+      <span class="chip chip-attention" data-el="st-review" data-hide><Icon name="user-check" />Ready for review</span>
+    </span>
+  </Fragment>
+
+  <AnalystSheet />
+  <AnalystPanel />
+</AppWindow>
+
+<script>
+  import { mountDemos } from '@/scripts/demo-engine';
+  import demo from './analyst/analyst-demo';
+  mountDemos(demo);
+</script>
+
+<style>
+  /* Static views (reduced motion, no JavaScript): the scene grows to show the whole report, and the
+     spreadsheet stays in view beside it (position: sticky in AnalystSheet). `clip` keeps the window's
+     rounded clipping without creating a scroll container, which would stop the sticky pane. */
+  @media (prefers-reduced-motion: reduce) {
+    :global([data-demo="analyst"] .app-window), :global([data-demo="analyst"] .aw-scene), :global([data-demo="analyst"] .aw-scene > .ax-app) { overflow: clip; }
+  }
+  :global(html.no-js [data-demo="analyst"] .app-window), :global(html.no-js [data-demo="analyst"] .aw-scene), :global(html.no-js [data-demo="analyst"] .aw-scene > .ax-app) { overflow: clip; }
+
+  /* Phones, static views: the scene keeps the phone height. demo.css sets min-height: var(--aw-h) (the
+     desktop 540px) there, which left a 60px empty band under the 480px sheet. */
+  @media (prefers-reduced-motion: reduce) and (width < 48rem) {
+    :global(.aw-demo[data-demo="analyst"] .aw-scene) { min-height: var(--aw-h-m, 480px); }
+  }
+  @media (width < 48rem) {
+    :global(html.no-js .aw-demo[data-demo="analyst"] .aw-scene) { min-height: var(--aw-h-m, 480px); }
+  }
+</style>

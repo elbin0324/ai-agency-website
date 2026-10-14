@@ -1,0 +1,56 @@
+---
+// OWNER: theater. One demo on /demos/: numbered section rule, headline, the setup, a service link and
+// "Watch for" (what to notice) beside it, then the demo itself (default slot) at full container width.
+// Renders its own <section id={copy.anchor}> (the anchors other pages link to: /demos/#sales-agent, …).
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { url } from '@/lib/url';
+import type { DemoCopy } from './demo-copy';
+
+interface Props {
+  copy: DemoCopy;
+  /** Section rule number, "01" to "06". */
+  num: string;
+  tone?: 'paper' | 'sunken';
+}
+
+const { copy, num, tone = 'paper' } = Astro.props;
+const titleId = `${copy.anchor}-title`;
+---
+<Section id={copy.anchor} tone={tone} class="demo-chapter" aria-labelledby={titleId}>
+  <SectionHeader num={num} eyebrow={copy.eyebrow} />
+  <div class="chapter-head">
+    <div class="chapter-head__main" data-reveal data-reveal-delay="80">
+      <h2 class="type-h2" id={titleId} data-motion="split">{copy.headline}</h2>
+      <p class="type-lead chapter-head__promise">{copy.promise}</p>
+      <a class="link-arrow chapter-head__link" href={url(copy.link.href)}><span>{copy.link.label}</span><Icon name="arrow-right" /></a>
+    </div>
+    <div class="chapter-head__watch" data-reveal data-reveal-delay="160">
+      <p class="type-label" id={`${copy.anchor}-watch`}>Watch for</p>
+      <ul class="ledger-list chapter-head__list" aria-labelledby={`${copy.anchor}-watch`}>
+        {copy.watch.map((w) => <li>{w}</li>)}
+      </ul>
+    </div>
+  </div>
+  <div class="chapter-demo" data-reveal>
+    <slot />
+  </div>
+</Section>
+
+<style>
+  .chapter-head {
+    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 32px;
+    align-items: end; margin-bottom: clamp(32px, 4vw, 52px);
+  }
+  .chapter-head__main { grid-column: 1 / span 7; }
+  .chapter-head__watch { grid-column: 9 / span 4; }
+  .chapter-head__promise { margin-top: 18px; max-width: 54ch; }
+  .chapter-head__link { margin-top: 14px; }
+  .chapter-head__list { margin-top: 12px; }
+  @media (width < 64rem) {
+    .chapter-head { row-gap: 24px; }
+    .chapter-head__main, .chapter-head__watch { grid-column: 1 / -1; }
+    .chapter-head__watch { max-width: 36rem; }
+  }
+</style>

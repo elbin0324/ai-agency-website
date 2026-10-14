@@ -1,0 +1,52 @@
+---
+// OWNER: services-a
+// The 40px service drawings for the 56px navy icon tiles (DESIGN.md §8.1 "Service art"), copied from
+// the reference #services markup: ivory strokes at 1.4px with one brass-filled element each.
+import type { ServiceSlug } from '@/data/services';
+
+interface Props { slug: ServiceSlug }
+const { slug } = Astro.props;
+---
+<svg class="svc-art" viewBox="0 0 44 44" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+  {slug === 'ai-agents' && (
+    <Fragment>
+      <path d="M22 12.5 12.5 30M22 12.5 31.5 30M12.5 30h19" stroke-opacity=".55" />
+      <circle cx="22" cy="11" r="4.25" class="svc-art__brass" />
+      <circle cx="11.5" cy="31.5" r="4.25" class="svc-art__navy" />
+      <circle cx="32.5" cy="31.5" r="4.25" class="svc-art__navy" />
+    </Fragment>
+  )}
+  {slug === 'marketing' && (
+    <Fragment>
+      <path d="M7 36.5h30" stroke-opacity=".4" />
+      <path d="M8 30.5 16 23l6 4.5 12-14" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="16" cy="23" r="2.25" class="svc-art__navy" />
+      <circle cx="22" cy="27.5" r="2.25" class="svc-art__navy" />
+      <circle cx="34.5" cy="12.5" r="3.75" class="svc-art__brass" />
+    </Fragment>
+  )}
+  {slug === 'sales' && (
+    <Fragment>
+      <rect x="7" y="11.5" width="30" height="21" rx="2.5" />
+      <path d="M7.8 12.6 22 23.5l14.2-10.9" stroke-linejoin="round" />
+      <circle cx="22" cy="24.5" r="4.5" class="svc-art__brass" />
+      <path d="M20.2 24.6l1.3 1.3 2.4-2.6" class="svc-art__ink" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+    </Fragment>
+  )}
+  {slug === 'consulting' && (
+    <Fragment>
+      <path d="M7 36.5h30" stroke-opacity=".4" />
+      <rect x="8.5" y="22" width="5" height="14.5" rx="1" />
+      <rect x="15.5" y="17.5" width="5" height="4.5" rx="1" />
+      <rect x="22.5" y="13" width="5" height="4.5" rx="1" />
+      <path d="M13.5 22h2M20.5 17.5h2M27.5 13h2" stroke-opacity=".55" />
+      <rect x="29.5" y="13" width="5" height="23.5" rx="1" class="svc-art__brass" />
+    </Fragment>
+  )}
+</svg>
+
+<style>
+  .svc-art__brass { fill: var(--color-brass-400); stroke: var(--color-brass-200); }
+  .svc-art__navy { fill: var(--color-navy-800); }
+  .svc-art__ink { stroke: var(--color-navy-800); }
+</style>

@@ -1,0 +1,139 @@
+---
+// Internal test page for the demo engine (noindex, excluded from the sitemap). OWNER: demo engine.
+// 1. The reference demo (autoplays at 50% in view).  2. A mock DemoTheater: tabs over hidden panels driven
+// with demo:play / demo:pause / demo:reset, plus a log of demo:step / demo:ended. Three instances, one page.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import SampleDemo from '@/components/demo/SampleDemo.astro';
+import LineChart from '@/components/demo/LineChart.astro';
+import BarChart from '@/components/demo/BarChart.astro';
+import ChatBubble from '@/components/demo/ChatBubble.astro';
+import ChatComposer from '@/components/demo/ChatComposer.astro';
+import SheetGrid from '@/components/demo/SheetGrid.astro';
+import { currency } from '@/lib/format';
+---
+<BaseLayout title="Demo engine" noindex>
+  <main id="main">
+    <Section id="engine-intro" size="tight">
+      <Eyebrow>Engine test page</Eyebrow>
+      <h1 class="type-h1 mt-4">The demo engine, <em>one reference demo</em>.</h1>
+      <p class="type-lead mt-5">Six steps that use every helper: a typed request, a streamed reply, a sheet that fills, a struck duplicate, a chart that grows, an approval click and the result card. Copy <code>SampleDemo.astro</code> and <code>sample-demo.ts</code> to start a real demo; the API is in <code>DEMO_ENGINE.md</code>.</p>
+    </Section>
+
+    <Section id="sample" tone="sunken" aria-labelledby="sample-title">
+      <SectionHeader num="01" eyebrow="Reference demo" title="Six steps, every helper." titleId="sample-title" subtitle="Autoplays at 50% in view, pauses under 20% or when the tab is hidden, holds on the result card. Try pause, replay, the chapters and Skip to result." />
+      <SampleDemo />
+    </Section>
+
+    <Section id="theater" aria-labelledby="theater-title">
+      <SectionHeader num="02" eyebrow="Programmatic control" title="Tabs drive the player with events." titleId="theater-title" subtitle="The light panel starts hidden, so it never autoplays. Switching tabs resets the old demo and plays the new one. The buttons send events to the visible demo." />
+      <div class="theater" data-theater>
+        <div class="demo-tabs" role="tablist" aria-label="Sample demo variants">
+          <button class="demo-tab" type="button" role="tab" id="tab-dark" aria-controls="panel-dark" aria-selected="true">Navy panes</button>
+          <button class="demo-tab" type="button" role="tab" id="tab-light" aria-controls="panel-light" aria-selected="false" tabindex="-1">Light scene</button>
+        </div>
+        <div role="tabpanel" id="panel-dark" aria-labelledby="tab-dark"><SampleDemo /></div>
+        <div role="tabpanel" id="panel-light" aria-labelledby="tab-light" hidden><SampleDemo variant="light" /></div>
+        <div class="theater__bar">
+          <div class="theater__cmds">
+            <button class="btn btn-secondary btn-sm" type="button" data-cmd="demo:play">demo:play</button>
+            <button class="btn btn-secondary btn-sm" type="button" data-cmd="demo:pause">demo:pause</button>
+            <button class="btn btn-secondary btn-sm" type="button" data-cmd="demo:reset">demo:reset</button>
+          </div>
+          <p class="math" data-log-last>Events appear here.</p>
+        </div>
+        <ol class="theater__log math" data-log></ol>
+      </div>
+    </Section>
+
+    <Section id="parts" tone="sunken" aria-labelledby="parts-title">
+      <SectionHeader num="03" eyebrow="Shared parts" title="Static parts, final state." titleId="parts-title" subtitle="The building blocks in src/components/demo, rendered without the engine (animate off). Inside an AppWindow the same markup animates." />
+      <div class="parts">
+        <div class="app-window parts__win">
+          <div class="aw-pane">
+            <LineChart animate={false} title="Cost per lead" sub="Fictional data" label="Cost per lead fell from $71 to $46" labels={['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']} format={(n) => currency(n)} max={80}
+              series={[{ name: 'Before', values: [71, 72, 70, 71, 72, 71], tone: 'context', end: false }, { name: 'With the agent', values: [71, 66, 58, 52, 48, 46], tone: 'accent' }]} note="Illustrative example: fictional data" />
+          </div>
+        </div>
+        <div class="app-window parts__win">
+          <div class="aw-pane">
+            <BarChart animate={false} title="Hours back by agent" label="The Analyst Agent returned the most hours" values="accent" format={(n) => `${n} h`} bars={[{ label: 'Customer', value: 9 }, { label: 'Analyst', value: 14, accent: true }, { label: 'Assistant', value: 11 }]} />
+          </div>
+        </div>
+        <div class="aw-doc parts__doc">
+          <div class="chat">
+            <div class="chat-list">
+              <ChatBubble from="agent" hide={false} meta="AI assistant · 9:47 pm">Hi! I can answer questions, give price ranges and book service, day or night.</ChatBubble>
+              <ChatBubble from="user" hide={false} meta="Jenna · 9:47 pm">My AC is buzzing. How soon can you come?</ChatBubble>
+            </div>
+            <ChatComposer el="parts-composer" />
+          </div>
+        </div>
+        <SheetGrid animate={false} fade minWidth="36rem" cell="E4" formula="=C4*D4" class="parts__sheet"
+          columns={['SKU', 'Item', { label: 'Qty', num: true }, { label: 'Unit', num: true }, { label: 'Line', num: true }]}
+          rows={[['A-102', 'Copper elbow ½"', 40, '$2.10', '$84.00'], ['A-215', 'PEX tubing 100 ft', 6, '$38.50', '$231.00'], ['B-007', 'Ball valve ¾"', 12, '$9.75', '$117.00']]} />
+      </div>
+    </Section>
+  </main>
+</BaseLayout>
+
+<script>
+  // Mock DemoTheater: shows how page code drives demos with events (DEMO_ENGINE.md "Programmatic control").
+  document.querySelectorAll<HTMLElement>('[data-theater]').forEach((theater) => {
+    const tabs = Array.from(theater.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const panelOf = (tab: HTMLElement) => document.getElementById(tab.getAttribute('aria-controls') ?? '');
+    const demoIn = (panel: Element | null) => panel?.querySelector<HTMLElement>('[data-demo]') ?? null;
+    const visibleDemo = () => demoIn(theater.querySelector('[role="tabpanel"]:not([hidden])'));
+    const select = (tab: HTMLButtonElement) => {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        const panel = panelOf(t);
+        if (!on && !panel?.hidden) demoIn(panel)?.dispatchEvent(new CustomEvent('demo:reset'));
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (panel) panel.hidden = !on;
+      });
+      demoIn(panelOf(tab))?.dispatchEvent(new CustomEvent('demo:play'));
+    };
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => select(tab));
+      tab.addEventListener('keydown', (e) => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return;
+        const next = tabs[(i + d + tabs.length) % tabs.length];
+        next.focus();
+        select(next);
+      });
+    });
+    theater.querySelectorAll<HTMLButtonElement>('[data-cmd]').forEach((b) =>
+      b.addEventListener('click', () => visibleDemo()?.dispatchEvent(new CustomEvent(b.dataset.cmd ?? ''))),
+    );
+    const log = theater.querySelector('[data-log]');
+    const last = theater.querySelector('[data-log-last]');
+    const write = (text: string) => {
+      if (last) last.textContent = text;
+      const li = document.createElement('li');
+      li.textContent = text;
+      log?.prepend(li);
+      while (log && log.children.length > 6) log.lastElementChild?.remove();
+    };
+    theater.addEventListener('demo:step', (e) => {
+      const d = (e as CustomEvent).detail;
+      write(`demo:step · ${d.id} · ${d.index + 1}/${d.total} · ${d.label}`);
+    });
+    theater.addEventListener('demo:ended', (e) => write(`demo:ended · ${(e as CustomEvent).detail.id}`));
+  });
+</script>
+
+<style>
+  .theater__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin-top: 18px; }
+  .theater__cmds { display: flex; flex-wrap: wrap; gap: 8px; }
+  .theater__log { display: grid; gap: 2px; margin-top: 10px; }
+  .parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .parts__doc { padding: 16px; }
+  .parts__doc .chat { height: auto; }
+  @media (width < 48rem) { .parts { grid-template-columns: minmax(0, 1fr); } }
+  code { padding: 1px 6px; border-radius: 5px; background: var(--color-paper-sunken); font-family: var(--font-mono); font-size: 0.875em; color: var(--color-ink); }
+</style>

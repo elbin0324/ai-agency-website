@@ -1,0 +1,35 @@
+---
+// OWNER: theater. /demos/ "What's real here" (COPY.md §8.10): what is real, fictional and illustrative.
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { url } from '@/lib/url';
+
+interface Props {
+  num: string;
+  tone?: 'paper' | 'sunken';
+}
+const { num, tone = 'sunken' } = Astro.props;
+---
+<Section id="whats-real" tone={tone} aria-labelledby="whats-real-title">
+  <SectionHeader
+    num={num}
+    eyebrow="What’s real here"
+    titleId="whats-real-title"
+    subtitle="These are scripted simulations, not recordings of client work. The workflows, checks, approvals and handoffs are the ones we build."
+  ><span slot="title" data-motion="split">Simulated, but not made up.</span></SectionHeader>
+  <div data-motion="stagger" data-stagger-target="li"><FeatureGrid
+    variant="cells"
+    cols={3}
+    label="What’s real, fictional and illustrative"
+    items={[
+      { icon: 'circle-check', title: 'Real', body: 'The steps, the guardrails and the handoff rules.' },
+      { icon: 'users', title: 'Fictional', body: 'The businesses, the people and the conversations.' },
+      { icon: 'calculator', title: 'Illustrative', body: 'Every figure and every result card.' },
+    ]}
+  /></div>
+  <p class="mt-6" data-reveal>
+    <a class="link-arrow" href={url('/results/#methodology')}><span>How we estimate</span><Icon name="arrow-right" /></a>
+  </p>
+</Section>

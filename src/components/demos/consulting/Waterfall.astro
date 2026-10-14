@@ -1,0 +1,74 @@
+---
+// Consulting demo, step 5: EBITDA margin waterfall, counted savings (DEMOS.md §6 chart spec; DESIGN.md
+// §3.4–§3.5 `.wf`). OWNER: demo-consulting. Y axis 0–10%, gridlines every 2%; today's total in
+// --viz-total, each counted saving in --viz-accent floating up from the running total, the modeled
+// margin in --viz-result. Labels never scale (HTML on the .wf grid); phones switch to data-short labels.
+//
+// The engine can only grow real elements, so each bar's fill and connector are spans (.wf__fill,
+// .wf__link) with the exact geometry of global.css's .wf__bar::before / ::after, which are switched off here.
+import { business, waterfall, waterfallFinding, waterfallNote, waterfallTitle } from './data';
+
+interface Props {
+  /** Start-state attributes for the engine (default true). */
+  animate?: boolean;
+}
+const { animate = true } = Astro.props;
+const flag = (on: boolean) => (on && animate ? '' : undefined);
+const max = 10;
+const ticks = [0, 2, 4, 6, 8, 10];
+const last = waterfall.length - 1;
+---
+<figure class="chart wfc">
+  <div class="chart__head">
+    <div><p class="chart__title">{waterfallTitle}</p><p class="chart__sub">{business.name} · $3.6M revenue</p></div>
+  </div>
+  <ul class="chart__legend" aria-label="Legend">
+    <li><span class="chart__key" style="--k:var(--viz-total)"></span>Today</li>
+    <li><span class="chart__key" style="--k:var(--viz-accent)"></span>Counted savings</li>
+    <li><span class="chart__key" style="--k:var(--viz-result)"></span>Modeled</li>
+  </ul>
+  <div class="wf" style={`--max:${max}`} role="img" aria-label={waterfallFinding}>
+    <div class="wf__grid" aria-hidden="true">{ticks.map((t) => <span style={`--v:${t}`} data-l={`${t}%`}></span>)}</div>
+    <ol class="wf__bars" aria-hidden="true">
+      {waterfall.map((b, i) => (
+        <li class:list={['wf__bar', b.type === 'total' && 'wf__bar--total', b.type === 'result' && 'wf__bar--result']} style={`--from:${b.from};--to:${b.to}`} data-wf={i}>
+          <span class="wf__fill" data-grow={flag(true)}></span>
+          {i < last && <span class="wf__link" data-ghost={flag(true)}></span>}
+          <span class="wf__val" data-ghost={flag(true)}><span>{b.value.replace(/ pts$/, '')}{b.type === 'step' && <span class="wf__pts"> pts</span>}</span><small>{b.dollars}</small></span>
+          <span class="wf__lab" data-short={b.short}>{b.label}</span>
+        </li>
+      ))}
+    </ol>
+  </div>
+  <figcaption class="chart__note" data-el={animate ? 'wf-note' : undefined} data-ghost={flag(true)}>{waterfallNote}</figcaption>
+</figure>
+
+<style>
+  .wfc { gap: 10px; }
+  .wfc .chart__legend { margin-top: -2px; }
+  .wf { --plot: 250px; padding-bottom: 46px; }
+  /* marks as real elements (see the header note); same geometry and tokens as global.css */
+  .wf__bar::before, .wf__bar::after { content: none; }
+  .wf__fill {
+    position: absolute; left: 50%; bottom: calc(var(--from) / var(--max) * 100%);
+    width: min(24px, 56%); height: max(2px, calc((var(--to) - var(--from)) / var(--max) * 100%));
+    translate: -50% 0; border-radius: var(--radius-data) var(--radius-data) 0 0; background: var(--viz-accent);
+  }
+  .wf__bar--total .wf__fill { background: var(--viz-total); }
+  .wf__bar--result .wf__fill { background: var(--viz-result); }
+  .wf__link {
+    position: absolute; left: calc(50% + min(12px, 28%)); right: calc(-50% + min(12px, 28%));
+    bottom: calc(var(--to) / var(--max) * 100%); height: 1px; background: var(--viz-axis);
+  }
+  .wf__val { line-height: 1.3; }
+  .wf__val small { font-weight: 450; }
+  .wfc .chart__note { margin-top: 2px; }
+  @media (width < 40rem) {
+    .wf { --plot: 176px; --gutter: 1.9375rem; padding-bottom: 34px; }   /* 31px: "10%" plus its 8px pad is 30.1px */
+    .wf__pts { display: none; }   /* "+0.40" fits a 46px column; "pts" stays in the legend context and transcript */
+    /* Short labels are single words, a few px wider than a 41px column at 390px ("Modeled"). Center each one
+       on its bar and let it overhang evenly, with a little room after the last column, so none is ever clipped. */
+    .wf__bars { margin-right: 6px; }
+    .wf__lab { left: 50%; right: auto; width: max-content; translate: -50% 0; }
+  }
+</style>

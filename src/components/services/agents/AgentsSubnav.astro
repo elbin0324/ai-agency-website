@@ -1,0 +1,155 @@
+---
+// OWNER: services-a
+// Sticky in-page navigation for /services/ai-agents/: the three roles plus the FAQ. It sticks under
+// the site header (paper, hairline, no blur) and marks the chapter in view with aria-current="location"
+// and the brass nav underline (DESIGN.md §6.14). While a demo window is at least half in view it tucks
+// under the header (.is-tucked), so the whole window fits on laptop screens. Place it as a sibling
+// directly before the chapters, inside a wrapper that ends where it should stop sticking.
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { agentRoles } from '@/data/services';
+
+type Link = { target: string; num?: string; icon?: IconName; label: string; short: string };
+const base: Link[] = [
+  ...agentRoles.map((r, i) => ({
+    target: r.anchor,
+    num: String(i + 1).padStart(2, '0'),
+    icon: r.icon,
+    label: r.id === 'assistant' ? 'Executive Assistant' : r.name,
+    short: r.id === 'customer' ? 'Customer' : r.id === 'analyst' ? 'Analyst' : 'Assistant',
+  })),
+  { target: 'faq', label: 'Questions', short: 'FAQ' },
+];
+// Phones show the short label. When it is part of the full one ("Customer" in "Customer Agent"), the
+// rest is only visually hidden there, so the link's name stays the full label at every width and
+// always contains the visible text. Otherwise (Questions / FAQ) each width shows, and names, its own.
+const links = base.map((l) => {
+  const i = l.label.indexOf(l.short);
+  const parts = i < 0 ? null : { before: l.label.slice(0, i), core: l.short, after: l.label.slice(i + l.short.length) };
+  return { ...l, parts };
+});
+---
+<nav class="agents-nav" aria-label="On this page" data-agents-nav>
+  <div class="wrap agents-nav__inner">
+    <span class="agents-nav__label" aria-hidden="true">On this page</span>
+    <ul class="agents-nav__list" role="list">
+      {links.map((l) => (
+        <li>
+          <a class="agents-nav__link" href={`#${l.target}`} data-target={l.target}>
+            {l.num && <span class="agents-nav__num">{l.num}</span>}
+            {l.icon && <Icon name={l.icon} size={16} class="agents-nav__icon" />}
+            {l.parts ? (
+              <span class="agents-nav__text">{l.parts.before && <span class="agents-nav__extra">{l.parts.before}</span>}{l.parts.core}{l.parts.after && <span class="agents-nav__extra">{l.parts.after}</span>}</span>
+            ) : (
+              <Fragment><span class="agents-nav__full">{l.label}</span><span class="agents-nav__short">{l.short}</span></Fragment>
+            )}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</nav>
+
+<style>
+  .agents-nav {
+    position: sticky; top: calc(var(--header-h) + 1px); z-index: var(--z-sticky);
+    background-color: var(--color-paper); background-image: var(--paper-grain);
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    transition: transform 0.25s var(--ease-out-soft);
+  }
+  /* While a demo is mostly in view the bar slides up under the header (z 40 over this bar's z 20),
+     so the whole demo window fits. Keyboard focus inside the bar brings it back. */
+  .agents-nav.is-tucked:not(:focus-within) { transform: translateY(-100%); }
+  .agents-nav__inner { display: flex; align-items: center; gap: 32px; }
+  .agents-nav__label {
+    flex: none; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--fg-3);
+  }
+  .agents-nav__list { display: flex; align-items: stretch; gap: 32px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .agents-nav__list::-webkit-scrollbar { display: none; }
+  .agents-nav__list > li:last-child { margin-left: auto; }
+  .agents-nav__inner > .agents-nav__list { flex: 1; }
+  .agents-nav__link {
+    position: relative; display: inline-flex; align-items: center; gap: 8px; height: 52px; white-space: nowrap;
+    font-size: 0.9375rem; font-weight: 460; color: var(--fg-2); text-decoration: none; transition: color 0.2s;
+  }
+  .agents-nav__link::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--color-brass-500);
+    transform: scaleX(0); transform-origin: left; transition: transform 0.35s var(--ease-out-soft);
+  }
+  .agents-nav__link:hover, .agents-nav__link[aria-current] { color: var(--fg); }
+  .agents-nav__link:hover::after, .agents-nav__link[aria-current]::after { transform: scaleX(1); }
+  .agents-nav__link:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; border-radius: 4px; }
+  .agents-nav__num { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--accent); }
+  .agents-nav__link :global(.agents-nav__icon) { color: var(--fg-3); transition: color 0.2s; }
+  .agents-nav__link[aria-current] :global(.agents-nav__icon) { color: var(--accent-display); }
+  .agents-nav__short { display: none; }
+
+  /* Chapters land below the header and this bar (html already pads for the header). */
+  :global([data-chapter]), :global(#faq), :global([id^="demo-"]) { scroll-margin-top: 54px; }
+
+  @media (width < 64rem) {
+    .agents-nav__label { display: none; }
+    .agents-nav__list { gap: 24px; }
+  }
+  @media (width < 48rem) {
+    .agents-nav__icon, .agents-nav__link :global(.agents-nav__icon) { display: none; }
+    .agents-nav__full { display: none; }
+    .agents-nav__short { display: inline; }
+    .agents-nav__extra {
+      position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+    .agents-nav__list { gap: 20px; }
+    .agents-nav__link { height: 48px; font-size: 0.875rem; }
+    :global([data-chapter]), :global(#faq), :global([id^="demo-"]) { scroll-margin-top: 50px; }
+  }
+</style>
+
+<script>
+  // Mark the chapter in view. A chapter is current once its top passes 40% of the viewport.
+  document.querySelectorAll<HTMLElement>('[data-agents-nav]').forEach((nav) => {
+    const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[data-target]'));
+    const targets = links.map((a) => document.getElementById(a.dataset.target ?? ''));
+    const list = nav.querySelector<HTMLElement>('.agents-nav__list');
+    let current = -2;
+    let ticking = false;
+
+    const update = () => {
+      ticking = false;
+      const line = window.innerHeight * 0.4;
+      let idx = -1;
+      targets.forEach((t, i) => { if (t && t.getBoundingClientRect().top <= line) idx = i; });
+      // Past the end of the FAQ (the closing CTA): nothing is current.
+      const last = targets[targets.length - 1];
+      if (last && last.getBoundingClientRect().bottom < line) idx = -1;
+      if (idx === current) return;
+      current = idx;
+      links.forEach((a, i) => {
+        if (i === idx) a.setAttribute('aria-current', 'location');
+        else a.removeAttribute('aria-current');
+      });
+      // Keep the current link visible in the horizontal scroller on phones.
+      const active = links[idx];
+      if (active && list && list.scrollWidth > list.clientWidth) {
+        const l = active.parentElement as HTMLElement;
+        const left = l.offsetLeft - (list.clientWidth - l.offsetWidth) / 2;
+        list.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+      }
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+
+    // Tuck the bar while any demo window is at least half in view.
+    if ('IntersectionObserver' in window) {
+      const visible = new Set<Element>();
+      const io = new IntersectionObserver((entries) => {
+        // isIntersecting stays true below the threshold, so test the ratio itself.
+        entries.forEach((e) => { if (e.isIntersecting && e.intersectionRatio >= 0.5) visible.add(e.target); else visible.delete(e.target); });
+        nav.classList.toggle('is-tucked', visible.size > 0);
+      }, { threshold: 0.5 });
+      document.querySelectorAll('.aw-demo').forEach((d) => io.observe(d));
+    }
+  });
+</script>

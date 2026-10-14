@@ -1,0 +1,37 @@
+---
+// Left rail of the mail client: account, folders (Inbox count 63 → 6) and the triage categories from step 2.
+// OWNER: demo-assistant. No data-pane: on narrow windows the rail folds into the chip row in MailPane.
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+import { categories, folders, needsYou, owner, unread } from './data';
+---
+<aside class="aw-pane aw-pane--sunk ea-rail">
+  <div class="ea-rail__in" data-el="open" data-ghost>
+    <div class="ea-acct">
+      <span class="ea-av" aria-hidden="true">{owner.initials}</span>
+      <span class="ea-acct__t"><b>{owner.name}</b><small>{owner.email}</small></span>
+    </div>
+    <ul class="ea-folders">
+      {folders.map((f, i) => (
+        <li class:list={['ea-folder', i === 0 && 'is-on']}>
+          <Icon name={f.icon} /><span>{f.label}</span>
+          {i === 0 && (
+            <span class="count" data-el="inbox-badge" data-initial-class="ea-count--plain">
+              <span data-el="inbox-count" data-count data-count-from={unread}>{needsYou}</span>
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+    <div class="ea-cats">
+      <p class="aw-label ea-cats__label" data-el="cats-label" data-ghost>Sorted by {site.name}</p>
+      <ul>
+        {categories.map((c) => (
+          <li class:list={['ea-cat', c.you && 'ea-cat--you']} data-el="cat" data-ghost>
+            <Icon name={c.icon} /><span>{c.label}</span><span class="ea-cat__n" data-el="cat-count" data-count>{c.count}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</aside>

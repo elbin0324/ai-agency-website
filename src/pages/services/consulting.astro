@@ -1,0 +1,292 @@
+---
+// OWNER: services-b
+// AI Consulting. Copy: content/COPY.md §7, tightened, with content/CRITIQUE.md edits 5, 7, 11 and the
+// consulting "missing content" FAQ. Section ids follow COPY.md §7 (home and /services/ link to #comparison).
+// Numbers come from @/data/consulting and @/data/worth; nothing is retyped here.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import Steps from '@/components/blocks/Steps.astro';
+import WorthExample from '@/components/blocks/WorthExample.astro';
+import FaqAccordion from '@/components/blocks/FaqAccordion.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Callout from '@/components/blocks/Callout.astro';
+import LedgerList from '@/components/blocks/LedgerList.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import ConsultingDemo from '@/components/demos/ConsultingDemo.astro';
+import HeroOpportunities from '@/components/services/consulting/HeroOpportunities.astro';
+import CostLedger from '@/components/services/consulting/CostLedger.astro';
+import type { IconName } from '@/components/ui/icons';
+import { getWorth } from '@/data/worth';
+import { providers } from '@/data/consulting';
+import { business as demoBusiness } from '@/components/demos/consulting/data';
+import { site } from '@/config/site';
+import { currency } from '@/lib/format';
+import { url } from '@/lib/url';
+
+const title = 'AI Consulting';
+const description =
+  'An AI-powered review of your financials and operations that ranks savings, pricing and automation opportunities by value, effort and payback. Fixed fee.';
+
+// The page uses two fictional businesses: the worked example (hero and "What it's worth") and the
+// demo's restaurant group. Both are named where the page switches between them.
+const worth = getWorth('consulting')!;
+
+// The most affordable traditional option for the same scope (modeled), for the "why" paragraph.
+const lowest = providers.filter((p) => p.costLow > 0).reduce((a, b) => (b.costLow < a.costLow ? b : a));
+
+const places: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'receipt', title: 'Costs and vendors', body: 'Every expense line, trended. Vendor price creep, overlapping subscriptions and contracts worth renegotiating.' },
+  { icon: 'dollar-sign', title: 'Pricing and margin', body: 'Margin by job, product, service line and customer, and where prices have fallen behind costs.' },
+  { icon: 'clock', title: 'Time and process', body: 'Where your team’s hours go, where work gets redone and where handoffs stall.' },
+  { icon: 'piggy-bank', title: 'Cash', body: 'Receivables, payment terms, inventory and the cash they tie up.' },
+  { icon: 'megaphone', title: 'Growth economics', body: 'What each marketing channel and customer type really costs, and what it returns.' },
+];
+
+const capabilities: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'receipt', title: 'Cost review', body: 'Categorizes and trends every expense. Flags price creep, duplicate tools and spending that has grown faster than revenue.' },
+  { icon: 'chart-column', title: 'Margin by job, product and customer', body: 'Shows which work makes money and which quietly loses it, down to the line item.' },
+  { icon: 'dollar-sign', title: 'Pricing analysis', body: 'Finds discounting patterns, underpriced services and costs that have outrun prices, with scenarios for adjusting.' },
+  { icon: 'workflow', title: 'Process mapping', body: 'Uses system data and short staff interviews to show where time goes and where work stalls.' },
+  { icon: 'calculator', title: 'Automation sizing', body: 'Estimates hours per task, cost per hour and what an agent could take on, ranked by value.' },
+  { icon: 'piggy-bank', title: 'Cash and working capital', body: 'Receivables aging, payment terms and inventory turns, and what tightening them would free up.' },
+  { icon: 'sliders-horizontal', title: 'Scenario modeling', body: 'Tests “what if” questions, like a price change, a new hire or a lost customer, with the assumptions visible.' },
+  { icon: 'list-checks', title: 'Prioritized roadmap', body: 'Every opportunity ranked by expected savings, effort and payback, with an owner and a first step.' },
+  { icon: 'lightbulb', title: 'AI strategy and readiness', body: 'Where AI fits your business and where it doesn’t, the data and policies you need, and a plain AI use policy for staff.' },
+];
+
+const deliverables: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'file-text', title: 'Executive summary', body: 'Two pages: what we found, what it’s worth and what to do first.' },
+  { icon: 'file-spreadsheet', title: 'Opportunity register', body: 'A spreadsheet of every opportunity with estimated value, effort, payback and owner.' },
+  { icon: 'chart-column', title: 'Margin waterfall', body: 'A chart that walks from today’s margin to your potential margin, one opportunity at a time.' },
+  { icon: 'calendar-check', title: '90-day action plan', body: 'The first moves, in order, with owners and dates.' },
+  { icon: 'chart-line', title: '12-month roadmap', body: 'What to automate, fix or renegotiate next, and when.' },
+  { icon: 'calculator', title: 'The model', body: 'The working spreadsheet behind every number, yours to keep and update.' },
+];
+
+const steps = [
+  { title: 'Kickoff', body: 'We agree on goals, constraints and the questions that matter most, then send a short data request.', time: 'Typically week 1' },
+  { title: 'Data in', body: 'You share 12 to 24 months of financial and operational data, read-only or as exports. We handle the cleanup.', time: 'Typically weeks 1 to 2' },
+  { title: 'Interviews', body: 'Short conversations with the people who run the work, usually 30 minutes each.', time: 'Typically week 2' },
+  { title: 'Analysis and review', body: 'AI does the heavy lifting across every transaction. A person checks every finding before it reaches you.', time: 'Typically weeks 2 to 4' },
+  { title: 'Readout and roadmap', body: 'We walk you through the findings and the plan, and answer every question.', time: 'Typically weeks 3 to 5' },
+];
+
+const guardrails: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'search', title: 'Traceable numbers', body: 'Every figure links back to the source data it came from.' },
+  { icon: 'trending-down', title: 'Conservative assumptions', body: 'When an estimate could go either way, we use the lower number and say so.' },
+  { icon: 'sliders-horizontal', title: 'Ranges, not false precision', body: 'Where the data is uncertain, savings are shown as a range.' },
+  { icon: 'user-check', title: 'A person checks every finding', body: 'AI does the reading and the math. A person reviews every recommendation before it reaches you.' },
+  { icon: 'circle-alert', title: 'Thin data, flagged', body: 'Where data is missing or messy, we tell you how that limits the conclusion.' },
+  { icon: 'lock', title: 'Confidential by default', body: 'Your financials are used only for your analysis, accessed read-only and deleted on request when the work ends.' },
+];
+
+const moves = [
+  'Your revenue and current margin',
+  'How long since prices and vendor contracts were last reviewed',
+  'How much of your team’s time goes to manual, repeatable work',
+  'How quickly you act on the plan',
+];
+
+const faq = [
+  {
+    q: 'Why does it cost so much less than a consulting firm?',
+    a: 'Because much of a traditional fee pays for people reading your data by hand. AI does that part in days. You still get an experienced person checking every finding and building the plan, and you pay a fixed fee for the review, not an hourly bill.',
+  },
+  {
+    q: 'How is this different from what my accountant does?',
+    a: 'Your accountant keeps the books accurate, compliant and filed. We use those books, plus your operational data, to look forward: where you’re losing margin, what to fix first and what it’s worth. We’re happy to work alongside your accountant.',
+  },
+  {
+    q: 'What data do you need?',
+    a: 'Typically 12 to 24 months of profit and loss and balance sheet, a general ledger or transaction export, payroll summaries, vendor and customer lists, and any job, order or time data you have. Read-only access or exports both work. We send a checklist.',
+  },
+  {
+    q: 'How long does it take?',
+    a: 'Typically 3 to 5 weeks from kickoff to readout. Most of that is gathering data and scheduling short interviews; the analysis itself takes days. The biggest factor is how quickly data can be shared.',
+  },
+  {
+    q: 'Do we have to use you to implement the roadmap?',
+    a: 'No. The roadmap and the model are yours. Some recommendations need agents we can build. Others are a phone call to a vendor. You choose who does what.',
+  },
+  {
+    q: 'Is AI really doing the analysis?',
+    a: 'AI does the heavy lifting: reading every transaction, categorizing spend, spotting patterns and running the models. A person checks every finding, adds business judgment and makes the recommendations. You get the speed of one and the judgment of the other.',
+  },
+];
+---
+<BaseLayout title={title} description={description}>
+  <PageHero
+    crumbs={[{ label: 'Services', href: '/services/' }, { label: 'AI Consulting' }]}
+    eyebrow="AI Consulting"
+    title="A ranked plan to cut costs and *grow your margin.*"
+    subtitle="A consulting-style review of your books and operations that ranks every saving, pricing gap and process fix by value, effort and payback. AI does the weeks of data work a firm would bill for; a person checks every finding."
+    chips={['Every number traceable', 'Opportunities ranked by payback', 'A 90-day plan', 'Fixed fee, agreed up front']}
+    secondary={{ label: 'Compare it with a consulting firm', href: '#comparison' }}
+    micro="The same core deliverable as a consulting engagement, for one fixed fee and a fraction of the cost."
+  >
+    <HeroOpportunities slot="art" />
+  </PageHero>
+
+  <Section id="what-we-look-at" aria-labelledby="look-title">
+    <SectionHeader num="01" eyebrow="What we look at" subtitle="Margin usually leaks out in small places nobody has had time to check." titleId="look-title"><span slot="title" data-motion="split">Five places we look for margin.</span></SectionHeader>
+    <ul class="cell-grid places" style="--cols: 5" role="list" data-reveal data-motion="stagger">
+      {places.map((p) => (
+        <li class="cell">
+          <span class="places__icon" aria-hidden="true"><Icon name={p.icon} size={18} /></span>
+          <h3 class="cell__title">{p.title}</h3>
+          <p class="cell__body">{p.body}</p>
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  <Section id="capabilities" tightTop aria-labelledby="capabilities-title">
+    <SectionHeader num="02" eyebrow="What it does" subtitle="AI reads every transaction and builds the models. A person checks the findings and makes the recommendations." titleId="capabilities-title"><span slot="title" data-motion="split">The analysis a good consultant would do, done in days.</span></SectionHeader>
+    <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="cells" items={capabilities} cols={3} label="Capabilities" /></div>
+  </Section>
+
+  <Section id="deliverables" tone="sunken" aria-labelledby="deliverables-title">
+    <SectionHeader num="03" eyebrow="What you get" subtitle="Just what you need to decide and act, and the working model behind every number." titleId="deliverables-title"><span slot="title" data-motion="split">Six deliverables. No 80-page binder.</span></SectionHeader>
+    <ol class="dlv" role="list" data-reveal data-motion="stagger">
+      {deliverables.map((d, i) => (
+        <li class="dlv__item">
+          <span class="icon-tile icon-tile--sm" aria-hidden="true"><Icon name={d.icon} size={18} /></span>
+          <div>
+            <p class="dlv__n">{String(i + 1).padStart(2, '0')}</p>
+            <h3 class="dlv__t">{d.title}</h3>
+            <p class="dlv__b">{d.body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <p class="note-line" data-reveal><Icon name="check" />The model and the opportunity register are yours to keep, whether or not we keep working together.</p>
+  </Section>
+
+  <Section id="how-it-works" aria-labelledby="how-title">
+    <SectionHeader num="04" eyebrow="How it works" titleId="how-title"><span slot="title" data-motion="split">From your data to a roadmap, in weeks.</span>
+      <p>Typically 3 to 5 weeks from kickoff to readout. Most of that goes to gathering data and fitting short interviews into your team’s week. <b class="text-fg">The analysis itself takes days, not weeks of billed hours.</b></p>
+    </SectionHeader>
+    <div data-motion="draw stagger" data-draw-target=".steps__rope line" data-stagger-target=".step"><Steps steps={steps} label="How a review works" /></div>
+    <div class="after-steps" data-reveal>
+      <p><b>Optional: we implement.</b> Hand the roadmap to your team, or have us build the agents that deliver it. Your call.</p>
+      <p class="text-fg-3">Timing depends mostly on how quickly data can be shared.</p>
+    </div>
+  </Section>
+
+  <Section id="comparison" tone="sunken" aria-labelledby="comparison-title">
+    <SectionHeader num="05" eyebrow="Compare the options" subtitle="What each kind of provider charges for a diagnostic and prioritized roadmap, from public records, and how long it takes." titleId="comparison-title"><span slot="title" data-motion="split">The same core deliverable. A fraction of the cost and time.</span></SectionHeader>
+    <div data-reveal>
+      <CostLedger />
+    </div>
+    <div class="why" data-reveal>
+      <div class="why__copy">
+        <h3 class="type-h3">Where a consulting fee goes.</h3>
+        <p>In a traditional engagement you pay for consultant hours, and this scope takes a firm 120 to 300 of them. Even the most affordable option, an {lowest.category.toLowerCase()}, comes to {currency(lowest.costLow)} or more, and recommendations commonly take 8 weeks or longer.</p>
+        <p>In ours, AI does the reading, categorizing and modeling across every transaction. People spend their hours checking the findings and making the recommendations. That’s how the fee stays fixed and the work typically takes 3 to 5 weeks.</p>
+        <div class="why__ctas">
+          <Button href={site.cta.href} variant="secondary" icon="arrow-right">Get a fixed-fee quote</Button>
+          <a class="link-arrow" href="#how-it-works"><span>See how the review works</span><Icon name="arrow-right" /></a>
+        </div>
+        <p class="why__micro">The free assessment comes first. You see the scope and the fixed fee in writing before any work starts.</p>
+      </div>
+      <div class="why__aside">
+        <Callout variant="note" title="When a firm is the better choice." icon="scale">
+          Months of hands-on change management, a sale or merger, or a question that needs a specialist in your exact industry. If that’s what you need, we’ll say so.
+        </Callout>
+        <Callout variant="tip" title="Have a quote from a consulting firm?" icon="receipt">
+          Bring it to the assessment, and we’ll show you how our fixed fee compares for the same scope.
+        </Callout>
+      </div>
+    </div>
+  </Section>
+
+  <Section id="demo" aria-labelledby="demo-title">
+    <SectionHeader num="06" eyebrow="See it work" titleId="demo-title"><span slot="title" data-motion="split">{"Watch a P&L turn into a ranked plan."}</span>
+      <p>A second fictional business: {demoBusiness.name}, two restaurants and a catering kitchen. Watch the agent read its P&amp;L, rank the savings and lay out the roadmap.</p>
+      <a class="link-arrow demo-all" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
+    </SectionHeader>
+    <div data-reveal><ConsultingDemo /></div>
+  </Section>
+
+  <Section id="guardrails" tightTop aria-labelledby="guardrails-title">
+    <SectionHeader num="07" eyebrow="How we keep it honest" subtitle="A roadmap is only useful if you trust the numbers behind it." titleId="guardrails-title"><span slot="title" data-motion="split">Analysis you can check.</span></SectionHeader>
+    <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="guard" items={guardrails} cols={3} label="How we keep the analysis honest" /></div>
+  </Section>
+
+  <Section id="worth" tone="sunken" aria-labelledby="worth-title">
+    <SectionHeader num="08" eyebrow="What it’s worth" subtitle={`Back to ${worth.business} from the top of the page. Value comes from several modest fixes, and we count only half of any saving that depends on a negotiation.`} titleId="worth-title"><span slot="title" data-motion="split">See how small fixes add up.</span></SectionHeader>
+    <WorthExample example={worth} afterLabel="With the plan" link={{ label: 'See the full example', href: '/results/#examples' }} />
+    <div class="moves" data-reveal>
+      <p class="type-label moves__label">What moves the number</p>
+      <LedgerList items={moves} variant="knot" class="moves__list" label="What moves the number" />
+      <a class="link-arrow moves__link" href={url(site.ctas.calculator.href)}><span>Run your own numbers</span><Icon name="arrow-right" /></a>
+    </div>
+  </Section>
+
+  <Section id="faq" aria-labelledby="faq-title">
+    <div class="faq-wrap">
+      <SectionHeader num="09" eyebrow="FAQ" align="left" titleId="faq-title"><span slot="title" data-motion="split">Questions about AI Consulting.</span></SectionHeader>
+      <FaqAccordion items={faq} jsonLd />
+    </div>
+  </Section>
+
+  <CtaBand
+    eyebrow="Free AI assessment"
+    title="Find out where your margin is going."
+    subtitle="On a free 30-minute call we’ll talk through your business and tell you where a review would likely find the most."
+    secondary={site.ctas.calculator}
+    micro="No cost, no obligation."
+  />
+</BaseLayout>
+
+<style>
+  .places__icon { display: inline-flex; color: var(--accent-display); margin-bottom: 12px; }
+  .places .cell__title { display: block; }
+
+  .dlv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line-strong); }
+  .dlv__item { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 16px; padding: 26px 28px 28px 0; border-bottom: 1px solid var(--line); }
+  .dlv__n { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--accent); }
+  .dlv__t { margin-top: 6px; font-family: var(--font-serif); font-size: 1.375rem; font-weight: 420; line-height: 1.2; letter-spacing: -0.014em; color: var(--fg); }
+  .dlv__b { margin-top: 8px; max-width: 34ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  @media (width < 64rem) { .dlv { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (width < 40rem) { .dlv { grid-template-columns: minmax(0, 1fr); } .dlv__item { padding-right: 0; } }
+
+  .note-line { display: flex; align-items: flex-start; gap: 10px; margin-top: 22px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2); }
+  .note-line > :global(.icon) { margin-top: 3px; color: var(--accent-display); }
+
+  .after-steps { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 32px; margin-top: clamp(36px, 4vw, 52px); padding-top: 20px; border-top: 1px solid var(--line); font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .after-steps b { font-weight: 600; color: var(--fg); }
+
+  .why { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px 56px; margin-top: clamp(48px, 6vw, 72px); padding-top: clamp(32px, 4vw, 44px); border-top: 1px solid var(--line-strong); }
+  .why__copy > p { margin-top: 14px; max-width: 62ch; font-size: 1.0625rem; line-height: 1.65; color: var(--fg-2); }
+  .why__ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 26px; }
+  .why__copy > .why__micro { margin-top: 12px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .why__aside { display: grid; align-content: start; gap: 14px; }
+  @media (width < 64rem) { .why { grid-template-columns: minmax(0, 1fr); } }
+
+  .demo-all { margin-top: 8px; }
+
+  .moves { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px 24px; align-items: start; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .moves__label { grid-column: 1 / span 3; padding-top: 4px; }
+  .moves :global(.moves__list) { grid-column: 4 / span 6; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+  .moves__link { grid-column: 10 / span 3; justify-self: end; margin-top: -10px; }
+  @media (width < 64rem) {
+    .moves__label, .moves :global(.moves__list), .moves__link { grid-column: 1 / -1; }
+    .moves__link { justify-self: start; margin-top: 0; }
+  }
+  @media (width < 40rem) { .moves :global(.moves__list) { grid-template-columns: minmax(0, 1fr); } }
+
+  .faq-wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 0 48px; }
+  .faq-wrap > :global(.sec-rule) { grid-column: 1 / -1; }
+  .faq-wrap > :global(.sec-head) { grid-column: 1; align-self: start; display: block; position: sticky; top: calc(var(--header-h) + 32px); }
+  .faq-wrap > :global(.faq) { grid-column: 2; }
+  @media (width < 64rem) {
+    .faq-wrap { grid-template-columns: minmax(0, 1fr); }
+    .faq-wrap > :global(.sec-head) { position: static; }
+    .faq-wrap > :global(.sec-head), .faq-wrap > :global(.faq) { grid-column: 1; }
+  }
+</style>

@@ -1,0 +1,23 @@
+---
+// Internal preview for the Consulting demo (noindex; /dev/ pages stay out of the sitemap). OWNER: demo-consulting.
+// Just the demo on a plain page, the way /demos/#consulting and /services/consulting/#demo frame it.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import ConsultingDemo from '@/components/demos/ConsultingDemo.astro';
+---
+<BaseLayout title="Consulting demo" noindex>
+  <main id="main">
+    <Section id="consulting" tone="sunken" aria-labelledby="consulting-title">
+      <SectionHeader
+        num="06"
+        eyebrow="AI Consulting"
+        title="A P&L becomes a ranked plan."
+        titleId="consulting-title"
+        subtitle="The agent reads the books, finds where margin leaks, ranks the fixes by dollars and effort, and hands over a 90-day plan with owners."
+        reveal={false}
+      />
+      <ConsultingDemo />
+    </Section>
+  </main>
+</BaseLayout>

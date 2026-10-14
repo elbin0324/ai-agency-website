@@ -1,0 +1,57 @@
+---
+// Executive Assistant demo: an overflowing inbox becomes a short list (content/DEMOS.md §3, COPY.md §8.5, §8.9).
+// OWNER: demo-assistant. Built on the demo engine (DEMO_ENGINE.md): this file is the FINAL-state scene inside
+// <AppWindow>; ./assistant/assistant-demo.ts holds the eight steps. Render the demo only: the page supplies the
+// <section> and its anchor (the same demo appears on /demos/ and /services/ai-agents/).
+//
+//   <AssistantDemo />                    autoplays at 50% in view
+//   <AssistantDemo autoplay={false} />   page code drives it with demo:play (DemoTheater)
+//
+// Layout (desktop): mail rail 20% · message list / reading pane 48% · {site.name} Assistant 32%, plus the
+// step 6 presentation overlay. Narrow windows fold the rail into a chip row; phones show Inbox / Assistant tabs.
+import AppWindow from '@/components/demo/AppWindow.astro';
+import { site } from '@/config/site';
+import Rail from './assistant/Rail.astro';
+import MailPane from './assistant/MailPane.astro';
+import AssistantPane from './assistant/AssistantPane.astro';
+import DeckOverlay from './assistant/DeckOverlay.astro';
+import { business, clockAt, microcopy, result, ticker, windowTitle } from './assistant/data';
+import demo from './assistant/assistant-demo';
+import './assistant/assistant.css';
+
+interface Props {
+  autoplay?: boolean;
+  class?: string;
+}
+const { autoplay = true, class: className } = Astro.props;
+---
+<AppWindow
+  demo={demo.id}
+  steps={demo.steps}
+  title={windowTitle}
+  label={`${site.name} Executive Assistant · ${business}`}
+  columns="20% 48% 32%"
+  tabs={[{ id: 'inbox', label: 'Inbox' }, { id: 'assistant', label: `${site.name} Assistant` }]}
+  height={540}
+  mobileHeight={480}
+  ticker={ticker.final}
+  tickerStart={ticker.start}
+  result={{ metrics: result.metrics, label: result.label }}
+  microcopy={microcopy}
+  autoplay={autoplay}
+  class:list={['ea', className]}
+>
+  <Fragment slot="meta">
+    <span class="aw-status demo-hide-m" data-el="clock" data-initial-text={clockAt('7:30')}>{clockAt('7:34')}</span>
+  </Fragment>
+  <Rail />
+  <MailPane />
+  <AssistantPane />
+  <DeckOverlay />
+</AppWindow>
+
+<script>
+  import { mountDemos } from '@/scripts/demo-engine';
+  import demo from './assistant/assistant-demo';
+  mountDemos(demo);
+</script>

@@ -235,7 +235,7 @@ export const scenarios: Scenario[] = [
       { label: 'Routine emails resolved without a rep', before: '0%', after: '35% of 12,000 a month' },
       { label: 'Quote turnaround', before: 'Next business day', after: 'Same day' },
       { label: 'Quotes checked against margin floors', before: 'Spot checks', after: 'Every quote' },
-      { label: 'Lapsed accounts sent a personal note', before: 'About 0 a month', after: '100 a month' },
+      { label: 'Lapsed accounts sent a personal note', before: 'None', after: '100 a month' },
     ],
     annualValue: 169275,
     timeToValue: 'Email agent live in 4–6 weeks; pricing findings within the first 30 days; full run-rate in 4–6 months',

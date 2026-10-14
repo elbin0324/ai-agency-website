@@ -1,0 +1,83 @@
+---
+// OWNER: pages-misc
+// /contact/ lower section: "Before you book" FAQ (COPY.md §11.6, id "faq") with the "Good fit, or not
+// yet?" answer from CRITIQUE.md, beside "Other ways to reach us" (§11.5, id "contact-details").
+// Phone and founder name render only once they are set in site config (DESIGN.md §6.15).
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FaqAccordion from '@/components/blocks/FaqAccordion.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site, emailReady } from '@/config/site';
+import { url } from '@/lib/url';
+
+const who = site.founderName
+  ? `${site.founderName}, together with the people who would design and build your agents. Not a sales rep.`
+  : 'The people who would design and build your agents, not a sales rep.';
+
+const items = [
+  { q: 'Is it really free?', a: 'Yes. No cost and no obligation. The written summary is yours either way.' },
+  { q: 'Who will I talk to?', a: who },
+  { q: 'Do I need to prepare anything?', a: 'No. If you can, bring one example of work that eats your team’s time: a report, a common customer question or an inbox you dread.' },
+  {
+    q: 'How do I know if we’re a good fit?',
+    a: [
+      'You’re likely a good fit if the same kinds of work come up every day or week, like routine questions, data entry or a report someone rebuilds by hand; if that work runs through software with logins, such as email, a calendar, accounting software or a CRM; and if someone can make decisions for a couple of hours in the first week.',
+      'It may be too early if the work is different every time or the volume is small. We’ll tell you that on the call.',
+    ],
+  },
+  { q: 'What if we’re not ready for AI?', a: 'Then we’ll tell you, and share what would get you ready. That’s a useful outcome too.' },
+  {
+    q: 'How do you handle our data?',
+    a: `We use what you share only to prepare for the call, and we never ask for passwords or system access during the assessment. If we work together, you’ll get our practices in writing. <a href="${url('/approach/#security')}">See how we handle access and data</a>.`,
+  },
+];
+
+const mail = `mailto:${site.email}`;
+const questionnaire = `mailto:${site.email}?subject=${encodeURIComponent('Security questionnaire')}`;
+---
+<Section id="faq" size="none" class="pb-section" aria-labelledby="contact-faq-title">
+  <SectionHeader eyebrow="FAQ" titleId="contact-faq-title" align="left"><span slot="title" data-motion="split">Before you book.</span></SectionHeader>
+  <div class="cfaq">
+    <FaqAccordion items={items} jsonLd class="cfaq__list" />
+    <aside id="contact-details" class="card cfaq__details" aria-labelledby="details-title" data-reveal data-reveal-delay="80">
+      <h3 class="type-h4" id="details-title">Other ways to reach us</h3>
+      <dl class="cfaq__rows">
+        {emailReady && (
+          <div>
+            <dt><Icon name="mail" />Prefer email?</dt>
+            <dd><a class="link" href={mail}>{site.email}</a></dd>
+          </div>
+        )}
+        {site.phone && (
+          <div>
+            <dt><Icon name="phone" />Rather talk?</dt>
+            <dd><a class="link" href={`tel:${site.phone.replace(/[^\d+]/g, '')}`}>{site.phone}</a></dd>
+          </div>
+        )}
+        <div>
+          <dt><Icon name="shield-check" />Security questionnaire or RFP?</dt>
+          <dd>{emailReady ? <Fragment>Send it to <a class="link" href={questionnaire}>{site.email}</a> and we’ll reply in writing.</Fragment> : <Fragment>Mention it when you book and we’ll answer in writing.</Fragment>}</dd>
+        </div>
+        <div>
+          <dt><Icon name="clock" />Response time</dt>
+          <dd>Within one business day.</dd>
+        </div>
+      </dl>
+    </aside>
+  </div>
+</Section>
+
+<style>
+  .cfaq { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; align-items: start; }
+  .cfaq :global(.cfaq__list) { grid-column: 1 / span 7; }
+  .cfaq__details { grid-column: 9 / span 4; }
+  .cfaq__rows { margin: 14px 0 0; }
+  .cfaq__rows > div { padding: 14px 0; border-top: 1px solid var(--line); }
+  .cfaq__rows dt { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 600; color: var(--fg); }
+  .cfaq__rows dt :global(.icon) { color: var(--accent-display); }
+  .cfaq__rows dd { margin: 4px 0 0 24px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2); overflow-wrap: anywhere; }
+  @media (width < 64rem) {
+    .cfaq :global(.cfaq__list), .cfaq__details { grid-column: 1 / -1; }
+    .cfaq__details { max-width: 30rem; }
+  }
+</style>

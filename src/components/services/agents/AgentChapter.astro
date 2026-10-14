@@ -1,0 +1,189 @@
+---
+// OWNER: services-a
+// One agent role on /services/ai-agents/ (COPY.md §4.3 to §4.5, §4.8, §4.9): the chapter head, then
+// "What it does" (the trust note, then capabilities), "Watch it work" (the role's demo, passed in the
+// "demo" slot), "What it's worth" (WorthExample from @/data/worth, collapsed) and "Guardrails and quality".
+// The section id is the role anchor (#customer-agent, …); the demo block is #demo-{anchor}.
+// The sub-head links (all demos, calculator, approval) print in chapter 01 only, so chapters 02 and 03
+// don't repeat them.
+//
+// What it's worth: the card shows WorthExample's tags, business, annual figure and summary; the
+// Today / With the agent / The math worksheet sits in a native <details> ("Show the full math"),
+// followed by the card's footnote and links. WorthExample's own worksheet and footer are hidden here
+// and re-rendered around the <details> from the same example object (no retyped numbers).
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Button from '@/components/ui/Button.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import WorthExample from '@/components/blocks/WorthExample.astro';
+import LedgerRows from '@/components/blocks/LedgerRows.astro';
+import MathLedger from '@/components/blocks/MathLedger.astro';
+import type { AgentRole } from '@/data/services';
+import { getWorth } from '@/data/worth';
+import { url } from '@/lib/url';
+import type { ChapterCopy } from './content';
+
+interface Props {
+  role: AgentRole;
+  copy: ChapterCopy;
+  num: string;
+  tone?: 'paper' | 'sunken';
+  tightTop?: boolean;
+}
+
+const { role, copy, num, tone = 'paper', tightTop = false } = Astro.props;
+const titleId = `${role.anchor}-title`;
+const worth = getWorth(role.demoId);
+const first = num === '01';
+const mathId = `${role.anchor}-math`;
+---
+<Section id={role.anchor} tone={tone} tightTop={tightTop} aria-labelledby={titleId} class="chapter" data-chapter>
+  <SectionHeader num={num} eyebrow={role.name} titleId={titleId}><span slot="title" data-motion="split">{role.headline}</span>
+    <p>{copy.aside}</p>
+  </SectionHeader>
+
+  <div class="chapter__block">
+    <p class="chapter__note" data-reveal><Icon name={copy.noteIcon} size={16} />{copy.note}</p>
+    <div class="chapter__sub" data-reveal>
+      <h3 class="type-label chapter__label">What it does</h3>
+    </div>
+    <div class="chapter__caps" id={`${role.anchor}-caps`} data-motion="stagger" data-stagger-target="li">
+      <FeatureGrid variant="cells" cols={3} level={4} items={copy.capabilities} label={`What the ${role.name} does`} />
+    </div>
+    <Button
+      variant="secondary" size="sm" icon="chevron-down" iconPosition="end" class="chapter__caps-toggle"
+      aria-expanded="false" aria-controls={`${role.anchor}-caps`} data-caps-toggle data-more={`Show all ${copy.capabilities.length}`}
+    ><span data-caps-label>Show all {copy.capabilities.length}</span></Button>
+  </div>
+
+  <div class="chapter__block" id={`demo-${role.anchor}`}>
+    <div class="chapter__sub" data-reveal>
+      <h3 class="type-label chapter__label">Watch it work</h3>
+      <p class="chapter__line">{copy.demoLine}</p>
+      {first && <a class="link-arrow chapter__more" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>}
+    </div>
+    <div class="chapter__demo" data-reveal><slot name="demo" /></div>
+  </div>
+
+  {worth && (
+    <div class="chapter__block">
+      <div class="chapter__sub" data-reveal>
+        <h3 class="type-label chapter__label">What it’s worth</h3>
+        <p class="chapter__line">A worked example on a fictional business, with every line of the math.</p>
+        {first && <a class="link-arrow chapter__more" href={url('/results/#calculator')}><span>Run your own numbers</span><Icon name="arrow-right" /></a>}
+      </div>
+      <div class="card chapter__worth" data-reveal>
+        <WorthExample example={worth} level={4} reveal={false} />
+        <details class="chapter__math" id={mathId}>
+          <summary class="chapter__math-toggle">
+            <span class="chapter__math-show">Show the full math</span><span class="chapter__math-hide">Hide the full math</span>
+            <Icon name="chevron-down" />
+          </summary>
+          <div class="chapter__math-body">
+            <div class="chapter__math-compare">
+              <LedgerRows title="Today" rows={worth.baseline} layout="stacked" />
+              <LedgerRows title="With the agent" rows={worth.after} layout="stacked" />
+            </div>
+            <MathLedger caption="The math" rows={worth.math} />
+          </div>
+        </details>
+        <div class="chapter__worth-foot">
+          <p class="chapter__worth-note">Gross value before any fees. Not a quote or a guarantee. Estimates exclude the cost of the engagement.</p>
+          <div class="chapter__worth-links">
+            <a class="link-arrow" href={url('/results/#methodology')}><span>How we estimate</span><Icon name="arrow-right" /></a>
+            <a class="link-arrow" href={url('/results/#examples')}><span>See the full example</span><Icon name="arrow-right" /></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+
+  <div class="chapter__block">
+    <div class="chapter__sub" data-reveal>
+      <h3 class="type-label chapter__label">Guardrails and quality</h3>
+      <p class="chapter__line">{copy.guardLine}</p>
+      {first && <a class="link-arrow chapter__more" href={url('/approach/#controls')}><span>How human approval works</span><Icon name="arrow-right" /></a>}
+    </div>
+    <FeatureGrid variant="guard" cols={4} level={4} items={copy.guardrails} label={`${role.name} guardrails`} />
+  </div>
+</Section>
+
+<style>
+  /* The trust note opens "What it does", so the head's aside stays a short standfirst level with the H2. */
+  .chapter__note {
+    display: flex; align-items: flex-start; gap: 10px; margin: 0 0 20px; max-width: 72ch;
+    font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2);
+  }
+  .chapter__note :global(.icon) { flex: none; margin-top: 3px; color: var(--accent); }
+  .chapter__block + .chapter__block { margin-top: clamp(56px, 6vw, 88px); }
+  /* Sub-block head: mono label · one line · a link pushed right. */
+  .chapter__sub {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; margin-bottom: 20px;
+  }
+  .chapter__label { color: var(--fg); }
+  .chapter__line { font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2); }
+  .chapter__more { margin-left: auto; min-height: 0; }
+  .chapter__demo { min-width: 0; }
+
+  /* What it's worth: this wrapper is the card; the WorthExample inside keeps only its top and head. */
+  .chapter__worth { display: grid; gap: 24px; padding: clamp(20px, 3vw, 36px); }
+  .chapter__worth :global(.worth) { padding: 0; border-radius: 0; background: none; box-shadow: none; }
+  .chapter__worth :global(.worth__body), .chapter__worth :global(.worth__foot) { display: none; }
+  /* The toggle is a ruled row: the card gap below it is cancelled so it sits centered between its
+     hairline and the footer's. */
+  .chapter__math { margin-bottom: -24px; border-top: 1px solid var(--line); }
+  .chapter__math-toggle {
+    display: flex; align-items: center; gap: 10px; min-height: 56px; list-style: none; cursor: pointer;
+    font-size: 0.9375rem; font-weight: 550; color: var(--fg);
+  }
+  .chapter__math-toggle::-webkit-details-marker { display: none; }
+  .chapter__math-toggle :global(.icon) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
+  .chapter__math-toggle:hover .chapter__math-show, .chapter__math-toggle:hover .chapter__math-hide { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  .chapter__math-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  .chapter__math-hide { display: none; }
+  .chapter__math[open] .chapter__math-show { display: none; }
+  .chapter__math[open] .chapter__math-hide { display: inline; }
+  .chapter__math[open] .chapter__math-toggle :global(.icon) { transform: rotate(180deg); }
+  /* Same worksheet layout as WorthExample: inputs on the left, the calculation on the right. */
+  .chapter__math-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px 48px; align-items: start; padding: 8px 0 32px; }
+  .chapter__math-compare { display: grid; gap: 28px; }
+  .chapter__worth-foot {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px;
+    padding-top: 16px; border-top: 1px solid var(--line);
+  }
+  .chapter__worth-note { flex: 1 1 36ch; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+  .chapter__worth-links { display: flex; flex-wrap: wrap; gap: 0 24px; }
+  @media (width < 64rem) {
+    .chapter__math-body { grid-template-columns: minmax(0, 1fr); }
+    .chapter__math-compare { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 40px; }
+  }
+
+  /* Phones: the first four capabilities, the rest behind a toggle (only with JS; without it all show). */
+  :global(.btn.chapter__caps-toggle) { display: none; }
+  :global(.chapter__caps-toggle[aria-expanded="true"] .icon) { transform: rotate(180deg); }
+  @media (width < 40rem) {
+    :global(html.js .btn.chapter__caps-toggle) { display: inline-flex; margin-top: 16px; }
+    :global(html.js) .chapter__caps:not(.is-open) :global(.cell:nth-child(n + 5)) { display: none; }
+  }
+  @media (width < 48rem) {
+    .chapter__sub { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .chapter__more { margin-left: 0; min-height: 44px; }
+    .chapter__math-compare { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-caps-toggle]').forEach((btn) => {
+    const panel = document.getElementById(btn.getAttribute('aria-controls') ?? '');
+    const label = btn.querySelector<HTMLElement>('[data-caps-label]');
+    if (!panel || !label) return;
+    btn.addEventListener('click', () => {
+      const open = btn.getAttribute('aria-expanded') !== 'true';
+      btn.setAttribute('aria-expanded', String(open));
+      panel.classList.toggle('is-open', open);
+      label.textContent = open ? 'Show fewer' : (btn.dataset.more ?? 'Show all');
+      if (!open) btn.scrollIntoView({ block: 'nearest' });
+    });
+  });
+</script>

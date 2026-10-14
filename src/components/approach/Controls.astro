@@ -1,0 +1,89 @@
+---
+// OWNER: pages-misc
+// /approach/ §10.6 "Human in the loop and controls" (id "controls"): the four levels of autonomy as a
+// ladder (a meter fills with each level; who decides is always a sky chip with user-check, DESIGN.md
+// §2.4), then the six controls the client keeps as a cell grid (DESIGN.md §6.17).
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+
+const levels = [
+  { name: 'Draft', body: 'The agent prepares the work. A person sends, books or changes it.', chip: 'A person acts', handoff: false },
+  { name: 'Approve', body: 'The agent acts once a person approves each item.', chip: 'Your OK on each item', handoff: false },
+  { name: 'Spot-check', body: 'The agent handles routine work on its own. People review a sample and every exception.', chip: 'You review samples', handoff: true },
+  { name: 'Within limits', body: 'The agent handles routine work end to end, inside hard limits. Anything outside them goes to a person.', chip: 'Exceptions come to you', handoff: true },
+];
+
+const controls: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'user-check', title: 'Approval rules', body: 'Choose what needs a yes: by category, dollar amount, customer type or anything else.' },
+  { icon: 'sliders-horizontal', title: 'Hard limits', body: 'Spending caps, send limits, discount and refund ceilings, and hours the agent can’t exceed.' },
+  { icon: 'circle-alert', title: 'Escalation rules', body: 'Complaints, legal or medical questions, safety issues, key customers and large orders always go to a person.' },
+  { icon: 'clipboard-list', title: 'Clear handoffs', body: 'When an agent passes something to a person, it includes the full context and a summary.' },
+  { icon: 'list-checks', title: 'Quality reviews', body: 'We review samples of agent work weekly at first, then monthly once things are stable, and track accuracy over time.' },
+  { icon: 'power', title: 'An off switch', body: 'Pause any agent at any time, and your team picks up where it left off.' },
+];
+---
+<Section id="controls" tone="sunken" aria-labelledby="controls-title">
+  <SectionHeader
+    num="04"
+    eyebrow="Human in the loop"
+    subtitle="Every agent starts with people approving its work. It takes on more only when its track record supports it, and only when you say so."
+    titleId="controls-title"
+  ><span slot="title" data-motion="split">Agents earn autonomy. You decide how much.</span></SectionHeader>
+
+  <h3 class="type-label ctl-label">Four levels of autonomy</h3>
+  <ol class="ladder" role="list" data-reveal>
+    {levels.map((l, i) => (
+      <li class="ladder__step" style={`--lvl: ${i + 1}`}>
+        <div class="ladder__top">
+          <span class="ladder__n">Level {i + 1}</span>
+          <span class="ladder__meter" aria-hidden="true">{levels.map((_, j) => <i class:list={[j <= i && 'is-on']}></i>)}</span>
+        </div>
+        <h4 class="type-h3 ladder__name">{l.name}</h4>
+        <p class="ladder__body">{l.body}</p>
+        <p class="ladder__who">
+          <span class:list={['chip', l.handoff ? 'chip-handoff' : 'chip-attention']}><Icon name="user-check" />{l.chip}</span>
+        </p>
+      </li>
+    ))}
+  </ol>
+  <p class="ctl-micro"><Icon name="power" />You can move any agent down a level, or pause it, at any time.</p>
+
+  <h3 class="type-label ctl-label ctl-label--second">Controls you keep</h3>
+  <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="cells" cols={3} level={4} items={controls} label="Controls you keep" /></div>
+</Section>
+
+<style>
+  .ctl-label { margin-bottom: 16px; }
+  .ctl-label--second { margin-top: clamp(48px, 6vw, 72px); }
+
+  /* Mobile first: one column, then 2-up with a divider, then one row of four (dividers between). */
+  .ladder { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--line-strong); }
+  .ladder__step { display: flex; flex-direction: column; min-width: 0; padding: 20px 0 22px; border-bottom: 1px solid var(--line); }
+  .ladder__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .ladder__n { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  /* Autonomy meter: one more segment per level, in decorative brass (DESIGN.md §2.3: brass-500 fills). */
+  .ladder__meter { display: inline-flex; gap: 3px; }
+  .ladder__meter > i { width: 14px; height: 4px; border-radius: 2px; background: var(--line-strong); }
+  .ladder__meter > i.is-on { background: var(--color-brass-500); }
+  .ladder__name { margin-top: 14px; }
+  .ladder__body { margin-top: 8px; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .ladder__who { margin-top: auto; padding-top: 16px; }
+
+  .ctl-micro { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 0.875rem; color: var(--fg-2); }
+  .ctl-micro :global(.icon) { color: var(--accent-display); }
+
+  @media (width >= 40rem) {
+    .ladder { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ladder__step { padding: 22px 22px 24px 0; }
+    .ladder__step:nth-child(even) { padding: 22px 0 24px 22px; border-left: 1px solid var(--line); }
+  }
+  @media (width >= 64rem) {
+    .ladder { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .ladder__step, .ladder__step:nth-child(even) { padding: 24px 24px 26px; border-left: 1px solid var(--line); }
+    .ladder__step:first-child { padding-left: 0; border-left: 0; }
+    .ladder__step:last-child { padding-right: 0; }
+  }
+</style>

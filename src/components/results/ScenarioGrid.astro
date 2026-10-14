@@ -1,0 +1,112 @@
+---
+// OWNER: results
+// The six industry scenarios on /results/: an industry filter (toggle buttons) over a two-column
+// hairline ledger of full ScenarioCards. Picking one industry shows that scenario across the full
+// width with its math open. Deep links (#scenario-dental, used by the home preview) clear the filter
+// and open that scenario's math. Without JS every card shows and the filter is hidden.
+import ScenarioCard from './ScenarioCard.astro';
+import { scenarios } from '@/data/scenarios';
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+const list = [...scenarios].sort((a, b) => a.employees - b.employees);
+---
+<div class:list={['sc-explorer', className]} data-sc-explorer>
+  <div class="sc-filter" role="group" aria-label="Filter scenarios by industry" data-sc-filter hidden>
+    <span class="type-label sc-filter__label" aria-hidden="true">Industry</span>
+    <div class="sc-filter__chips">
+      <button type="button" class="demo-tab sc-chip" aria-pressed="true" data-filter="all">All six</button>
+      {list.map((s) => (
+        <button type="button" class="demo-tab sc-chip" aria-pressed="false" data-filter={s.id}>{s.industry}</button>
+      ))}
+    </div>
+  </div>
+  <p class="sr-only" aria-live="polite" data-sc-status></p>
+  <div class="sc-grid" data-sc-grid>
+    {list.map((s) => <ScenarioCard scenario={s} variant="full" />)}
+  </div>
+</div>
+
+<style>
+  .sc-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 28px; }
+  .sc-filter__label { color: var(--fg-3); }
+  .sc-filter__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sc-chip { box-shadow: inset 0 0 0 1px var(--line); }
+  .sc-chip[aria-pressed='true'] { color: var(--color-on); background: var(--color-ink); box-shadow: none; }
+
+  /* Two-column ledger (the reference's .ex-grid): hairlines, no boxes. */
+  .sc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line-accent); }
+  .sc-grid > :global(.sc) { padding: 30px 32px 34px; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .sc-grid > :global(.sc:nth-child(odd)) { padding-left: 0; border-left: 0; }
+  .sc-grid > :global(.sc:nth-child(even)) { padding-right: 0; }
+  .sc-grid.is-solo { grid-template-columns: minmax(0, 1fr); }
+  .sc-grid.is-solo > :global(.sc) { padding-left: 0; padding-right: 0; border-left: 0; }
+  /* One industry picked: a detail view at a readable measure, not a stretched card. */
+  .sc-grid.is-solo > :global(.sc) { max-width: 52rem; }
+  .sc-grid :global(.sc.is-hidden) { display: none; }
+  @media (width < 64rem) {
+    .sc-grid { grid-template-columns: minmax(0, 1fr); }
+    .sc-grid > :global(.sc), .sc-grid > :global(.sc:nth-child(n)) { padding: 28px 0 32px; border-left: 0; border-top: 0; }
+  }
+  @media (width < 40rem) {
+    .sc-filter { flex-wrap: nowrap; align-items: flex-start; flex-direction: column; }
+    .sc-filter__chips { flex-wrap: nowrap; width: calc(100% + 2 * var(--spacing-gutter)); margin-inline: calc(-1 * var(--spacing-gutter)); padding: 2px var(--spacing-gutter) 6px; overflow-x: auto; scrollbar-width: none; }
+    .sc-chip { flex: none; }
+  }
+</style>
+
+<script>
+  function init(root: HTMLElement) {
+    if (root.dataset.ready === 'true') return;
+    root.dataset.ready = 'true';
+    const filter = root.querySelector<HTMLElement>('[data-sc-filter]');
+    const grid = root.querySelector<HTMLElement>('[data-sc-grid]');
+    const status = root.querySelector<HTMLElement>('[data-sc-status]');
+    if (!filter || !grid) return;
+    const chips = Array.from(filter.querySelectorAll<HTMLButtonElement>('[data-filter]'));
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-scenario]'));
+    const autoOpened = new Set<HTMLDetailsElement>();
+    filter.hidden = false;
+
+    const apply = (id: string, announce = true) => {
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.filter === id)));
+      let shown = 0;
+      cards.forEach((card) => {
+        const on = id === 'all' || card.dataset.scenario === id;
+        card.classList.toggle('is-hidden', !on);
+        if (on) shown++;
+      });
+      const solo = id !== 'all' && shown === 1;
+      grid.classList.toggle('is-solo', solo);
+      autoOpened.forEach((d) => { d.open = false; });
+      autoOpened.clear();
+      if (solo) {
+        const details = cards.find((c) => c.dataset.scenario === id)?.querySelector<HTMLDetailsElement>('[data-sc-details]');
+        if (details && !details.open) { details.open = true; autoOpened.add(details); }
+      }
+      if (announce && status) {
+        const card = cards.find((c) => c.dataset.scenario === id);
+        status.textContent = id === 'all' ? `Showing all ${cards.length} scenarios.` : `Showing 1 of ${cards.length} scenarios: ${card?.dataset.industry ?? ''}, with the math open.`;
+      }
+    };
+
+    chips.forEach((chip) => chip.addEventListener('click', () => apply(chip.dataset.filter ?? 'all')));
+
+    const openFromHash = () => {
+      const m = window.location.hash.match(/^#scenario-([\w-]+)$/);
+      if (!m) return;
+      const card = cards.find((c) => c.dataset.scenario === m[1]);
+      if (!card) return;
+      apply('all', false);
+      const details = card.querySelector<HTMLDetailsElement>('[data-sc-details]');
+      if (details) details.open = true;
+      card.scrollIntoView({ block: 'start' });
+    };
+    window.addEventListener('hashchange', openFromHash);
+    openFromHash();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-sc-explorer]').forEach(init);
+</script>

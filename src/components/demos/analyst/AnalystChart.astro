@@ -1,0 +1,96 @@
+---
+// Clustered column chart: gross margin % by product line, Jul–Sep (content/DEMOS.md §2 step 5). OWNER: demo-analyst.
+// DESIGN.md §3: surface-aware --viz-* roles (it sits on the paper sheet, so it takes the paper values),
+// categorical slots in the order DEMOS.md lists the product lines, 24px columns with 4px rounded data ends,
+// solid hairline grid at 0/10/20/30%, legend top-left, selective labels (the three Paper goods columns and
+// September Safety & PPE), one annotation with a 1px leader. Labels are HTML, so text never drops below 12px.
+// Phones: a 34.7px "22.4%" label is wider than a 14px column plus its gaps and would sit on the taller
+// neighbors, so labels drop the % sign there (the title and the axis carry the unit) and never touch a mark.
+// Engine start states: frame data-ghost, columns data-grow, labels data-ghost (DEMO_ENGINE.md §4).
+import { chartMax, chartSeries, chartTicks, months } from './data';
+
+const frac = (v: number) => (v / chartMax).toFixed(4);
+const labelled = (key: string, m: number) => key === 'pg' || (key === 'sp' && m === 2);
+const pg = chartSeries.find((s) => s.key === 'pg')!;
+// Annotation geometry: a bracket over the August and September Paper goods columns.
+const annot = `--a:${frac(pg.values[1])};--b:${frac(pg.values[2])};--top:${frac(32.4)}`;
+const handle = (key: string, m: number) => (key === 'pg' ? 'bar-pg' : key === 'jn' ? 'bar-jn' : key === 'sp' && m === 2 ? 'bar-sp9' : undefined);
+---
+<figure class="chart ax-chart">
+  <div class="ax-chart__top" data-el="ch-head" data-ghost>
+    <figcaption>
+      <p class="chart__title">Gross margin % by product line · Q3</p>
+      <p class="chart__sub">Jul–Sep 2026 · from the Pivot sheet</p>
+    </figcaption>
+    <ul class="chart__legend ax-chart__legend" aria-hidden="true">
+      {chartSeries.map((s) => <li><span class="chart__key" style={`--k:var(--viz-${s.tone})`}></span>{s.name}</li>)}
+    </ul>
+  </div>
+  <div class="ax-plot" role="img" aria-label="Paper goods margin fell from 22.4% to 18.6% from July to September, the steepest drop of the four product lines; Safety & PPE slid to 25.6% in September.">
+    <div class="ax-gridlines" data-el="ch-axes" data-ghost aria-hidden="true">
+      {chartTicks.map((t) => <span style={`--v:${frac(t)}`} data-l={`${t}%`}></span>)}
+    </div>
+    <div class="ax-clusters" aria-hidden="true">
+      {months.map((m, mi) => (
+        <div class="ax-cluster">
+          {chartSeries.map((s) => (
+            <span
+              class:list={['ax-bar', s.key === 'jn' && 'is-flag']}
+              style={`--v:${frac(s.values[mi])};--k:var(--viz-${s.tone})`}
+              data-el={handle(s.key, mi)}
+              data-final-class={s.key === 'jn' ? 'is-flag' : undefined}
+              data-grow
+            >
+              {labelled(s.key, mi) && <span class="ax-blab" data-el="blab" data-ghost>{s.values[mi].toFixed(1)}<span class="ax-blab__u">%</span></span>}
+            </span>
+          ))}
+          <span class="ax-xlab">{m}</span>
+        </div>
+      ))}
+      <div class="ax-annot" style={annot} data-el="annot" data-ghost>
+        <span class="ax-annot__line"></span>
+        <span class="ax-annot__leg ax-annot__leg--a"></span>
+        <span class="ax-annot__leg ax-annot__leg--b"></span>
+        <span class="ax-annot__text">Freight surcharges from Aug 4</span>
+      </div>
+    </div>
+  </div>
+</figure>
+
+<style>
+  .ax-chart { --gutter: 2.5rem; --bar: 24px; --gap: 8px; display: flex; flex: 1; flex-direction: column; gap: 14px; min-height: 0; }
+  .ax-chart__top { display: grid; gap: 10px; }
+  .ax-chart__legend { gap: 6px 18px; }
+  .ax-plot { position: relative; flex: 1; min-height: 160px; margin-bottom: 24px; }
+
+  /* Horizontal gridlines only, solid hairlines; the baseline uses --viz-axis (DESIGN.md §3.5) */
+  .ax-gridlines { position: absolute; inset: 0 0 0 var(--gutter); pointer-events: none; }
+  .ax-gridlines > span { position: absolute; left: 0; right: 0; bottom: calc(var(--v) * 100%); height: 1px; background: var(--viz-grid); }
+  .ax-gridlines > span:first-child { background: var(--viz-axis); }
+  .ax-gridlines > span::before { content: attr(data-l); position: absolute; right: calc(100% + 8px); top: -6px; font-size: 0.75rem; line-height: 1; color: var(--viz-text-muted); font-variant-numeric: tabular-nums; }
+
+  .ax-clusters { position: absolute; inset: 0 0 0 var(--gutter); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ax-cluster { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: var(--gap); height: 100%; }
+  .ax-bar { position: relative; flex: none; width: var(--bar); height: calc(var(--v) * 100%); border-radius: var(--radius-data) var(--radius-data) 0 0; background: var(--k); }
+  .ax-bar.is-flag { outline: 1.5px dashed var(--viz-text-muted); outline-offset: 2px; }
+  .ax-blab { position: absolute; left: -20px; right: -20px; bottom: calc(100% + 6px); font-size: 0.75rem; font-weight: 550; line-height: 1; text-align: center; white-space: nowrap; color: var(--viz-text); font-variant-numeric: tabular-nums; }
+  .ax-xlab { position: absolute; left: 0; right: 0; top: calc(100% + 8px); font-size: 0.75rem; line-height: 1; text-align: center; color: var(--viz-text-muted); }
+
+  /* Annotation: a 1px --viz-axis bracket from the August to the September Paper goods column (DESIGN.md §3.5).
+     Paper goods is the third of four columns, so its centre sits half a step right of the cluster centre. */
+  .ax-annot { --dx: calc((var(--bar) + var(--gap)) / 2); position: absolute; inset: 0; pointer-events: none; }
+  .ax-annot__line, .ax-annot__leg { position: absolute; background: var(--viz-axis); }
+  .ax-annot__line { left: calc(50% + var(--dx)); width: calc(100% / 3); bottom: calc(var(--top) * 100%); height: 1px; }
+  .ax-annot__leg { width: 1px; }
+  .ax-annot__leg--a { left: calc(50% + var(--dx)); bottom: calc(var(--a) * 100% + 22px); top: calc((1 - var(--top)) * 100%); }
+  .ax-annot__leg--b { left: calc(500% / 6 + var(--dx)); bottom: calc(var(--b) * 100% + 22px); top: calc((1 - var(--top)) * 100%); }
+  .ax-annot__text { position: absolute; left: calc(400% / 6 + var(--dx)); bottom: calc(var(--top) * 100% + 6px); transform: translateX(-50%); font-size: 0.75rem; line-height: 1; white-space: nowrap; color: var(--viz-text-muted); }
+
+  @media (width < 48rem) {
+    .ax-chart { --gutter: 2rem; --bar: 14px; --gap: 8px; gap: 10px; }
+    .ax-chart__legend { gap: 4px 12px; }
+    .ax-blab { left: -12px; right: -12px; }
+    .ax-blab__u { display: none; }
+    .ax-annot__text { white-space: normal; width: 9.5rem; text-align: center; line-height: 1.25; }
+  }
+</style>

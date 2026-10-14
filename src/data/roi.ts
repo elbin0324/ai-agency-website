@@ -97,7 +97,7 @@ export const roiAssumptions: { id: string; label: string; value: number; unit: s
   { id: 'aiResolutionPct', label: 'Share of inquiries an AI agent resolves end to end without staff (blend of chat, email and phone; conservative chat rate, base phone rate)', value: C.aiResolutionPct, unit: '% of inquiries', sources: ['cx-09', 'cx-10', 'ai-28'] },
   { id: 'fteHoursPerYear', label: 'Hours actually worked per full-time employee per year (for FTE capacity)', value: C.fteHoursPerYear, unit: 'hours per year', sources: ['lab-04', 'lab-05', 'lab-11'] },
   { id: 'defaultHourlyCost', label: 'Default loaded hourly cost: routine office and admin work (median wage x 1.35)', value: 29, unit: '$ per hour worked', sources: ['lab-01', 'lab-06'] },
-  { id: 'perPersonCeiling', label: 'Evidence ceiling on routine-admin hours returned per worker (all agent tasks combined); the defaults return 1.4', value: 2, unit: 'hours per worker per week', sources: ['time-01', 'ai-15', 'time-05'] },
+  { id: 'perPersonCeiling', label: 'Evidence ceiling on routine-admin hours returned per worker (all agent tasks combined); the calculator’s defaults return 1.4 hours a week', value: 2, unit: 'hours per worker per week', sources: ['time-01', 'ai-15', 'time-05'] },
 ];
 
 export type RoiResult = {
