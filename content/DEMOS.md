@@ -341,7 +341,7 @@ Status: Triggered · callback task created for Renee K.
 | Tile | Value | Label | Basis (one line) |
 |---|---|---|---|
 | Time | 2 min | First message to confirmed booking | First message 9:47 pm, booked 9:49 pm; first reply in 2 seconds vs a typical ~60 min web reply (cx-20, cx-18). |
-| Staff time | 0 min | Office time to book, confirm and log | By phone the next morning: about 5 staff minutes per routine contact (cx-34), if they haven't booked elsewhere. |
+| Staff time | 0 min | Office time to book, confirm and log | vs about 5 staff minutes by phone the next morning (cx-34), if the customer hasn't booked elsewhere by then. |
 | Value | $215 | Estimated job value | Midpoint of the quoted $165–$265; about $86 gross profit at a 40% service-job margin (cx-28, pnl-16). |
 
 `COPY.md` §8.3 placeholders: `{seconds}` = 2 · `{job_value}` = $215 · booked at 9:49 pm (the copy draft says 9:52 PM; use 9:49 pm).
@@ -579,11 +579,11 @@ Together: $46,780 of Q3 margin, about $28,000 a month at September's pace.
 
 | Tile | Value | Label | Basis (one line) |
 |---|---|---|---|
-| Time | 4 min | Agent run; Priya reviews the Log | Run 3 min 48 s. Modeled saving ~36 min: 10% of a ~6-hr manual job, the measured rate for spreadsheet work (ai-23, ai-21). |
+| Time | 36 min | Modeled time saved this run | The agent ran 3 min 48 s and Priya still reviews the Log, so we count 10% of a ~6-hr manual job, the measured rate for spreadsheet work (ai-23, ai-21). |
 | Value | $46,780 | Q3 margin leaks found | Identified, not yet recovered: freight $23,056 + glove costs $9,724 + expired discount $14,000 (pnl-28, pnl-29). |
-| Outcome | ~$28K/mo | At stake at September's pace | Sep: freight $15,265 + gloves $8,227 + discount $4,667 (Q3's $14,000 ÷ 3), on a 25.3% margin (pnl-06, pnl-16). |
+| Outcome | ~$28K a month | At stake at September's pace | Sep: freight $15,265 + gloves $8,227 + discount $4,667 (Q3's $14,000 ÷ 3), on a 25.3% margin (pnl-06, pnl-16). |
 
-`COPY.md` §8.4 placeholders: `{manual_hours}` = 6 (manual baseline only; the copy must not present those 6 hours as saved: the modeled saving is ~36 min) · `{agent_minutes}` = 4 · `{n}` = 3 · `{value}` = $46,780.
+`COPY.md` §8.4 placeholders: `{manual_hours}` = 6 (manual baseline only; the copy must not present those 6 hours as saved: the modeled saving is ~36 min) · `{agent_minutes}` = 4 (the 3 min 48 s run, used only in the step 7 caption "Done in under 4 minutes"; the result card leads with the modeled saving instead, because a "4 min" tile read as "6 hours down to 4 minutes") · `{n}` = 3 · `{value}` = $46,780.
 
 ### Reduced-motion final state
 
@@ -1250,7 +1250,7 @@ Stops on any reply, bounce or opt-out · each follow-up passes the same 5 checks
 | Tile | Value | Label | Basis (one line) |
 |---|---|---|---|
 | Time | ~6.5 min vs ~10 min | Sam's time per prospect, with review | Agent drafts in 90 s; Sam's checks keep a 35% saving on a 10-minute manual baseline (sales-11, ai-03). |
-| Value | ~$9,500 | First-year gross profit if it closes | 22 users × $90 per user a month (sales-26) × 12 months × an assumed 40% gross margin = $9,504. |
+| Sources | 2/2 facts sourced | Every claim checked | Both facts link to the dossier (firm news page, Sep 8; job post, Sep 29); the proof point is on Parkline's approved claims list. |
 | Outcome | 5/5 checks · 3 skipped | Quality before volume | 5 checks incl. the CAN-SPAM footer (sales-16) and Sam's approval; 3 matching firms skipped for lack of a reason. |
 
 `COPY.md` §8.7 placeholders: `{manual_minutes}` = 10 (Sam's time with the agent: ~6.5) · `{agent_minutes}` = 1.5 (90 seconds of agent drafting) · `{n}` = 9 (Tuesday's queue) · `{skipped}` = 3.
@@ -1467,7 +1467,7 @@ Every number above was recomputed by script on 2026-10-12, and again after the b
 
 **5 · Sales Agent**
 - Email B: 89 words from "Hi Dana," through "No call needed." (limit 120).
-- Value: 22 × $90 × 12 × 40% = $9,504 (MRR $1,980, inside the base $1,001–$2,500 band, sales-26).
+- Value: 22 × $90 × 12 × 40% = $9,504 (MRR $1,980, inside the base $1,001–$2,500 band, sales-26). No longer on the result card, which shows "2/2 facts sourced" in its place.
 - Time: 10 min × (1 − 35%) = 6.5 min of Sam's time per prospect.
 - Dates: Mon Oct 12 (approval), Tue Oct 13 (send), Fri Oct 16 (day 3), Thu Oct 22 (day 9), Tue Oct 27 (day 14) fall on those weekdays in 2026.
 

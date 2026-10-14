@@ -30,7 +30,7 @@ const proof = [
     <div class="hero__grid">
       <div class="hero__title">
         <Eyebrow>AI agents and consulting for small and mid-size businesses</Eyebrow>
-        <h1 class="type-display" id="hero-title" data-motion="split">{titleLead} <em>{titleEm}</em></h1>
+        <h1 class="type-display hero__h1" id="hero-title">{titleLead} <em>{titleEm}</em></h1>
       </div>
       <p class="hero__lead type-lead">
         {site.name} builds and runs AI agents: software that does a defined job, like answering customers,
@@ -60,6 +60,13 @@ const proof = [
   .hero__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
   .hero__title { grid-column: 1 / span 7; }
   .hero__title .type-display { margin-top: 20px; max-width: 12ch; }
+  /* The headline is the page's largest paint, so it animates with CSS alone: it paints with the
+     first frame instead of waiting for the motion script (which below-the-fold headings use). */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__h1 { animation: hero-rise 0.9s cubic-bezier(.2, .7, .2, 1) both; }
+    .hero__h1 em { display: inline-block; animation: hero-rise 0.9s cubic-bezier(.2, .7, .2, 1) 0.18s both; }
+  }
+  @keyframes hero-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
   .hero__lead { grid-column: 8 / span 5; align-self: end; padding-bottom: 6px; }
   .hero__actions { grid-column: 1 / span 7; margin-top: 30px; }
   .hero__ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }

@@ -8,7 +8,7 @@ This file holds every number the site shows about value: the savings calculator 
 
 ## How to use this file
 
-- **Labels are required wherever these numbers appear.** Calculator results: "Modeled estimate". Per-service examples: "Illustrative example". Industry scenarios: "Illustrative scenario". Put "Fictional business" next to every example and scenario business name, and link each label to Methodology & assumptions (Section 4).
+- **Labels are required wherever these numbers appear.** Calculator results: "Modeled estimate". Per-service examples: "Illustrative example". Industry scenarios: "Illustrative scenario" (as built, the site labels scenarios per `DESIGN.md` §6.4 instead: the "Illustrative example" tag, with "Fictional business" by the business name). Put "Fictional business" next to every example and scenario business name, and link each label to Methodology & assumptions (Section 4).
 - **Never present any of this as a client result.** No quotes or testimonials attributed to the fictional businesses, no "our clients see" phrasing. Say "in this example" or "in this model".
 - **Numbers are linked.** Don't round, restate or tweak one figure on its own. If an input changes, recompute the whole example; every step of the math is shown.
 - **No prices.** Every value is gross value to the business, before any fees. The calculator's break-even budget is the price-free way to frame it.
@@ -658,7 +658,7 @@ Summary:
 
 ## 3. Industry scenarios (results page)
 
-Six fictional businesses from 8 to 250 employees, ordered by size. Each card carries the label "Illustrative scenario" and "Fictional business", and links to Methodology & assumptions. Rules are the same as Section 2. Time to value is a planning estimate for a typical scope, not a track record; actual timing depends on system access and how quickly decisions get made.
+Six fictional businesses from 8 to 250 employees, ordered by size. Each card carries the label "Illustrative scenario" and "Fictional business", and links to Methodology & assumptions. (As built, the site labels scenarios per `DESIGN.md` §6.4: the cards carry the "Illustrative example" tag plus "Fictional business", and the per-scenario "Illustrative scenario" labels below are not shown.) Rules are the same as Section 2. Time to value is a planning estimate for a typical scope, not a track record; actual timing depends on system access and how quickly decisions get made.
 
 | # | Business (fictional) | Industry | Employees | Agents deployed | Hours back / month | Modeled annual value | Typical time to value |
 |---|---|---|---|---|---|---|---|

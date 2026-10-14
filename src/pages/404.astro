@@ -40,9 +40,12 @@ const links: { icon: IconName; title: string; body: string; href: string; linkLa
   :global(.nf-links) { padding-bottom: var(--spacing-section); }
   .nf-micro { margin-top: 24px; font-size: 0.875rem; color: var(--fg-3); }
   /* Phones: each card is already a whole-card link, so icon plus title works as a compact 2-up tile
-     (ul.fgrid outranks FeatureGrid's own scoped 1-column rule). */
+     (ul.fgrid and .fgrid__card .fgrid__title outrank FeatureGrid's own scoped rules in either CSS order).
+     Every tile takes the tallest one's height, with its icon at the top and its title at the bottom, so a
+     title that wraps ("Free assessment" at 390px) leaves no tile half empty. */
   @media (width < 40rem) {
-    :global(.nf-links ul.fgrid) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    :global(.nf-links ul.fgrid) { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 12px; }
     :global(.nf-links .fgrid__body), :global(.nf-links .fgrid__more) { display: none; }
+    :global(.nf-links .fgrid__card .fgrid__title) { margin-top: auto; padding-top: 14px; }
   }
 </style>

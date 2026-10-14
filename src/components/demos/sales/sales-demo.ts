@@ -69,15 +69,12 @@ async function markClaims(ctx: DemoContext, prefix: 'a' | 'b') {
 /** Step 4, +3,000 ms: the stream has ended, so the pane stops following new lines and returns to the subject line
  *  before the markers land. Phones show about half the email; without this, the subject, "Hi Dana," and fact 1 (the
  *  Riverside office, the trigger the page is built around) scroll away unseen and marker 1 draws off-screen.
- *  Two engine behaviors would pull the pane straight back down: every show() (the markers, the notes) follows its
- *  [data-autoscroll] box, and the stream's follower can stall a pixel or two short of the bottom and never retire
- *  (scrollTop snaps to whole pixels). So the pane drops data-autoscroll, and settles on its true bottom first, which
- *  lets that follower retire on its next frame. Reset rebuilds the scene, so every replay follows the stream again. */
+ *  Every show() (the markers, the notes) follows its [data-autoscroll] box and would pull the pane straight back
+ *  down, so the pane drops data-autoscroll first. Reset rebuilds the scene, so every replay follows the stream again. */
 function backToTop(ctx: DemoContext) {
   const pane = ctx.el('work-pane');
   if (!pane) return;
   pane.removeAttribute('data-autoscroll');
-  pane.scrollTop = pane.scrollHeight;
   return ctx.scroll(pane, 'top', { duration: 300 });
 }
 

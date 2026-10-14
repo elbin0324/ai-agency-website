@@ -1180,14 +1180,17 @@ class Player implements DemoController {
       const follow = () => {
         if (dead()) return clock.removeFrame(follow);
         const dest = box.scrollHeight - box.clientHeight;
-        const diff = dest - box.scrollTop;
-        if (Math.abs(diff) < 1) {
+        const move = (dest - box.scrollTop) * 0.22;
+        // scrollTop snaps to whole pixels (Chrome rounds, other engines may truncate), so an eased move under 1px never
+        // lands: the follower would hover a pixel or two short of the bottom for the rest of the run and pull back every
+        // ctx.scroll on the box. Once the move is under 1px, jump to the exact end and stop.
+        if (Math.abs(move) < 1) {
           box.scrollTop = dest;
           clock.removeFrame(follow);
           p.followers.delete(box);
           return;
         }
-        box.scrollTop += diff * 0.22;
+        box.scrollTop += move;
       };
       p.followers.set(box, follow);
       clock.addFrame(follow);

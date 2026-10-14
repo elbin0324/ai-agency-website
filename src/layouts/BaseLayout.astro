@@ -18,6 +18,7 @@ import '@fontsource-variable/fraunces/opsz-italic.css';
 import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
 import frauncesLatin from '@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2?url';
+import geistLatin from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
 import '@/styles/global.css';
 import '@/styles/motion.css';
 import Header from '@/components/layout/Header.astro';
@@ -79,6 +80,8 @@ const hasMain = /<main[\s>]/i.test(content);
     <link rel="apple-touch-icon" href={url('/apple-touch-icon.png')} />
     <link rel="sitemap" href={url('/sitemap-index.xml')} />
     <link rel="preload" href={frauncesLatin} as="font" type="font/woff2" crossorigin />
+    <!-- Body copy (often the largest paint, e.g. the hero lead) is set in Geist. -->
+    <link rel="preload" href={geistLatin} as="font" type="font/woff2" crossorigin />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.name} />

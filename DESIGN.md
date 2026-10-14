@@ -458,7 +458,7 @@ All classes below exist in `global.css`. Astro components (names from ARCHITECTU
 </div>
 ```
 
-- Every column opens on a 216px mini window tagged `Illustrative`. Window titles are at most 16 characters ("Agents on shift", "Cost per lead", "First email", "Margin, pts"). The four vignettes are: agents with status chips; budget share bars with "Moves capped at 15% a week"; a cited email with green source markers and "2 facts, sourced / Your OK" chips; and a margin waterfall with value labels (`.vg-wf` in the reference page CSS).
+- Every column opens on a 216px mini window tagged `Illustrative`. Window titles are at most 16 characters ("Agents on shift", "Cost per lead", "First email", "Margin, pts"). The four vignettes are: agents with status chips; budget share bars with "Moves capped at 20% a week"; a cited email with green source markers and "2 facts, sourced / Your OK" chips; and a margin waterfall with value labels (`.vg-wf` in the reference page CSS).
 - Columns are divided by 1px rules, and a 2px brass rule grows across the top on hover or focus.
 - Under 640px the icon tile hides (the vignette already identifies the service), and each column shows its vignette and copy at full width.
 
