@@ -161,11 +161,36 @@ function collect(root: ParentNode, effect: MotionEffect): Target[] {
 
 // ---------- split: headings rise word by word out of a mask
 
+// Restraint (MOTION.md §4.1): the word-by-word rise is a headline moment, so it plays on at most a few
+// lines per page: the page H1, the closing CTA headline (navy CTA band) and display lines that opt in with
+// data-split="feature" (a Statement line). Every other data-motion="split" heading, which is most section
+// H2s, gets the quiet section-head fade instead (opacity only, 400ms, no rise), so the same rise doesn't
+// replay every screen and a half. The attribute stays the same, so pages need no change.
+const FEATURE_SPLIT = 'h1, .cta.band-navy, [data-split="feature"]';
+
+function featureSplit(el: HTMLElement): boolean {
+  return !!el.closest(FEATURE_SPLIT);
+}
+
 function split(el: HTMLElement, ctx: gsap.Context, late: boolean): Cleanup | void {
   if (late && inView(el)) return; // the failsafe already showed it: don't hide it again
   const delay = attrNum(el, 'data-delay', 0, 0, 3);
   let st: SplitText | null = null;
   gsap.set(el, { opacity: 0 }); // stays in the accessibility tree while it waits below the fold
+
+  if (!featureSplit(el)) {
+    ScrollTrigger.create({
+      trigger: el,
+      start: at(el.getAttribute('data-start') ?? 'top 88%', el),
+      end: at('bottom top', el),
+      once: true,
+      onEnter: () =>
+        later(ctx, () => {
+          if (el.isConnected) gsap.to(el, { opacity: 1, duration: 0.4, delay, ease: 'power1.out', clearProps: 'opacity' });
+        }),
+    });
+    return;
+  }
 
   const play = () => {
     if (!el.isConnected) return;

@@ -1,12 +1,14 @@
 ---
 // OWNER: pages-misc
-// Book a free AI assessment (content/COPY.md §11, tightened; CRITIQUE.md applied: a shorter form, a
-// "good fit" answer, booking link and phone when configured). Section ids: hero, form (with
-// what-happens-next and assessment beside it), faq (with contact-details).
+// Book a free AI assessment (content/COPY.md §11; DECISIONS.md 2026-10-14: the assessment asks real
+// questions so the first call starts with a draft estimate). Section ids: hero, form (the five-step
+// intake with the live estimate beside it, then what-happens-next and assessment), faq (with
+// contact-details).
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/blocks/PageHero.astro';
 import Section from '@/components/ui/Section.astro';
 import ContactForm from '@/components/contact/ContactForm.astro';
+import EstimatePanel from '@/components/contact/EstimatePanel.astro';
 import NextSteps from '@/components/contact/NextSteps.astro';
 import ContactFaq from '@/components/contact/ContactFaq.astro';
 
@@ -19,7 +21,7 @@ const description =
     crumbs={[{ label: 'Contact' }]}
     eyebrow="Free AI assessment"
     title="Book your *free AI assessment.*"
-    subtitle="Tell us a little about your business. We’ll come prepared, and you’ll leave with a written plan, whether or not you work with us."
+    subtitle="Answer a few questions about your business and watch a preliminary estimate build as you go. We’ll bring a draft to the call, and you’ll leave with a written plan, whether or not you work with us."
     chips={['A 30-minute call, video or phone', 'Written summary in about 3 business days', 'No cost, no obligation']}
     chipsLabel="What the assessment includes"
     primary={false}
@@ -32,8 +34,11 @@ const description =
         <ContactForm />
       </div>
       <div class="contact-grid__aside">
-        <NextSteps />
+        <EstimatePanel />
       </div>
+    </div>
+    <div class="contact-after">
+      <NextSteps />
     </div>
   </Section>
 
@@ -43,9 +48,10 @@ const description =
 <style>
   :global(.contact-hero) { padding-bottom: clamp(32px, 4vw, 48px); }
   :global(.contact-form-sec) { padding-bottom: var(--spacing-section); }
-  .contact-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 40px 24px; align-items: start; }
-  .contact-grid__form { grid-column: 1 / span 7; min-width: 0; }
-  .contact-grid__aside { grid-column: 9 / span 4; position: sticky; top: calc(var(--header-h) + 32px); }
+  .contact-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; align-items: start; }
+  .contact-grid__form { grid-column: 1 / span 8; min-width: 0; }
+  .contact-grid__aside { grid-column: 9 / span 4; position: sticky; top: calc(var(--header-h) + 24px); min-width: 0; }
+  .contact-after { margin-top: clamp(56px, 6vw, 88px); padding-top: clamp(40px, 4vw, 56px); border-top: 1px solid var(--line); }
   @media (width < 64rem) {
     .contact-grid__form, .contact-grid__aside { grid-column: 1 / -1; }
     .contact-grid__aside { position: static; max-width: 40rem; }

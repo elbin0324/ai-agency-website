@@ -28,7 +28,7 @@ const ids = (s: string) => s.replace(/\b([a-z]+)-(\d+)\b/g, '$1-\u2060$2');
   title={`${fileName} · ${business}`}
   label={`${site.name} Analyst Agent · ${business}`}
   columns="64% 36%"
-  tabs={[{ id: 'sheet', label: 'Spreadsheet' }, { id: 'agent', label: `${site.name} Analyst` }]}
+  tabs={[{ id: 'sheet', label: 'Spreadsheet', short: 'Sheet' }, { id: 'agent', label: `${site.name} Analyst`, short: 'Analyst' }]}
   height={540}
   mobileHeight={480}
   ticker="Done in 3 min 48 s · ready for review"

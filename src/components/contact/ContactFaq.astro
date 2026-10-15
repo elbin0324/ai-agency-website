@@ -19,6 +19,10 @@ const items = [
   { q: 'Who will I talk to?', a: who },
   { q: 'Do I need to prepare anything?', a: 'No. If you can, bring one example of work that eats your team’s time: a report, a common customer question or an inbox you dread.' },
   {
+    q: 'How accurate is the preliminary estimate?',
+    a: `It’s a modeled range, not a quote: your answers times published benchmark rates, from the base rates in our research at the low end to the optimistic ones at the high end, never beyond. Where you weren’t sure, it uses typical values and says so. On the call we swap in your real numbers, and your written summary carries the revised estimate. <a href="${url('/results/#methodology')}">See how we estimate</a>.`,
+  },
+  {
     q: 'How do I know if we’re a good fit?',
     a: [
       'You’re likely a good fit if the same kinds of work come up every day or week, like routine questions, data entry or a report someone rebuilds by hand; if that work runs through software with logins, such as email, a calendar, accounting software or a CRM; and if someone can make decisions for a couple of hours in the first week.',

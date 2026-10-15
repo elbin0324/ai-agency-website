@@ -110,6 +110,7 @@ const fmt = (ms: number) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 const first = activeTab ?? tabs?.[0]?.id;
+const hasTabs = !!tabs && tabs.length > 1;
 const sceneStyle = [
   `--aw-h:${height}px`,
   mobileHeight ? `--aw-h-m:${mobileHeight}px` : '',
@@ -119,10 +120,18 @@ const sceneStyle = [
 const name = label ?? title ?? app ?? demo;
 const shortTitle = titleShort ?? title?.split(' · ').reduce((a, b) => (b.length < a.length ? b : a));
 const lines = (t?: string | string[]) => (t ? (Array.isArray(t) ? t : [t]) : []);
+// The result card's footer link goes to this agent's full-year worked example on /results/ (ServiceExamples
+// selects the tab from the #example-{id} anchor), not to the top of the examples section. Those examples use
+// their own fictional business, so the link says "example" rather than promising the math of this run (the
+// tiles' basis lines carry that).
+const exampleIds = ['customer', 'analyst', 'assistant', 'marketing', 'sales', 'consulting'];
+const resultProps = result && exampleIds.includes(demo)
+  ? { mathHref: `/results/#example-${demo}`, mathLabel: 'See a full-year example', ...result }
+  : result;
 ---
 <div class:list={['aw-demo', className]} data-demo={demo} data-autoplay={autoplay ? undefined : 'off'}>
   <div class="app-window app-window--demo" role="group" aria-label={`Simulated demo: ${name}`} tabindex="-1" data-demo-window>
-    <div class="aw-bar">
+    <div class:list={['aw-bar', hasTabs && 'aw-bar--tabs']}>
       <span class="aw-dots" aria-hidden="true"><i></i><i></i><i></i></span>
       {app ? (
         <span class="aw-crumb"><b>{app}</b>{view && <><span class="aw-crumb__sep" aria-hidden="true">/</span><span>{view}</span></>}</span>
@@ -134,21 +143,22 @@ const lines = (t?: string | string[]) => (t ? (Array.isArray(t) ? t : [t]) : [])
         </span>
       )}
       {address && <span class="aw-address">{address}</span>}
+      {/* Phones: the pane switcher takes the title's place in the title bar (the section heading already names the
+          demo), so it costs no row of its own. Hidden from 768px, where every pane shows. */}
+      {hasTabs && (
+        <div class="aw-panetabs aw-seg" role="group" aria-label="Show pane">
+          {tabs!.map((t) => (
+            <button type="button" class="aw-panetab" aria-pressed={t.id === first ? 'true' : 'false'} data-demo-pane-tab={t.id}>
+              <span class="dot" aria-hidden="true"></span>{t.short ?? t.label}
+            </button>
+          ))}
+        </div>
+      )}
       <span class="aw-meta">
         {hasMeta && <span class="aw-meta__scene" data-demo-scene="meta"><slot name="meta" /></span>}
         <span class="aw-tag">{badge}</span>
       </span>
     </div>
-
-    {tabs && tabs.length > 1 && (
-      <div class="aw-panetabs" role="group" aria-label="Show pane">
-        {tabs.map((t) => (
-          <button type="button" class="aw-panetab" aria-pressed={t.id === first ? 'true' : 'false'} data-demo-pane-tab={t.id}>
-            <span class="dot" aria-hidden="true"></span>{t.label}
-          </button>
-        ))}
-      </div>
-    )}
 
     <div class="aw-stage" data-demo-stage>
       <div
@@ -166,7 +176,7 @@ const lines = (t?: string | string[]) => (t ? (Array.isArray(t) ? t : [t]) : [])
       </div>
       {hasResult && (
         <div class="aw-result" data-demo-result>
-          {hasResultSlot ? <slot name="result" /> : result && <ResultCard {...result} />}
+          {hasResultSlot ? <slot name="result" /> : resultProps && <ResultCard {...resultProps} />}
         </div>
       )}
     </div>
@@ -179,6 +189,9 @@ const lines = (t?: string | string[]) => (t ? (Array.isArray(t) ? t : [t]) : [])
       </div>
     )}
 
+    {/* The dock: caption, static step list and player. Desktop: display: contents (they stack under the stage as
+        before). Phones: one compact block above the stage (demo.css). */}
+    <div class="aw-dock">
     <div class="aw-caption" role="status" aria-live="polite" aria-atomic="true" aria-label="Demo captions" data-demo-caption>
       <b data-demo-caption-count>Step 1 of {steps.length}</b><span data-demo-caption-text>{steps[0]?.caption}</span>
     </div>
@@ -219,6 +232,7 @@ const lines = (t?: string | string[]) => (t ? (Array.isArray(t) ? t : [t]) : [])
         <span class="aw-time" data-demo-time>0:00 / {fmt(total)}</span>
         <button type="button" class="aw-skip" data-demo-skip>Skip to result</button>
       </div>
+    </div>
     </div>
   </div>
 

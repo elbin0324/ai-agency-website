@@ -3,7 +3,9 @@
 // AI Sales Agent. Copy: content/COPY.md §6, tightened. Quality over volume is the centerpiece: the
 // problem statement opens the generic-vs-ours comparison (#comparison; its heading carries the
 // #problem anchor), then the research checklist and the quality bar. Section ids follow COPY.md §6.
-// The worked example values time only, so it leads with hours back (SalesWorth), not dollars.
+// The worked example counts rep time only; SalesWorth leads with the pipeline the outreach opens and what
+// one account is worth (critique 2026-10-14), with the counted hours as the second line. The demo follows
+// the comparison, so it is the second section on a phone.
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/blocks/PageHero.astro';
 import Section from '@/components/ui/Section.astro';
@@ -20,6 +22,7 @@ import EmailCompare from '@/components/services/sales/EmailCompare.astro';
 import SalesWorth from '@/components/services/sales/SalesWorth.astro';
 import type { IconName } from '@/components/ui/icons';
 import { getSource } from '@/data/benchmarks';
+import { getWorth } from '@/data/worth';
 import { url } from '@/lib/url';
 
 const title = 'AI Sales Agent';
@@ -89,6 +92,15 @@ const compliance = [
   '<b>Records kept.</b> Every send, reply and opt-out is logged.',
 ];
 
+// Worked example (@/data/worth): its size and the held-meeting rates behind its pipeline rows, read from
+// the data so the copy never goes stale (BENCHMARKS.md base 0.7, optimistic 1.5 per 1,000 prospects).
+const salesEx = getWorth('sales')!;
+const exSize = salesEx.profile.match(/(\d[\d,]*) employees/)?.[1];
+const rateIn = (re: RegExp) => salesEx.math.find((r) => re.test(r.label))?.formula?.match(/×\s*([\d.]+)\s*÷\s*1,000/)?.[1];
+const meetBase = rateIn(/^for context: held meetings/i) ?? '0.7';
+const meetUp = rateIn(/^for context: upside held meetings/i) ?? '1.5';
+const worthSubtitle = `A different fictional business${exSize ? `, a ${exSize}-person commercial cleaner with three reps` : ''}: the pipeline its outreach opens, what one account is worth, and the rep time the agent gives back, which is the only part we count.`;
+
 const ftc = getSource('sales-16');
 const gmail = getSource('sales-13');
 const yahoo = getSource('sales-14');
@@ -116,7 +128,7 @@ const faq = [
   },
   {
     q: 'What results should we expect?',
-    a: `Fewer replies than most tools promise, and we’d rather say so now. Cold email is a slow channel, even done well, so we value the Sales Agent on the prospecting hours it gives back and treat new business as upside. Research and a real reason to write are how you beat the odds, not volume. <a href="${url('/results/#methodology')}">See how we estimate</a>.`,
+    a: `Meetings, not a flood of replies. Even well-researched cold email is a slow channel: we model about ${meetBase} to ${meetUp} held meetings for every 1,000 researched prospects, from published benchmarks. It pays off when one new account is worth a lot to you, as it usually is for distributors, commercial services and B2B firms. In our estimates we count only the prospecting hours the agent gives back, and show the pipeline beside them, never added in. <a href="${url('/results/#methodology')}">See how we estimate</a>.`,
   },
 ];
 ---
@@ -144,8 +156,16 @@ const faq = [
     </div>
   </Section>
 
-  <Section id="research" aria-labelledby="research-title">
-    <SectionHeader num="02" eyebrow="Research checklist" subtitle="Every prospect gets a short dossier. If the research doesn’t turn up a real reason to reach out, the prospect is skipped." titleId="research-title"><span slot="title" data-motion="split">What the agent checks before it writes a word.</span></SectionHeader>
+  <Section id="demo" aria-labelledby="demo-title">
+    <SectionHeader num="02" eyebrow="See it work" titleId="demo-title"><span slot="title" data-motion="split">Watch one prospect go from profile to personal email.</span>
+      <p>The same prospect, start to finish: the research, the draft, the quality check and the send, with the generic AI email for contrast.</p>
+      <a class="link-arrow demo-all" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
+    </SectionHeader>
+    <div data-reveal><SalesDemo /></div>
+  </Section>
+
+  <Section id="research" tone="sunken" aria-labelledby="research-title">
+    <SectionHeader num="03" eyebrow="Research checklist" subtitle="Every prospect gets a short dossier. If the research doesn’t turn up a real reason to reach out, the prospect is skipped." titleId="research-title"><span slot="title" data-motion="split">What the agent checks before it writes a word.</span></SectionHeader>
     <div class="rc" data-reveal>
       <ol class="rc__list" role="list">
         {research.map((r, i) => (
@@ -166,8 +186,8 @@ const faq = [
     </div>
   </Section>
 
-  <Section id="quality" tightTop aria-labelledby="quality-title">
-    <SectionHeader num="03" eyebrow="Our quality bar" subtitle="Before anything goes out, the draft is checked against these eight standards. Anything that falls short goes to a person, or doesn’t go at all." titleId="quality-title"><span slot="title" data-motion="split">Every email has to earn its send.</span></SectionHeader>
+  <Section id="quality" tone="sunken" tightTop aria-labelledby="quality-title">
+    <SectionHeader num="04" eyebrow="Our quality bar" subtitle="Before anything goes out, the draft is checked against these eight standards. Anything that falls short goes to a person, or doesn’t go at all." titleId="quality-title"><span slot="title" data-motion="split">Every email has to earn its send.</span></SectionHeader>
     <ul class="cell-grid qb" style="--cols: 4" role="list" data-reveal data-motion="stagger">
       {quality.map((q) => (
         <li class="cell">
@@ -177,14 +197,6 @@ const faq = [
       ))}
     </ul>
     <p class="note-line" data-reveal><Icon name="list-checks" />The review queue shows the result of every check, for every email.</p>
-  </Section>
-
-  <Section id="demo" tone="sunken" aria-labelledby="demo-title">
-    <SectionHeader num="04" eyebrow="See it work" titleId="demo-title"><span slot="title" data-motion="split">Watch one prospect go from profile to personal email.</span>
-      <p>The research, the draft, the quality check and the send, side by side with what a generic AI tool would have written.</p>
-      <a class="link-arrow demo-all" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
-    </SectionHeader>
-    <div data-reveal><SalesDemo /></div>
   </Section>
 
   <Section id="capabilities" aria-labelledby="capabilities-title">
@@ -221,7 +233,7 @@ const faq = [
   </Section>
 
   <Section id="worth" aria-labelledby="worth-title">
-    <SectionHeader num="08" eyebrow="What it’s worth" subtitle="A different fictional business, a 70-person commercial cleaner: this worked example counts only the prospecting time its rep gets back, and leaves new business out." titleId="worth-title"><span slot="title" data-motion="split">The math: the same emails, in less of your rep’s time.</span></SectionHeader>
+    <SectionHeader num="08" eyebrow="What it’s worth" subtitle={worthSubtitle} titleId="worth-title"><span slot="title" data-motion="split">The pipeline it opens, and the hours it gives back.</span></SectionHeader>
     <SalesWorth />
   </Section>
 

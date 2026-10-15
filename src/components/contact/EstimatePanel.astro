@@ -1,0 +1,189 @@
+---
+// OWNER: pages-misc
+// "Your preliminary estimate": the live panel beside the intake form (below it on phones). A result card
+// (DESIGN.md §6.12: paper-raised, brass top rule that draws in once there is a figure) holding the annual
+// value and the hours back a month as base-to-upside ranges, one ledger row per value lever, the
+// Modeled estimate tag, a one-line method note and the methodology link. intake-client.ts fills it from
+// computeLevers (@/data/roi) through ./estimate.ts; every figure is the model's, never typed here.
+//
+// Interactive, not a mockup: each counted lever opens to show its own math (the inputs it used and every
+// line computeLevers returns), and a lever still waiting for an answer links straight to that question
+// once the visitor has reached its step. Without JavaScript the panel says the estimate will be prepared
+// before the call instead.
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import { url } from '@/lib/url';
+import { computeLevers } from '@/data/roi';
+import { sources } from '@/data/benchmarks';
+import { referencedIds, sourceHref } from '@/components/results/sources';
+
+// Source links for each lever's math, resolved here at build time so the client bundle doesn't carry
+// the citation list: the methodology entry on /results/ when it lists the id (as the calculator links
+// them), else the source itself. { id: [href, citation, external] }
+const listed = referencedIds();
+const sourceLinks: Record<string, [string, string, boolean]> = {};
+for (const lever of computeLevers({}).levers) {
+  for (const id of lever.sources) {
+    if (sourceLinks[id]) continue;
+    const s = sources.find((x) => x.id === id);
+    sourceLinks[id] = listed.has(id)
+      ? [`${url('/results/')}${sourceHref(id)}`, s?.citation ?? id, false]
+      : [s?.url ?? url('/results/#methodology'), s?.citation ?? id, Boolean(s?.url)];
+  }
+}
+
+/** The footnote every modeled figure carries (DESIGN.md §6.4, exact text). */
+const footnote = 'Not a quote or a guarantee. Estimates exclude the cost of the engagement.';
+
+// Row order matches the model's lever ids. Names are replaced at runtime with the model's own labels.
+const rows = [
+  { id: 'time', name: 'Team time', wait: 'Choose a team size in step 1' },
+  { id: 'customers', name: 'Customer inquiries', wait: 'Add monthly inquiries in step 3' },
+  { id: 'marketing', name: 'Ad spend', wait: 'Add your ad spend in step 3' },
+  { id: 'sales', name: 'Sales outreach', wait: 'Tell us about outbound sales in step 3' },
+  { id: 'consulting', name: 'Pricing and vendors', wait: 'Add annual revenue in step 1' },
+];
+---
+<aside class="est result-card is-empty" id="estimate" aria-labelledby="est-title" data-estimate data-sources={JSON.stringify(sourceLinks)}>
+  <div class="est__top">
+    <span class="est__ctx">Updates as you answer</span>
+    <IllustrativeLabel kind="Modeled estimate" />
+  </div>
+  <h2 class="est__title" id="est-title">Your preliminary estimate</h2>
+
+  <div class="est__live">
+    <p class="est__start" data-est-start>
+      Choose a team size in step 1 and your first figure appears here. Each answer after that sharpens it.
+    </p>
+    <div class="est__figs" data-est-figs>
+      <p class="est__fig"><span data-est-total>$0</span><small>a year</small></p>
+      <p class="est__basis">Base case to upside, in profit terms.</p>
+      <p class="est__hours"><b data-est-hours>0</b><span>hours back a month</span></p>
+    </div>
+
+    <ul class="est__levers" role="list" aria-label="Value by lever">
+      {rows.map((r) => (
+        <li class="est__lever is-waiting" data-est-lever={r.id}>
+          <div class="est__lhead">
+            <span class="est__lname">{r.name}</span>
+            <span class="est__lval">Not counted</span>
+            <span class="est__lnote">{r.wait}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+    <p class="est__hint" data-est-hint hidden><Icon name="calculator" size={14} />Select a lever to see its math.</p>
+
+    <p class="est__rev" data-est-rev hidden></p>
+    <p class="est__typical" data-est-typical hidden></p>
+    <p class="est__off" data-est-off hidden>The estimate isn’t available right now. Send your answers anyway: we’ll prepare it before the call.</p>
+  </div>
+
+  <p class="est__nojs">Turn on JavaScript to watch your estimate build as you answer. Or send the form as it is: we’ll work out your numbers before the call.</p>
+
+  <div class="est__foot">
+    <p class="math est__method">Method: your answers × published benchmark rates.</p>
+    <a class="link-arrow est__link" href={url('/results/#methodology')}><span>How we estimate</span><Icon name="arrow-right" /></a>
+    <p class="est__fine">{footnote}</p>
+    <a class="est__back" href="#form-title"><Icon name="chevron-down" size={16} />Back to your answers</a>
+  </div>
+  <template data-est-chev><Icon name="chevron-down" size={16} class="est__chev" /></template>
+  <p class="sr-only" aria-live="polite" data-est-live></p>
+</aside>
+
+<style>
+  .est { padding: clamp(20px, 2.2vw, 26px); }
+  .est.is-empty { --done: 0; }
+  /* Desktop: the panel is sticky beside the form. While a lever's math is open it stops at the viewport
+     and scrolls inside, so the math never hides below the fold. */
+  @media (width >= 64rem) {
+    .est.has-open { max-height: calc(100vh - var(--header-h) - 48px); max-height: calc(100dvh - var(--header-h) - 48px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--color-rule-strong) transparent; }
+  }
+  .est__top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; }
+  .est__ctx { font-size: 0.8125rem; color: var(--color-ink-3); }
+  .est__title { margin-top: 12px; font-family: var(--font-serif); font-size: 1.5rem; font-weight: 400; line-height: 1.2; letter-spacing: -0.016em; color: var(--color-ink); text-wrap: balance; }
+
+  /* Empty: an invitation instead of a placeholder figure. */
+  .est__start { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--color-rule); font-size: 0.9375rem; line-height: 1.55; color: var(--color-ink-2); }
+  .est:not(.is-empty) .est__start, .est.is-empty .est__figs { display: none; }
+
+  .est__figs { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--color-rule); }
+  .est__fig {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px;
+    font-family: var(--font-serif); font-size: var(--text-figure-sm); font-weight: 340; line-height: 1.05; letter-spacing: -0.02em;
+    font-variant-numeric: lining-nums proportional-nums; color: var(--color-ink);
+  }
+  .est__fig small { font-family: var(--font-sans); font-size: 0.9375rem; font-weight: 500; letter-spacing: 0; color: var(--color-brass-700); }
+  .est.is-updated .est__fig span { animation: est-fig 0.5s var(--ease-out-soft); }
+  @keyframes est-fig { from { opacity: 0.45; } to { opacity: 1; } }
+  .est__basis { margin-top: 6px; font-size: 0.8125rem; line-height: 1.45; color: var(--color-ink-3); }
+  .est__hours { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-top: 12px; }
+  .est__hours b { font-size: 1.5rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+  .est__hours span { font-size: 0.875rem; color: var(--color-ink-2); }
+
+  /* Ledger of levers. A counted lever is a button that opens its math; a waiting one says what unlocks it. */
+  .est__levers { margin-top: 14px; border-top: 1px solid var(--color-rule-strong); }
+  .est__lever { border-bottom: 1px solid var(--color-rule); }
+  .est__lever :global(.est__lhead) {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0 12px;
+    width: 100%; padding: 8px 0; border: 0; background: none; font: inherit; text-align: left; color: inherit;
+  }
+  .est__lever :global(button.est__lhead) { grid-template-columns: minmax(0, 1fr) auto 16px; gap: 0 8px; min-height: 44px; cursor: pointer; }
+  .est__lever :global(button.est__lhead:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-control); }
+  .est__lever :global(.est__lname) { font-size: 0.875rem; font-weight: 550; line-height: 1.35; color: var(--color-ink); }
+  .est__lever :global(.est__lval) { font-size: 0.875rem; font-weight: 600; line-height: 1.35; text-align: right; color: var(--color-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .est__lever :global(.est__lnote) { grid-column: 1 / -1; font-size: 0.8125rem; line-height: 1.4; color: var(--color-ink-3); }
+  .est__lever :global(.est__chev) { align-self: center; width: 16px; height: 16px; color: var(--color-ink-3); transition: transform 0.25s var(--ease-out-soft), color 0.15s; }
+  .est__lever :global(button.est__lhead:hover .est__lname) { text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  .est__lever :global(button.est__lhead:hover .est__chev) { color: var(--color-ink); }
+  .est__lever :global(button[aria-expanded="true"] .est__chev) { transform: rotate(180deg); color: var(--color-ink); }
+  .est__lever.is-waiting :global(.est__lname) { color: var(--color-ink-2); font-weight: 500; }
+  .est__lever.is-waiting :global(.est__lval) { font-weight: 400; color: var(--color-ink-3); }
+  .est__lever.is-on { animation: est-row 0.6s var(--ease-out-soft); }
+  @keyframes est-row { from { background-color: color-mix(in srgb, var(--color-brass-500) 12%, transparent); } to { background-color: transparent; } }
+
+  /* "Add monthly inquiries in step 3": a link to the question once its step is reachable. */
+  .est__lever :global(.est__jump) {
+    display: inline; margin: -3px 0; padding: 3px 0; border: 0; background: none; font: inherit; text-align: left; color: var(--color-ink-2);
+    text-decoration: underline; text-decoration-color: var(--accent-line); text-decoration-thickness: 1px; text-underline-offset: 3px; cursor: pointer;
+  }
+  .est__lever :global(.est__jump:hover) { color: var(--color-ink); text-decoration-color: currentColor; }
+  .est__lever :global(.est__jump:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: 4px; }
+
+  /* A lever's math: the inputs it used, then each line of the model's working (like the calculator's). */
+  .est__lever :global(.est__math) { margin: 0 0 12px; padding: 12px 14px 4px; border-radius: var(--radius-tile); background: var(--color-paper-sunken); }
+  .est__lever :global(.est__math[hidden]) { display: none; }
+  .est__lever :global(.est__mbasis) { font-size: 0.8125rem; line-height: 1.5; color: var(--color-ink-2); }
+  .est__lever :global(.est__mlines) { margin-top: 10px; }
+  .est__lever :global(.est__mlines > div) { padding: 8px 0; border-top: 1px solid var(--color-rule); }
+  .est__lever :global(.est__mlines dt) { font-size: 0.8125rem; font-weight: 500; line-height: 1.4; color: var(--color-ink-2); }
+  .est__lever :global(.est__mlines dd) { margin-top: 2px; font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.5; letter-spacing: 0.01em; color: var(--color-ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .est__lever :global(.est__mfoot) { padding: 9px 0 10px; border-top: 1px solid var(--color-rule-strong); font-size: 0.75rem; line-height: 1.55; color: var(--color-ink-3); }
+  .est__lever :global(.est__mfoot a) { color: var(--color-ink-2); font-family: var(--font-mono); font-size: 0.75rem; }
+
+  .est__hint { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 0.8125rem; line-height: 1.4; color: var(--color-ink-3); }
+  .est__hint[hidden] { display: none; }
+  .est__hint :global(.icon) { flex: none; color: var(--accent-display); }
+
+  .est__rev, .est__typical, .est__off { margin-top: 10px; font-size: 0.8125rem; line-height: 1.45; color: var(--color-ink-2); }
+  .est__rev :global(b) { font-weight: 600; color: var(--color-ink); }
+  .est__off { padding: 10px 12px; border-radius: var(--radius-tile); background: var(--color-paper-sunken); }
+
+  .est__nojs { display: none; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--color-rule); font-size: 0.9375rem; line-height: 1.55; color: var(--color-ink-2); }
+  :global(html.no-js) .est__nojs { display: block; }
+  :global(html.no-js) .est__live, :global(html.no-js) .est__ctx { display: none; }
+
+  .est__foot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--color-rule); }
+  .est__link { min-height: 40px; }
+  .est__fine { margin-top: 2px; font-size: 0.75rem; line-height: 1.5; color: var(--color-ink-3); }
+  /* Phones and tablets: the estimate bar's "Details" jumps down here, so offer the way back up. */
+  .est__back { display: none; align-items: center; gap: 6px; min-height: 44px; margin-top: 6px; font-size: 0.9375rem; font-weight: 550; color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  .est__back :global(.icon) { transform: rotate(180deg); color: var(--accent-display); }
+  .est__back:hover { text-decoration-color: currentColor; }
+  @media (width < 64rem) { :global(html.js) .est__back:not([hidden]) { display: inline-flex; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .est__lever.is-on, .est.is-updated .est__fig span { animation: none; }
+    .est__lever :global(.est__chev) { transition: none; }
+  }
+</style>

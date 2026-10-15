@@ -18,10 +18,21 @@ const rows = pick
   .map((id) => providers.find((p) => p.id === id))
   .filter((p): p is (typeof providers)[number] => !!p);
 
-// Shared cost axis for the range bars: $0 to the next $20K above the largest figure shown.
-const axisMax = Math.ceil(Math.max(...rows.map((r) => r.costHigh)) / 20000) * 20000;
-const pct = (v: number) => `${((v / axisMax) * 100).toFixed(1)}%`;
+// Shared axes, as on the AI Consulting page (critique 2026-10-14): cost $0 to $110K with ticks every $25K,
+// time 0 to 32 weeks with ticks every 8 (labels on every other one). Our time bar is the one brass mark; no price bar while
+// site.consultingPrice is null. Phones keep the stacked cards (global .cost-ledger), where bars hide.
+const axisMax = 110_000;
+const WEEKS_MAX = 32;
+const COST_TICKS = [25_000, 50_000, 75_000, 100_000];
+const WEEK_TICKS = [8, 16, 24, 32];
+const pct = (v: number, max = axisMax) => `${Math.max(0, Math.min(100, (v / max) * 100)).toFixed(1)}%`;
 const k = (v: number) => (v === 0 ? '$0' : `$${Math.round(v / 1000)}K`);
+const costTicks = COST_TICKS.map((t) => pct(t));
+const weekTicks = WEEK_TICKS.map((t) => pct(t, WEEKS_MAX));
+const weeksOf = (fig: string) => {
+  const m = fig.match(/(\d+)\s*to\s*(\d+)\+?\s*weeks/i);
+  return m ? { from: pct(+m[1], WEEKS_MAX), to: pct(+m[2], WEEKS_MAX) } : null;
+};
 
 // "8 to 17 weeks (modeled; …)" -> fig "8 to 17 weeks", note "Modeled; …"
 const splitTime = (t: string) => {
@@ -56,26 +67,28 @@ const ourTime = ours.time.replace(/ from kickoff to readout$/, '');
 
   <div class="ct" data-reveal>
     <table class="cost-ledger ct__table">
-      <caption><span class="type-label">A diagnostic and prioritized roadmap for a 20 to 100 person business</span></caption>
+      <caption><span class="type-label">A diagnostic and prioritized roadmap, costed for a 20 to 100 person business</span></caption>
       <thead>
         <tr>
           <th scope="col">Who does it</th>
-          <th scope="col">Typical cost for this scope<span class="cost-ledger__axis" aria-hidden="true"><span>{k(0)}</span><span>{k(axisMax / 2)}</span><span>{k(axisMax)}</span></span></th>
-          <th scope="col">Time to recommendations</th>
+          <th scope="col">Typical cost for this scope<span class="ct__axis" aria-hidden="true"><span style="left:0%">{k(0)}</span>{COST_TICKS.map((t) => <span style={`left:${pct(t)}`}>{k(t)}</span>)}</span></th>
+          <th scope="col">Time to recommendations<span class="ct__axis" aria-hidden="true"><span style="left:0%">0</span>{WEEK_TICKS.filter((_, i) => i % 2 === 1).map((t) => <span class:list={[t === WEEKS_MAX && 'is-end']} style={`left:${pct(t, WEEKS_MAX)}`}>{t === WEEKS_MAX ? `${t} wk` : t}</span>)}</span></th>
         </tr>
       </thead>
       <tbody>
         {rows.map((r) => {
           const t = timeOverride[r.id] ?? splitTime(r.time);
+          const span = weeksOf(t.fig);
           return (
             <tr>
               <th scope="row"><span class="cost-ledger__name">{shortName[r.id] ?? r.category}</span><span class="cost-ledger__sub">{subs[r.id]}</span></th>
               <td data-label="Typical cost for this scope">
                 <span class="cost-ledger__fig">{currency(r.costLow)} to {currency(r.costHigh)}</span>
-                <span class="range-bar" aria-hidden="true"><span class="range-bar__fill" style={`--from:${pct(r.costLow)};--to:${pct(r.costHigh)}`}></span></span>
+                <span class="range-bar" aria-hidden="true">{costTicks.map((l) => <i class="ct__tick" style={`left:${l}`}></i>)}<span class="range-bar__fill" style={`--from:${pct(r.costLow)};--to:${pct(r.costHigh)}`}></span></span>
               </td>
               <td data-label="Time to recommendations">
                 <span class="cost-ledger__fig">{t.fig}</span>
+                {span && <span class="range-bar" aria-hidden="true">{weekTicks.map((l) => <i class="ct__tick" style={`left:${l}`}></i>)}<span class="range-bar__fill" style={`--from:${span.from};--to:${span.to}`}></span></span>}
                 {t.note && <span class="cost-ledger__note">{t.note}</span>}
               </td>
             </tr>
@@ -98,6 +111,7 @@ const ourTime = ours.time.replace(/ from kickoff to readout$/, '');
           </td>
           <td data-label="Time to recommendations">
             <span class="cost-ledger__fig">{ourTime}</span>
+            {weeksOf(ourTime) && <span class="range-bar range-bar--us" aria-hidden="true">{weekTicks.map((l) => <i class="ct__tick" style={`left:${l}`}></i>)}<span class="range-bar__fill" style={`--from:${weeksOf(ourTime)!.from};--to:${weeksOf(ourTime)!.to}`}></span></span>}
             <span class="cost-ledger__note">From kickoff to the readout meeting</span>
           </td>
         </tr>
@@ -106,7 +120,7 @@ const ourTime = ours.time.replace(/ from kickoff to readout$/, '');
 
     <div class="cmp-foot ct__foot">
       <IllustrativeLabel kind="Modeled estimate" href="/services/consulting/#comparison" />
-      <p>{scopeNote} Market costs from public records, 2021 to 2026, modeled as hourly rate × hours. Provider categories, not firms. Sources and the full comparison are on the AI Consulting page.</p>
+      <p>{scopeNote} Market costs from public records, 2021 to 2026, modeled as hourly rate × hours. Provider categories, not firms. Sources and the full comparison are on the AI Consulting page. <b class="ct__bigger">Larger company?</b> We work with businesses up to 500 people; the scope grows with your entities and locations, priced the same way: a fixed fee after the free assessment.</p>
     </div>
     <a class="link-arrow ct__more" href={url('/services/consulting/#comparison')}><span>See the full cost comparison</span><Icon name="arrow-right" /></a>
   </div>
@@ -119,5 +133,13 @@ const ourTime = ours.time.replace(/ from kickoff to readout$/, '');
     .ct__table tbody th { width: 34%; }
   }
   .ct__table tr.is-us .cost-ledger__note { color: var(--color-on-2); }
+  .ct__table .range-bar + .cost-ledger__note { margin-top: 12px; }
+  .ct__axis { position: relative; display: block; height: 16px; margin-top: 8px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 400; line-height: 16px; color: var(--color-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ct__axis > span { position: absolute; top: 0; transform: translateX(-50%); }
+  .ct__axis > span:first-child { transform: none; }
+  .ct__axis > span.is-end { transform: translateX(-100%); }
+  .ct__tick { position: absolute; top: -3px; bottom: -3px; width: 1px; margin-left: -0.5px; background: var(--viz-axis); opacity: 0.6; }
+  .ct__table .range-bar__fill { z-index: 1; }
   .ct__more { margin-top: 8px; }
+  .ct__bigger { font-weight: 600; color: var(--fg-2); }
 </style>

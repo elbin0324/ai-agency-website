@@ -12,6 +12,8 @@ export interface StepMeta {
 export interface PaneTab {
   id: string;
   label: string;
+  /** Shorter label for the phone title bar, where the tabs replace the window title ("Chat" for "Customer chat"). */
+  short?: string;
 }
 
 export type ProvenanceKind = 'Illustrative example' | 'Modeled estimate';
@@ -42,8 +44,11 @@ export interface ResultCardProps {
   heading?: string;
   /** Heading tag level (default 3: demos sit under a section h2). */
   headingLevel?: 2 | 3 | 4;
-  /** "See the math" target, default /results/#examples. */
+  /** Footer link target, default /results/#examples. Inside an AppWindow whose `demo` is one of the six ids,
+   *  the default is that agent's full-year worked example on /results/ (#example-{id}). */
   mathHref?: string;
+  /** Footer link text, default "See the math" ("See a full-year example" with the AppWindow default). */
+  mathLabel?: string;
   /** Show the Replay button (default true) and the primary CTA (default true). */
   replay?: boolean;
   cta?: boolean;

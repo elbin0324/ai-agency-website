@@ -1,24 +1,34 @@
 ---
-// OWNER: theater. Home "See it work" (#demos): six pill tabs over one demo at a time (DESIGN.md §6.12).
-// Copy: content/COPY.md §2.5, tightened; per-demo lines in src/components/demos-page/demo-copy.ts.
+// OWNER: theater. Home "Agent demos" (#demos): the six agents at work, picked from a row of large tabs over one
+// player (DESIGN.md §6.10, §6.12; the picker is ./theater/DemoPicker.astro). Copy: content/COPY.md §2.5, made
+// plainer (2026-10-14: "say plainly that these are the agents at work"); per-demo lines in
+// src/components/demos-page/demo-copy.ts; run times from the demo definitions (./theater/runtimes.ts).
+// Placement (2026-10-14, founder: demos "front and center"): right after the integrations strip, as the proof of
+// the hero's promise. In that slot it opens the page like the hero and the integrations strip, so its rule carries
+// no number by default; the home page passes 01 (home/story/sections.ts) so the sequence never skips.
 // Behavior (DEMO_ENGINE.md "Programmatic control"):
 //   - Only the selected demo plays. On tabs:change the old demo gets demo:pause and the new one demo:play
 //     (a paused demo resumes when its tab comes back; a finished one replays).
+//   - Each tab's bar follows its demo's progress (./theater/demo-progress.ts: demo:step, demo:ended and the
+//     player's own chapters); a demo that reaches its result (demo:ended) is marked "Watched".
 //   - About 4 s after the selected demo's demo:ended, the next tab is selected, unless the visitor has
-//     interacted with the theater (click, tap, key or focus; a touch that only scrolls the page past it doesn't
-//     count). The next tab fills in while it counts down; the countdown holds while the pointer is over the
-//     theater, the theater is out of view or the page is hidden. It stops after the last demo and never runs
-//     with reduced motion.
-//   - Phones: the tab strip scrolls sideways, fades the edge that has more tabs and keeps the selected one in view.
+//     interacted with the theater (click, tap, key, focus, or scrolling the rail by hand; a touch that only
+//     scrolls the page past it doesn't count). The next tab shows "Up next" and fills while it counts down; the
+//     countdown holds while the pointer is over the theater, the theater is out of view or the page is hidden.
+//     It stops after the last demo and never runs with reduced motion.
+//   - Under 1200px the picker is a swipeable rail: it fades the edge that has more cards, flips its swipe hint at
+//     the end and keeps the selected card in view.
 //   - Lazy demos (phone performance): only the first demo is live DOM at load. The other five wait inside a
 //     <template> (parsed, never styled or laid out) and are moved into their panel and mounted the first time
-//     their tab is selected (mountDemos(panel), DEMO_ENGINE.md "Lazy mounting"). When the countdown to the
-//     next demo starts, that demo is instantiated in its hidden panel, so auto-advance switches instantly.
-//     Without JavaScript the first demo shows its final state, and "See all six demos" leads to /demos/.
+//     their tab is selected (mountDemos(panel), DEMO_ENGINE.md "Lazy mounting"). A mouse resting on a tab for
+//     150 ms, or the countdown to it, prepares that demo in its hidden panel first, so the switch is instant.
+//   - Without JavaScript the picker hides (it can't switch) and the first demo shows its final state; "See all six
+//     demos" leads to /demos/.
 import Section from '@/components/ui/Section.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import Icon from '@/components/ui/Icon.astro';
-import Tabs from '@/components/blocks/Tabs.astro';
+import DemoPicker, { type PickerItem } from '@/components/home/theater/DemoPicker.astro';
+import { clock, runtimeMs, spoken } from '@/components/home/theater/runtimes';
 import CustomerAgentDemo from '@/components/demos/CustomerAgentDemo.astro';
 import AnalystDemo from '@/components/demos/AnalystDemo.astro';
 import AssistantDemo from '@/components/demos/AssistantDemo.astro';
@@ -26,12 +36,14 @@ import MarketingDemo from '@/components/demos/MarketingDemo.astro';
 import SalesDemo from '@/components/demos/SalesDemo.astro';
 import ConsultingDemo from '@/components/demos/ConsultingDemo.astro';
 import { demoCopy } from '@/components/demos-page/demo-copy';
-import { homeNum } from '@/components/home/story/sections';
 import { site } from '@/config/site';
 import { url } from '@/lib/url';
 
-/** Home section number from home/story/sections.ts, the agreed page order (02 Services · 03 See it work · 04 Illustrative examples …). */
-const NUM = homeNum.demos;
+interface Props {
+  /** Section rule number ("03"). Unnumbered by default: see "Placement" above. */
+  num?: string;
+}
+const { num } = Astro.props;
 const PREFIX = 'theater';
 
 const components = {
@@ -43,114 +55,105 @@ const components = {
   consulting: ConsultingDemo,
 };
 const panelId = (id: string) => `${PREFIX}-panel-${id}`;
-const tabId = (id: string) => `${PREFIX}-tab-${id}`;
+const items: PickerItem[] = demoCopy.map((d) => ({
+  id: d.id,
+  label: d.label,
+  icon: d.icon,
+  outcome: d.outcome,
+  runtime: clock(runtimeMs[d.id]),
+  runtimeSpoken: spoken(runtimeMs[d.id]),
+  panelId: panelId(d.id),
+}));
 ---
 <Section id="demos" tone="sunken" aria-labelledby="demos-title">
-  <SectionHeader num={NUM} eyebrow="See it work" titleId="demos-title"><span slot="title" data-motion="split">Don’t take our word for it. Watch the work.</span>
-    <p>Six short simulations, one per job. Each runs from the first message to the finished result, with the checks and handoffs we build in.</p>
+  <SectionHeader num={num} eyebrow="Agent demos" titleId="demos-title"><span slot="title" data-motion="split">Watch the AI agents at work.</span>
+    <p>Six short simulations, one per agent, from the first message to the finished result, with the checks and handoffs we build in.</p>
     <a class="link-arrow mt-3" href={url(site.ctas.demos.href)}><span>See all six demos</span><Icon name="arrow-right" /></a>
   </SectionHeader>
 
-  <div class="theater" id="demos-player" data-theater data-reveal>
-    <Tabs
-      label="Demos"
-      idPrefix={PREFIX}
-      panels={false}
-      tabs={demoCopy.map((d) => ({ id: d.id, label: d.label, icon: d.icon, panelId: panelId(d.id) }))}
-    />
-    {demoCopy.map((d, i) => {
-      const Demo = components[d.id];
-      return (
-        <div
-          role="tabpanel"
-          id={panelId(d.id)}
-          aria-labelledby={tabId(d.id)}
-          class="theater__panel"
-          data-theater-panel={d.id}
-          hidden={i !== 0}
-        >
-          <div class="theater__intro">
-            <p class="theater__line"><b>{d.label}.</b> {d.intro}</p>
-            <a class="link-arrow theater__link" href={url(d.link.href)}><span>{d.link.label}</span><Icon name="arrow-right" /></a>
+  <div class="theater" id="demos-player" data-theater>
+    <div class="theater__pick" data-reveal><DemoPicker items={items} idPrefix={PREFIX} label="Agent demos" /></div>
+    <div class="theater__stage" data-reveal data-reveal-delay="80">
+      {demoCopy.map((d, i) => {
+        const Demo = components[d.id];
+        return (
+          <div
+            role="tabpanel"
+            id={panelId(d.id)}
+            aria-labelledby={`${PREFIX}-name-${d.id}`}
+            class="theater__panel"
+            data-theater-panel={d.id}
+            hidden={i !== 0}
+          >
+            {i === 0 ? <Demo /> : <template data-theater-demo><Demo /></template>}
+            <p class="theater__foot">
+              <a class="link-arrow" href={url(d.link.href)}><span>{d.link.label}</span><Icon name="arrow-right" /></a>
+            </p>
           </div>
-          {i === 0 ? <Demo /> : <template data-theater-demo><Demo /></template>}
-        </div>
-      );
-    })}
+        );
+      })}
+    </div>
   </div>
 </Section>
 
 <style>
-  .theater__intro {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 24px;
-    margin-bottom: 14px;
-  }
-  .theater__line { min-width: 0; max-width: 72ch; font-size: var(--text-body); line-height: 1.5; color: var(--fg-2); }
-  .theater__line b { font-weight: 600; color: var(--fg); }
-  .theater__link { flex: none; }
-
-  /* The strip sits flush with the copy column (Tabs.astro pads it 4px for focus rings). */
-  .theater :global(.demo-tabs) { margin-bottom: 20px; }
-
-  /* Countdown to the next demo: the next tab fills with the hover tint, then becomes the selected tab. */
-  .theater :global(.demo-tab) { position: relative; isolation: isolate; overflow: hidden; }
-  .theater :global(.demo-tab.is-next)::after {
-    content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
-    background: color-mix(in srgb, var(--color-ink) 8%, transparent);
-    transform-origin: left center;
-    animation: theater-next-fill var(--advance, 4000ms) linear forwards;
-  }
-  .theater[data-holding] :global(.demo-tab.is-next)::after { animation-play-state: paused; }
-  @keyframes theater-next-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-
-  /* Phones: fade the edge of the strip that has more tabs. */
-  .theater :global(.demo-tabs[data-more-end]) { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 56px), transparent); }
-  .theater :global(.demo-tabs[data-more-start]) { -webkit-mask-image: linear-gradient(90deg, transparent, #000 56px); mask-image: linear-gradient(90deg, transparent, #000 56px); }
-  .theater :global(.demo-tabs[data-more-start][data-more-end]) {
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 56px, #000 calc(100% - 56px), transparent);
-    mask-image: linear-gradient(90deg, transparent, #000 56px, #000 calc(100% - 56px), transparent);
-  }
-
+  /* The hero's "Watch the agents work" (#demos-player) lands here, with the picker and the whole player on a
+     1440 x 900 screen. The reveals sit on the children, so the anchor itself never moves while it is measured. */
+  .theater { scroll-margin-top: -12px; }
+  .theater__pick { margin-bottom: 12px; }
+  .theater__foot { display: flex; justify-content: flex-end; margin-top: 2px; }
   @media (width < 48rem) {
-    .theater__intro { margin-bottom: 12px; }
-    .theater__line { font-size: var(--text-small); }
-    .theater__link { min-height: 40px; font-size: var(--text-small); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .theater :global(.demo-tab.is-next)::after { animation: none; }
+    .theater__pick { margin-bottom: 16px; }
+    .theater__foot { justify-content: flex-start; }
   }
 </style>
 
 <script>
-  import { selectTab, type TabsChangeDetail } from '@/components/blocks/tabs';
+  import { initTabs, selectTab, type TabsChangeDetail } from '@/components/blocks/tabs';
   import { getDemo, mountDemos } from '@/scripts/demo-engine';
+  import { trackProgress } from '@/components/home/theater/demo-progress';
 
   const ADVANCE_MS = 4000;
+  const PREPARE_AFTER_MS = 150; // hover intent: a pointer passing over the row prepares nothing
   const idle = (fn: () => void) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 200));
 
   function initTheater(theater: HTMLElement) {
     if (theater.hasAttribute('data-theater-ready')) return;
-    const tabsRoot = theater.querySelector<HTMLElement>('[data-tabs]');
-    const list = tabsRoot?.querySelector<HTMLElement>('[role="tablist"]');
-    if (!tabsRoot || !list) return;
+    const picker = theater.querySelector<HTMLElement>('[data-picker]');
+    const rail = picker?.querySelector<HTMLElement>('[role="tablist"]');
+    if (!picker || !rail) return;
+    initTabs(picker);
     theater.setAttribute('data-theater-ready', '');
     theater.style.setProperty('--advance', `${ADVANCE_MS}ms`);
 
-    const tabs = Array.from(list.querySelectorAll<HTMLElement>('[role="tab"]'));
+    const tabs = Array.from(rail.querySelectorAll<HTMLElement>('[role="tab"]'));
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const panelOf = (id: string | null) => (id ? theater.querySelector<HTMLElement>(`[data-theater-panel="${id}"]`) : null);
-    const demoOf = (id: string | null) => panelOf(id)?.querySelector<HTMLElement>('[data-demo]') ?? null;
+    const tabOf = (id: string | null | undefined) => tabs.find((t) => t.dataset.tab === id) ?? null;
+    const panelOf = (id: string | null | undefined) => (id ? theater.querySelector<HTMLElement>(`[data-theater-panel="${id}"]`) : null);
+    const demoOf = (id: string | null | undefined) => panelOf(id)?.querySelector<HTMLElement>('[data-demo]') ?? null;
     const send = (el: HTMLElement | null, type: 'demo:play' | 'demo:pause') => el?.dispatchEvent(new CustomEvent(type));
 
+    // ---- Progress: each live demo paints its tab's bar (--p, 0..1).
+    const tracked = new WeakSet<HTMLElement>();
+    const track = (panel: HTMLElement | null) => {
+      const root = panel?.querySelector<HTMLElement>('[data-demo]');
+      const tab = tabOf(panel?.dataset.theaterPanel);
+      if (!root || !tab || tracked.has(root)) return;
+      tracked.add(root);
+      trackProgress(root, (p) => tab.style.setProperty('--p', p.toFixed(4)));
+    };
+
     // ---- Lazy demos: only the first panel's demo is live at load. Each other one waits in a <template> until its
-    // tab is first selected (or the countdown to it starts), then moves into its panel and mounts.
+    // tab is first selected or prepared, then moves into its panel and mounts.
     let waiting: HTMLElement | null = null; // selected, but its definition has not registered yet
     const instantiate = (panel: HTMLElement | null) => {
       const tpl = panel?.querySelector<HTMLTemplateElement>(':scope > template[data-theater-demo]');
       if (!panel || !tpl) return;
       tpl.replaceWith(tpl.content); // used once, so move the nodes instead of cloning them
       mountDemos(panel);
+      track(panel);
     };
+    const prepare = (id: string | undefined) => idle(() => instantiate(panelOf(id)));
     const play = (id: string) => {
       instantiate(panelOf(id));
       const root = demoOf(id);
@@ -163,25 +166,63 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
       waiting = null;
       send(e.target as HTMLElement, 'demo:play');
     });
-    // A tab picked before this script ran (tabs.ts can load first) still gets its demo; it autoplays in view.
-    instantiate(panelOf(tabs.find((t) => t.getAttribute('aria-selected') === 'true')?.dataset.tab ?? null));
+    // A tab picked before this script ran still gets its demo; it autoplays in view.
+    const first = tabs.find((t) => t.getAttribute('aria-selected') === 'true')?.dataset.tab;
+    instantiate(panelOf(first));
+    tabs.forEach((t) => track(panelOf(t.dataset.tab)));
 
-    // ---- Tab strip on phones: edge fades and keep the selected tab in view
+    // Prepare a demo before it is picked: a mouse that rests on its tab. Only where the primary pointer hovers:
+    // after a tap, WebKit reports a "mouse" over whichever card the rail scrolls under the finger. (Keyboard focus
+    // needs nothing: arrows select as they move, and selecting mounts at once.)
+    const hovers = window.matchMedia('(hover: hover)');
+    let hoverTimer = 0;
+    let hoverTab: HTMLElement | null = null;
+    rail.addEventListener('pointerover', (e) => {
+      if (!hovers.matches || (e.pointerType !== 'mouse' && e.pointerType !== 'pen')) return;
+      const tab = (e.target as Element).closest<HTMLElement>('[role="tab"]');
+      if (tab === hoverTab) return; // moving between the parts of one card
+      hoverTab = tab;
+      window.clearTimeout(hoverTimer);
+      if (tab) hoverTimer = window.setTimeout(() => prepare(tab.dataset.tab), PREPARE_AFTER_MS);
+    });
+    rail.addEventListener('pointerleave', () => {
+      hoverTab = null;
+      window.clearTimeout(hoverTimer);
+    });
+
+    // ---- Rail (under 1200px): edge fades and the swipe hint, and keep the selected card in view.
     const edges = () => {
-      const max = list.scrollWidth - list.clientWidth;
-      list.toggleAttribute('data-more-start', max > 1 && list.scrollLeft > 4);
-      list.toggleAttribute('data-more-end', max > 1 && max - list.scrollLeft > 4);
+      const max = rail.scrollWidth - rail.clientWidth;
+      const start = max > 1 && rail.scrollLeft > 4;
+      const end = max > 1 && max - rail.scrollLeft > 4;
+      rail.toggleAttribute('data-more-start', start);
+      rail.toggleAttribute('data-more-end', end);
+      picker.toggleAttribute('data-at-end', start && !end);
     };
+    // A card that is already whole stays put; any other one scrolls to its own snap position (its start at the
+    // rail's scroll padding). Scrolling by an arbitrary amount instead lets the mandatory snap carry the rail on
+    // to the neighbouring card, leaving the selected one half off-screen.
     const keepInView = (tab: HTMLElement) => {
-      if (list.scrollWidth - list.clientWidth < 2) return;
-      const l = list.getBoundingClientRect();
+      if (rail.scrollWidth - rail.clientWidth < 2) return;
+      const pad = parseFloat(getComputedStyle(rail).scrollPaddingInlineStart) || 0;
+      const l = rail.getBoundingClientRect();
       const t = tab.getBoundingClientRect();
-      const pad = 48;
-      const dx = t.left < l.left + pad ? t.left - l.left - pad : t.right > l.right - pad ? t.right - l.right + pad : 0;
-      if (dx) list.scrollBy({ left: dx, behavior: reduced.matches ? 'auto' : 'smooth' });
+      if (t.left >= l.left + pad - 1 && t.right <= l.right - pad + 1) return;
+      rail.scrollTo({ left: rail.scrollLeft + t.left - l.left - pad, behavior: reduced.matches ? 'auto' : 'smooth' });
     };
-    list.addEventListener('scroll', edges, { passive: true });
-    if ('ResizeObserver' in window) new ResizeObserver(edges).observe(list);
+    // Swiping or side-scrolling the rail by hand means the visitor is browsing: stop auto-advance, which would
+    // otherwise pull the rail back to the playing card. (A finger that scrolls the page vertically never scrolls
+    // the rail, and layout-driven snapping happens without a touch, so neither counts.)
+    let touching = false;
+    rail.addEventListener('touchstart', () => (touching = true), { passive: true });
+    rail.addEventListener('touchend', () => (touching = false), { passive: true });
+    rail.addEventListener('touchcancel', () => (touching = false), { passive: true });
+    rail.addEventListener('wheel', (e) => Math.abs(e.deltaX) > Math.abs(e.deltaY) && interact(), { passive: true });
+    rail.addEventListener('scroll', () => {
+      edges();
+      if (touching) interact();
+    }, { passive: true });
+    if ('ResizeObserver' in window) new ResizeObserver(edges).observe(rail);
     edges();
 
     // ---- Auto-advance after demo:ended
@@ -201,7 +242,7 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
     const advance = () => {
       const tab = next;
       stopCountdown();
-      if (tab && !interacted) selectTab(tabsRoot, tab.dataset.tab ?? '');
+      if (tab && !interacted) selectTab(picker, tab.dataset.tab ?? '');
     };
     const run = () => {
       if (!next || timer || holds.size) return;
@@ -225,10 +266,10 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
       tab.classList.add('is-next');
       run();
     };
-    const interact = () => {
+    function interact() {
       interacted = true;
       stopCountdown();
-    };
+    }
 
     // Any click, tap, key press or focus inside the theater means the visitor is driving. A mouse counts on
     // press; a finger or pen only on a finished tap (click), because a touch that scrolls the page past the
@@ -255,19 +296,19 @@ const tabId = (id: string) => `${PREFIX}-tab-${id}`;
     }
 
     theater.addEventListener('demo:ended', (e) => {
-      if (interacted || reduced.matches) return;
       const panel = (e.target as Element).closest<HTMLElement>('[data-theater-panel]');
-      if (!panel || panel.hidden) return;
+      if (!panel) return;
+      tabOf(panel.dataset.theaterPanel)?.setAttribute('data-watched', '');
+      if (interacted || reduced.matches || panel.hidden) return;
       const i = tabs.findIndex((t) => t.dataset.tab === panel.dataset.theaterPanel);
       const tab = tabs[i + 1];
       if (!tab) return;
       startCountdown(tab);
-      // Instantiate the next demo in its hidden panel now, so the switch is instant.
-      idle(() => instantiate(panelOf(tab.dataset.tab ?? null)));
+      prepare(tab.dataset.tab); // so the switch is instant
     });
 
     // Only the selected demo plays.
-    tabsRoot.addEventListener('tabs:change', (e) => {
+    picker.addEventListener('tabs:change', (e) => {
       const d = (e as CustomEvent<TabsChangeDetail>).detail;
       stopCountdown();
       send(demoOf(d.previousId), 'demo:pause');

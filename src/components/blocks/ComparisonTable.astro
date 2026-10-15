@@ -3,8 +3,11 @@
 // use the cost ledger for 4+ provider categories. Paper and sunken bands only (the "us" column is navy).
 // Cells are plain text, or a mark (yes / partial / no: check / minus / x icon) with optional short text.
 // A mark without text gets a screen-reader word, so meaning never rests on the icon alone.
-// Mobile (< 768px): each row becomes a stacked card (each answer under its mono column label) and the
-// "us" answer becomes a navy tile: the most legible pattern for long, sentence-like answers.
+// Phones (< 640px): two columns. Each row label is one line; under it the usual way (ink-3) and ours
+// (ink, on a raised tile) sit side by side, and the only navy is our header cell. With two alternatives,
+// a switch above the table ("Compare with: DIY AI tools | Generic agency") picks which one fills the left
+// column; it is a real control (aria-pressed buttons) that the script below enables, and without JS both
+// alternatives stack in the left column. 640px and up shows the full table.
 // Put the `.cmp-foot` (tag + source line) or a note in the default slot; it renders under the table.
 //
 //   <ComparisonTable caption="How the options compare"
@@ -50,15 +53,31 @@ const words: Record<Mark, string> = { yes: 'Yes', partial: 'Partly', no: 'No', .
 const icons: Record<Mark, IconName> = { yes: 'check', partial: 'minus', no: 'x' };
 const norm = (c: Cell | undefined) => (typeof c === 'string' ? { text: c } : c ?? { text: '' });
 const revealAttr = reveal ? { 'data-reveal': '' } : {};
+// Index of each alternative (non-"us") column, for the phone switch: 0, 1 … in column order.
+const altIndex = columns.map((col, i) => (col.us ? -1 : columns.slice(0, i).filter((c) => !c.us).length));
+const alts = columns.filter((c) => !c.us);
+const usCol = columns.find((c) => c.us);
+const hasSwitch = alts.length === 2 && !!usCol;
 ---
-<div class:list={['cmp-block', className]} {...revealAttr}>
+<div class:list={['cmp-block', className]} data-alts={alts.length} data-show="0" data-cmp-switch={hasSwitch ? '' : undefined} {...revealAttr}>
+  {hasSwitch && (
+    <div class="cmp-switch" role="group" aria-label={`Compare ${usCol!.short ?? usCol!.label} with`}>
+      {caption && <p class="cmp-switch__cap" aria-hidden="true">{caption}</p>}
+      <span class="cmp-switch__k" aria-hidden="true">Compare with</span>
+      <span class="cmp-switch__seg">
+        {alts.map((col, k) => (
+          <button type="button" class="cmp-switch__btn" data-show={k} aria-pressed={k === 0 ? 'true' : 'false'}>{col.short ?? col.label}</button>
+        ))}
+      </span>
+    </div>
+  )}
   <table class="cmp" id={id} role="table">
     {caption && <caption>{caption}</caption>}
     <thead role="rowgroup">
       <tr role="row">
         <th role="columnheader" scope="col"><span class="sr-only">{rowHeaderLabel}</span></th>
         {columns.map((col) => (
-          <th role="columnheader" scope="col" class:list={[col.us && 'is-us']}>
+          <th role="columnheader" scope="col" class:list={[col.us && 'is-us']} data-alt={col.us ? undefined : altIndex[columns.indexOf(col)]}>
             {col.us && usMark ? (
               <span class="cmp-us">
                 <span class="cmp-us__mark" aria-hidden="true"><Logo variant="dark" href={null} wordmark={false} size={18} /></span>
@@ -77,7 +96,7 @@ const revealAttr = reveal ? { 'data-reveal': '' } : {};
             const cell = norm(row.cells[i]);
             const muted = cell.muted ?? (!col.us && cell.mark === 'no');
             return (
-              <td role="cell" class:list={[col.us && 'is-us', muted && 'is-muted']} data-label={col.short ?? col.label}>
+              <td role="cell" class:list={[col.us && 'is-us', muted && 'is-muted']} data-label={col.short ?? col.label} data-alt={col.us ? undefined : altIndex[i]}>
                 {cell.mark ? (
                   <span class:list={['cmp-val', `cmp-val--${cell.mark}`]}>
                     <Icon name={icons[cell.mark]} />
@@ -94,6 +113,24 @@ const revealAttr = reveal ? { 'data-reveal': '' } : {};
   <slot />
 </div>
 
+<script>
+  // Phone switch: pick which alternative fills the "usual way" column. CSS shows the switch only under
+  // 640px and only once this has run (.has-switch), so it never appears without working.
+  function initCmpSwitch(root: ParentNode = document) {
+    root.querySelectorAll<HTMLElement>('[data-cmp-switch]:not(.has-switch)').forEach((block) => {
+      const btns = Array.from(block.querySelectorAll<HTMLButtonElement>('.cmp-switch__btn'));
+      const show = (k: string) => {
+        block.dataset.show = k;
+        btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.show === k)));
+      };
+      btns.forEach((b) => b.addEventListener('click', () => show(b.dataset.show ?? '0')));
+      show(block.dataset.show ?? '0');
+      block.classList.add('has-switch');
+    });
+  }
+  initCmpSwitch();
+</script>
+
 <style>
   .cmp-us { display: inline-flex; align-items: center; gap: 8px; }
   .cmp-us__mark { display: inline-flex; }
@@ -104,10 +141,21 @@ const revealAttr = reveal ? { 'data-reveal': '' } : {};
   .cmp-val--partial > :global(.icon), .cmp-val--no > :global(.icon) { color: var(--color-ink-3); }
   /* inside the navy "us" column every mark is brass-300 (the global .cmp .is-us .icon rule) */
   .is-us .cmp-val > :global(.icon) { color: var(--color-brass-300); }
-  /* Stacked cards under 768px: the row header and caption take the full card width
-     (global.css keeps the desktop 22% width on tbody th, which squeezes it to ~80px). */
-  @media (width < 48rem) {
+  /* Phone switch: a segmented control on paper (44px targets; pressed = ink fill). Hidden until the
+     script marks the block .has-switch, and only under 640px, where the table shows one alternative. */
+  .cmp-switch { display: none; }
+  @media (width < 40rem) {
     .cmp tbody th { width: auto; }
     .cmp caption { display: block; }
+    .has-switch > .cmp-switch { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 18px; }
+    /* The caption reads first, then the switch: a visible copy sits above the switch and the real
+       caption stays for screen readers. */
+    .cmp-switch__cap { flex: 0 0 100%; margin-bottom: 4px; font-size: 0.9375rem; font-weight: 600; line-height: 1.4; color: var(--color-ink); }
+    .has-switch .cmp caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .cmp-switch__k { font-size: 0.875rem; color: var(--color-ink-2); }
+    .cmp-switch__seg { display: inline-flex; padding: 3px; border-radius: var(--radius-control); background: var(--color-paper-raised); box-shadow: inset 0 0 0 1px var(--color-field); }
+    .cmp-switch__btn { min-height: 38px; padding: 0 14px; border-radius: 6px; font-size: 0.875rem; font-weight: 550; color: var(--color-ink-2); cursor: pointer; transition: background-color 0.15s, color 0.15s; }
+    .cmp-switch__btn[aria-pressed='true'] { background: var(--color-ink); color: var(--color-paper-raised); }
+    .cmp-switch__btn:focus-visible { outline: 2px solid var(--color-brass-600); outline-offset: 2px; }
   }
 </style>

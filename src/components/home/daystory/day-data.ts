@@ -62,7 +62,8 @@ export type Moment = {
   /** Narrative time label and the window clock (minutes after midnight). */
   time: string;
   minutes: number;
-  /** Minutes the clock moves while the moment plays. */
+  /** Minutes the window clock runs while the moment's work builds (then it fast-forwards to the next
+   *  moment). The last moment's minutes run to the end of the story: the evening after the summary. */
   tick: number;
   agent: string;
   icon: IconName;
@@ -82,7 +83,7 @@ export const moments: Moment[] = [
     id: 'inbox',
     time: '7:30 am',
     minutes: 7 * 60 + 30,
-    tick: 11,
+    tick: 22,
     agent: label('assistant', 'Executive Assistant'),
     icon: 'inbox',
     line: 'The inbox is sorted before the first coffee.',
@@ -94,7 +95,7 @@ export const moments: Moment[] = [
     id: 'chat',
     time: '9:40 am',
     minutes: 9 * 60 + 40,
-    tick: 4,
+    tick: 6,
     agent: label('customer', 'Customer Agent'),
     icon: 'message-square',
     line: 'A website question becomes a booked job.',
@@ -106,7 +107,7 @@ export const moments: Moment[] = [
     id: 'margin',
     time: '1:15 pm',
     minutes: 13 * 60 + 15,
-    tick: 6,
+    tick: 14,
     agent: label('analyst', 'Analyst Agent'),
     icon: 'chart-column',
     line: 'A margin leak, caught early.',
@@ -118,7 +119,7 @@ export const moments: Moment[] = [
     id: 'outreach',
     time: '3:30 pm',
     minutes: 15 * 60 + 30,
-    tick: 7,
+    tick: 20,
     agent: label('sales', 'Sales Agent'),
     icon: 'send',
     line: 'Nine researched emails wait for a yes.',
@@ -130,7 +131,7 @@ export const moments: Moment[] = [
     id: 'summary',
     time: '6:00 pm',
     minutes: 18 * 60,
-    tick: 0,
+    tick: 30,
     agent: 'Daily summary',
     icon: 'clock',
     line: 'The day, accounted for.',

@@ -1,0 +1,184 @@
+---
+// OWNER: theater. The Home demo picker (DemoTheater, #demos): six large tabs, one per agent, over one player.
+// Each tab shows the agent's icon, name, the job in a few words ("Late-night chat → booked job") and the run time.
+// States (set by DemoTheater's script; the markup is the idle state, first tab selected):
+//   aria-selected="true"  the demo in the player: ink fill, brass icon, and a brass progress fill (--p, 0..1)
+//                         that follows the demo's own chapters (./demo-progress.ts)
+//   data-watched          the demo ran to its result: "Watched" with a check replaces the run time
+//   .is-next              the countdown to auto-advance: "Up next", and the bar fills over --advance
+//   --p on any tab        progress so far; a demo left mid-way keeps its partial bar
+// Layout: from 1200px a row of six; below that a swipeable rail (scroll snap) with the next card peeking, edge
+// fades (data-more-start / data-more-end on the rail, set by the script) and a "Six agents · Swipe" hint whose
+// arrow turns back once the rail reaches its end (data-at-end on the picker).
+// Behavior: the WAI-ARIA tabs contract of src/components/blocks/tabs.ts (roving tabindex, Left/Right/Home/End,
+// tabs:change on the [data-tabs] root). Brass law (DESIGN.md §2.3): brass only on the selected tab, its icon (as
+// on the .demo-tab pills it replaces) and its progress fill (like the player's chapter fill).
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+
+export type PickerItem = {
+  id: string;
+  label: string;
+  icon: IconName;
+  outcome: { from: string; to: string };
+  /** "0:43" */
+  runtime: string;
+  /** "43 seconds" */
+  runtimeSpoken: string;
+  /** id of the tabpanel this tab controls */
+  panelId: string;
+};
+
+interface Props {
+  items: PickerItem[];
+  /** Prefix for ids; tabs are `${idPrefix}-tab-${id}`, names `${idPrefix}-name-${id}`. */
+  idPrefix: string;
+  /** Accessible name of the tablist. */
+  label: string;
+}
+
+const { items, idPrefix, label } = Astro.props;
+// Two lines on every card, "Late-night chat" over "→ booked job"; the arrow stays with the result's first word.
+const head = (s: string) => s.split(' ')[0];
+const tail = (s: string) => s.split(' ').slice(1).map((w) => ` ${w}`).join('');
+---
+<div class="picker" data-tabs data-picker>
+  <p class="picker__hint" aria-hidden="true">
+    <span class="type-label">{items.length === 6 ? 'Six' : items.length} agents</span>
+    <span class="picker__swipe type-label">Swipe<Icon name="arrow-right" /></span>
+  </p>
+  <div class="picker__rail" role="tablist" aria-label={label} data-picker-rail>
+    {items.map((d, i) => (
+      <button
+        type="button"
+        role="tab"
+        id={`${idPrefix}-tab-${d.id}`}
+        aria-controls={d.panelId}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        tabindex={i === 0 ? 0 : -1}
+        class:list={['pick', i === 0 && 'is-on']}
+        data-tab={d.id}
+      >
+        <span class="pick__icon" aria-hidden="true"><Icon name={d.icon} /></span>
+        <span class="pick__name" id={`${idPrefix}-name-${d.id}`}>{d.label}</span><span class="sr-only">,</span>
+        <span class="pick__line"><span class="pick__from">{d.outcome.from}<span class="sr-only"> becomes</span></span> <span class="pick__to"><Icon name="arrow-right" class="pick__arrow" />{head(d.outcome.to)}</span>{tail(d.outcome.to)}<span class="sr-only">.</span></span>
+        <span class="pick__meta">
+          <span class="pick__time"><Icon name="clock" /><span aria-hidden="true">{d.runtime}</span><span class="sr-only">{d.runtimeSpoken}</span></span>
+          <span class="pick__done"><Icon name="check" />Watched</span>
+          <span class="pick__next">Up next</span>
+        </span>
+        <span class="pick__bar" aria-hidden="true"><span class="pick__fill"></span></span>
+      </button>
+    ))}
+  </div>
+</div>
+
+<style>
+  /* ---------- Card (one tab) */
+  .pick {
+    position: relative; isolation: isolate; overflow: hidden;
+    display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "icon meta" "name name" "line line";
+    align-content: start; align-items: center;
+    min-width: 0; padding: 11px 13px 14px; border-radius: var(--radius-tile);
+    text-align: left; color: var(--color-ink); cursor: pointer;
+    background: color-mix(in srgb, var(--color-paper-raised) 62%, transparent);
+    box-shadow: inset 0 0 0 1px var(--color-rule);
+    transition: background-color 0.2s var(--ease-out-soft), box-shadow 0.2s var(--ease-out-soft), color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pick:hover { background: var(--color-paper-raised); box-shadow: inset 0 0 0 1px var(--color-rule-strong); }
+  .pick:focus-visible { outline-offset: 2px; }
+
+  .pick__icon { grid-area: icon; display: flex; align-items: center; height: 20px; color: var(--color-ink-2); transition: color 0.2s; }
+  .pick__icon > :global(.icon) { width: 18px; height: 18px; }
+  .pick:hover .pick__icon { color: var(--color-ink); }
+  .pick__name { grid-area: name; margin-top: 9px; font-size: 0.9375rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.005em; }
+  .pick__line { grid-area: line; margin-top: 3px; font-size: var(--text-small); line-height: 1.4; color: var(--color-ink-2); }
+  .pick__from { display: block; }
+  .pick__to { white-space: nowrap; }
+  .pick__line :global(.pick__arrow) { display: inline-block; width: 13px; height: 13px; margin: 0 5px 0 1px; vertical-align: -2px; color: var(--color-ink-3); }
+
+  .pick__meta { grid-area: meta; justify-self: end; display: flex; align-items: center; min-height: 20px; font-size: var(--text-ui-sm); line-height: 1; }
+  .pick__time, .pick__done, .pick__next { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .pick__time { font-family: var(--font-mono); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; color: var(--color-ink-3); }
+  .pick__time > :global(.icon), .pick__done > :global(.icon) { width: 12px; height: 12px; }
+  .pick__done > :global(.icon) { stroke-width: 2; }
+  .pick__done { font-weight: 550; color: var(--color-success); }
+  .pick__next { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink-2); }
+  .pick__done, .pick__next { display: none; }
+
+  /* Progress: a 4px bar along the bottom edge, clipped by the card's radius. */
+  .pick__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--color-rule); }
+  .pick__fill, .pick__bar::after { position: absolute; inset: 0; transform-origin: 0 50%; }
+  .pick__fill { transform: scaleX(var(--p, 0)); background: var(--color-ink-3); }
+
+  /* Selected: the demo in the player */
+  .pick[aria-selected="true"] {
+    color: var(--color-on); background: var(--color-navy-800);
+    box-shadow: inset 0 0 0 1px var(--color-navy-950), var(--shadow-float);
+  }
+  .pick[aria-selected="true"] .pick__icon { color: var(--color-brass-300); }
+  .pick[aria-selected="true"] .pick__line { color: var(--color-on-2); }
+  .pick[aria-selected="true"] .pick__line :global(.pick__arrow),
+  .pick[aria-selected="true"] .pick__time { color: var(--color-on-3); }
+  .pick[aria-selected="true"] .pick__bar { background: var(--color-rule-dark-strong); }
+  .pick[aria-selected="true"] .pick__fill { background: var(--color-brass-300); }
+
+  /* Watched: ran to its result */
+  .pick[data-watched] .pick__time { display: none; }
+  .pick[data-watched] .pick__done { display: inline-flex; }
+  .pick[data-watched][aria-selected="true"] .pick__done { color: var(--color-sage); }
+  .pick[data-watched]:not([aria-selected="true"]) .pick__fill { transform: none; background: var(--color-success); }
+
+  /* Up next: the countdown to auto-advance */
+  .pick.is-next .pick__time, .pick.is-next .pick__done { display: none; }
+  .pick.is-next .pick__next { display: inline-flex; }
+  .pick.is-next .pick__bar::after {
+    content: ""; background: var(--color-ink-2);
+    animation: pick-next var(--advance, 4000ms) linear forwards;
+  }
+  :global([data-holding]) .pick.is-next .pick__bar::after { animation-play-state: paused; }
+  @keyframes pick-next { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  /* ---------- Row of six (from 1200px) */
+  .picker__hint { display: none; }
+  .picker__rail { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+
+  /* ---------- Swipeable rail (under 1200px) */
+  @media (width < 75rem) {
+    .picker__hint { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .picker__hint .type-label { color: var(--color-ink-3); }
+    .picker__swipe { display: inline-flex; align-items: center; gap: 6px; }
+    .picker__swipe > :global(.icon) { width: 14px; height: 14px; color: var(--color-ink-2); transition: scale 0.25s var(--ease-out-soft); }
+    .picker[data-at-end] .picker__swipe > :global(.icon) { scale: -1 1; }
+    .picker__rail {
+      grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: var(--pick-w);
+      /* room for the focus ring and the selected card's shadow inside the scroller */
+      margin: -6px -6px -18px; padding: 6px 6px 18px; scroll-padding-inline: 6px;
+      overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none;
+      --pick-w: calc((100% - 3 * 10px) / 3.35);
+    }
+    .picker__rail::-webkit-scrollbar { display: none; }
+    .pick { scroll-snap-align: start; }
+    /* Fade the edge that has more cards: wide at the end, where the next card peeks; only a soft clip at the
+       start, where cards snap whole (a wide fade there would wash out the card in front, often the selected one). */
+    .picker__rail[data-more-end] { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); }
+    .picker__rail[data-more-start] { -webkit-mask-image: linear-gradient(90deg, transparent, #000 8px); mask-image: linear-gradient(90deg, transparent, #000 8px); }
+    .picker__rail[data-more-start][data-more-end] {
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 8px, #000 calc(100% - 48px), transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 8px, #000 calc(100% - 48px), transparent);
+    }
+  }
+  /* Phones: one card and a half, so the next one always shows. */
+  @media (width < 40rem) {
+    .picker__rail { --pick-w: min(248px, 66%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* No playback to follow: no progress or countdown, only the selection and the watched mark. */
+    .pick__bar { display: none; }
+  }
+  /* Without JavaScript the tabs can't switch, so they don't show (the demo player hides its controls the same
+     way): the first demo shows its final state and the section's "See all six demos" link leads on. */
+  :global(html.no-js) .picker { display: none; }
+</style>

@@ -31,7 +31,7 @@ const { autoplay = true, class: className } = Astro.props;
   title={windowTitle}
   label={`${site.name} Executive Assistant · ${business}`}
   columns="20% 48% 32%"
-  tabs={[{ id: 'inbox', label: 'Inbox' }, { id: 'assistant', label: `${site.name} Assistant` }]}
+  tabs={[{ id: 'inbox', label: 'Inbox' }, { id: 'assistant', label: `${site.name} Assistant`, short: 'Assistant' }]}
   height={540}
   mobileHeight={480}
   ticker={ticker.final}

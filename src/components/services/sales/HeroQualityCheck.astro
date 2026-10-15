@@ -2,7 +2,10 @@
 // OWNER: services-b
 // Hero art for /services/sales/: the quality check a draft passes before anyone approves it.
 // Content follows the Sales demo storyboard (content/DEMOS.md §5, steps 6 and 7): five checks, the
-// approval point in sky (DESIGN.md §2.4), and the per-inbox daily cap. Decorative product view: role="img".
+// approval point in sky (DESIGN.md §2.4), and the per-inbox daily cap. The controls work (founder, 2026-10-14:
+// no clickable-looking mockups): "Approve & send" sends it (the chip turns to Sent, the daily count ticks to
+// 10 of 20, Undo puts it back), and "View email" jumps to the email itself in the comparison below. Without
+// JavaScript only the link shows, so nothing looks clickable that isn't.
 import Icon from '@/components/ui/Icon.astro';
 
 const checks = [
@@ -14,7 +17,7 @@ const checks = [
 ];
 ---
 <figure class="hqc">
-  <div class="app-window" role="img" aria-label="Illustration: a first email to Dana Whitaker at Hollis & Grant passes five quality checks, then waits for the sender's approval. The inbox has used 9 of its 20 daily sends.">
+  <div class="app-window" role="group" aria-label="Illustrative quality check: a first email to Dana Whitaker at Hollis & Grant passed five checks and waits for the sender's approval." data-hqc>
     <div class="aw-bar">
       <span class="aw-dots"><i></i><i></i><i></i></span>
       <span class="aw-crumb"><b>Quality check</b><span class="aw-crumb__sep">/</span><span>Hollis &amp; Grant</span></span>
@@ -34,13 +37,19 @@ const checks = [
         ))}
       </ul>
       <div class="hqc__foot">
-        <span class="chip chip-attention"><Icon name="user-check" />Waits for Sam’s OK</span>
-        <span class="hqc__btns"><span class="app-btn">Edit</span><span class="app-btn app-btn--primary">Approve &amp; send</span></span>
+        <span class="chip chip-attention" data-hqc-wait><Icon name="user-check" />Waits for Sam’s OK</span>
+        <span class="chip chip-done" data-hqc-sent hidden><Icon name="check" />Sent and logged to the CRM</span>
+        <span class="hqc__btns">
+          <a class="app-btn" href="#ec-ours" data-hqc-view><Icon name="mail" />View email</a>
+          <button type="button" class="app-btn app-btn--primary hqc__js" data-hqc-approve><Icon name="send" />Approve &amp; send</button>
+          <button type="button" class="app-btn" data-hqc-undo hidden><Icon name="rotate-ccw" />Undo</button>
+        </span>
       </div>
       <dl class="ledger-rows hqc__rows">
-        <div><dt>Daily limit, this inbox</dt><dd>9 of 20 used</dd></div>
+        <div><dt>Daily limit, this inbox</dt><dd><span data-hqc-used>9</span> of 20 used</dd></div>
         <div><dt>Skipped today: no reason to write</dt><dd>3 firms</dd></div>
       </dl>
+      <p class="sr-only" aria-live="polite" data-hqc-live></p>
     </div>
   </div>
   <figcaption class="fig-caption hqc__cap"><b>FIG. 1</b> Illustrative interface. Parkline IT and Hollis &amp; Grant are fictional businesses.</figcaption>
@@ -60,9 +69,47 @@ const checks = [
   .hqc__t b { display: block; font-weight: 600; color: var(--color-on); }
   .hqc__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-rule-dark); }
   .hqc__btns { display: flex; gap: 6px; }
+  .hqc__btns .app-btn { cursor: pointer; transition: color .15s, background-color .15s, box-shadow .15s; }
+  .hqc__btns .app-btn :global(.icon) { width: 14px; height: 14px; }
+  .hqc__btns .app-btn:not(.app-btn--primary):hover { color: var(--color-on); box-shadow: inset 0 0 0 1px rgb(224 191 127 / .5); }
+  .hqc__btns .app-btn--primary:hover { background: var(--color-white); }
+  .hqc__js { display: none; }
+  :global(html.js) .hqc__js { display: inline-flex; }
+  @media (pointer: coarse) { .hqc__btns .app-btn { height: 40px; padding: 0 12px; font-size: 0.8125rem; } }
   .hqc__rows { margin-top: 10px; }
   .hqc__rows > div { font-size: 0.8125rem; }
   .hqc__cap { margin-top: 14px; }
   /* phones: keep the window title to its first crumb rather than truncating mid-word */
   @media (width < 40rem) { .hqc .aw-crumb__sep, .hqc .aw-crumb > span:last-child { display: none; } }
 </style>
+
+<script>
+  // The approval point works: approve sends (chip, daily count, a polite announcement), Undo restores it.
+  // "View email" makes sure the comparison below is showing the Sales Agent's email before the jump.
+  document.querySelectorAll<HTMLElement>('[data-hqc]').forEach((root) => {
+    const q = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
+    const wait = q('[data-hqc-wait]');
+    const sent = q('[data-hqc-sent]');
+    const approve = q<HTMLButtonElement>('[data-hqc-approve]');
+    const undo = q<HTMLButtonElement>('[data-hqc-undo]');
+    const used = q('[data-hqc-used]');
+    const live = q('[data-hqc-live]');
+    const base = Number(used.textContent) || 9;
+    const set = (isSent: boolean) => {
+      wait.hidden = isSent;
+      sent.hidden = !isSent;
+      approve.hidden = isSent;
+      undo.hidden = !isSent;
+      used.textContent = String(base + (isSent ? 1 : 0));
+      live.textContent = isSent
+        ? `Approved and sent. ${base + 1} of 20 daily sends used.`
+        : `Back in the queue, waiting for your OK. ${base} of 20 daily sends used.`;
+      (isSent ? undo : approve).focus();
+    };
+    approve.addEventListener('click', () => set(true));
+    undo.addEventListener('click', () => set(false));
+    q('[data-hqc-view]').addEventListener('click', () => {
+      document.querySelector<HTMLButtonElement>('[data-ec] [data-ec-show="ours"]')?.click();
+    });
+  });
+</script>

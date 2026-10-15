@@ -1,12 +1,16 @@
 ---
 // Home: the whole story in one scroll (BRIEF.md site map, ARCHITECTURE.md). OWNER: foundation (layout).
 // Each section is its own component in src/components/home/, built by its owner; keep this order.
-// Background sequence (DESIGN.md §5): paper → sunken (demos) → navy (calculator) → paper → sunken (why-us)
-// → paper → sunken (industries) → paper → navy (final CTA) → footer.
+// Background sequence (DESIGN.md §5): paper → sunken (demos) → paper (where to start) → sunken (day story)
+// → paper → navy (calculator) → paper → sunken (why-us) → paper → sunken (industries) → paper → navy (final CTA)
+// → footer.
+// 2026-10-14 critique round: shorter and less repetitive. "Same team. More gets done." (Outcomes) gave way to
+// "Where to start"; Why us, Security and Industries were cut down; pricing structure sits under How it works.
+// Section numbers: src/components/home/story/sections.ts.
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Hero from '@/components/home/Hero.astro';
 import Integrations from '@/components/home/Integrations.astro';
-import Outcomes from '@/components/home/Outcomes.astro';
+import WhereToStart from '@/components/home/WhereToStart.astro';
 import DayStory from '@/components/home/DayStory.astro';
 import ServicesGrid from '@/components/home/ServicesGrid.astro';
 import DemoTheater from '@/components/home/DemoTheater.astro';
@@ -18,14 +22,15 @@ import Security from '@/components/home/Security.astro';
 import Industries from '@/components/home/Industries.astro';
 import HomeFaq from '@/components/home/HomeFaq.astro';
 import FinalCta from '@/components/home/FinalCta.astro';
+import { homeNum } from '@/components/home/story/sections';
 ---
 <BaseLayout>
   <Hero />
   <Integrations />
-  <Outcomes />
-  <DayStory />
+  <DemoTheater num={homeNum.demos} />
+  <WhereToStart />
+  <DayStory num={homeNum.day} />
   <ServicesGrid />
-  <DemoTheater />
   <Savings />
   <ScenariosPreview />
   <Process />

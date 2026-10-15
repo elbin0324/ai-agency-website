@@ -3,7 +3,12 @@
 // /approach/ §10.3 "The process in detail" (id "process"): five phases on the rising line, each with a
 // duration and a "You get" deliverable, then a "Time to value" row (CRITIQUE.md edit 14) reusing the
 // .leave-with label-and-list motif. Durations are the COPY.md Appendix A #6 commitments.
+// Then "Every month" (id "monthly-report"): what "Run and improve" delivers, as a sample report
+// (ReportWindow.astro, FIG. 2; the agent spec in the hero is FIG. 1), with a link to the sample
+// assessment summary on /contact/ (#sample-summary), the paper that starts an engagement.
 import Section from '@/components/ui/Section.astro';
+import ReportWindow from './ReportWindow.astro';
+import { url } from '@/lib/url';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import Steps from '@/components/blocks/Steps.astro';
 import Icon from '@/components/ui/Icon.astro';
@@ -64,8 +69,40 @@ const timeToValue = [
     </ul>
   </div>
   <p class="process__micro">Timelines depend on scope and access. You get a dated plan before work starts.</p>
+
+  <div class="report-row" id="monthly-report">
+    <div class="report-row__copy" data-reveal>
+      <p class="type-label report-row__label">Every month</p>
+      <h3 class="type-h3 report-row__title">A report in hours and dollars, against the baseline.</h3>
+      <p class="report-row__lead">Once an agent is running, you get one page a month: what changed since launch, what the agent got wrong and who caught it, and what we’d change next. It takes about 30 minutes to review.</p>
+      <ol class="report-row__list" role="list">
+        <li><span class="fig-legend__n" aria-hidden="true">1</span>Hours and dollars against the baseline you signed off in the spec</li>
+        <li><span class="fig-legend__n" aria-hidden="true">2</span>Every mistake caught, and what changed so it doesn’t repeat</li>
+        <li><span class="fig-legend__n" aria-hidden="true">3</span>Proposed changes for next month, each waiting on your OK</li>
+      </ol>
+      <p class="report-row__more">It starts with the free assessment. <a class="link" href={url('/contact/#sample-summary')}>See a sample assessment summary</a>.</p>
+    </div>
+    <div class="report-row__fig">
+      <ReportWindow />
+    </div>
+  </div>
 </Section>
 
 <style>
   .process__micro { margin-top: 28px; font-size: 0.8125rem; line-height: 1.45; color: var(--fg-3); }
+
+  .report-row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; align-items: start; margin-top: clamp(48px, 6vw, 80px); padding-top: clamp(40px, 5vw, 64px); border-top: 1px solid var(--line); scroll-margin-top: calc(var(--header-h) + 16px); }
+  .report-row__copy { grid-column: 1 / span 5; position: sticky; top: calc(var(--header-h) + 24px); min-width: 0; }
+  .report-row__fig { grid-column: 7 / span 6; min-width: 0; }
+  .report-row__label { color: var(--accent); }
+  .report-row__title { margin-top: 10px; max-width: 22ch; }
+  .report-row__lead { margin-top: 12px; max-width: 46ch; font-size: 1rem; line-height: 1.6; color: var(--fg-2); }
+  .report-row__list { display: grid; gap: 12px; margin-top: 20px; }
+  .report-row__list > li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg); }
+  .report-row__more { margin-top: 20px; font-size: 0.875rem; line-height: 1.5; color: var(--fg-3); }
+  .report-row__more .link { font-weight: 550; color: var(--fg); }
+  @media (width < 64rem) {
+    .report-row__copy, .report-row__fig { grid-column: 1 / -1; max-width: 40rem; }
+    .report-row__copy { position: static; }
+  }
 </style>

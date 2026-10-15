@@ -1,9 +1,17 @@
 ---
 // OWNER: results
-// Home "Illustrative examples" (COPY.md §2.7 with CRITIQUE.md edit 9): three industry scenarios from
-// @/data/scenarios as a hairline stat ledger, each linking to its full math on /results/, plus a link
-// to all six. Suggested trio from content/SCENARIOS.md: home services, dental group, distributor.
-// Keep id="examples": COPY.md anchors and other pages link here.
+// Home "Illustrative examples" (COPY.md §2.7 with CRITIQUE.md edit 9; founder decisions 2026-10-14:
+// show the upside, lead with the biggest credible examples, make dashboards interactive). An explorer
+// over all six industry scenarios from @/data/scenarios, in data order (biggest base-case value first):
+//   left   a ledger of the six businesses, each with its value as a range ("$244K to $664K") and a
+//          range bar on one shared scale (base case solid, upside extension), an emphasis chart
+//          (DESIGN.md §3.1): the selected row is ink and brass, the rest gray. The rows are a tablist.
+//   right  the selected business as a compact ScenarioCard: the range figure, where the value comes
+//          from (bars and lever ledger), added revenue, the situation, agents, time to value and
+//          "See the full math" (opens #scenario-{id} on /results/).
+// Under 1024px the ledger becomes a scrolling strip of chips (industry and range) above the panel.
+// Keyboard: arrows in either axis move and select, Home and End jump. Without JS the first business
+// shows and the foot link leads to all six. Keep id="examples": COPY.md anchors and other pages link here.
 import Icon from '@/components/ui/Icon.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import ScenarioCard from '@/components/results/ScenarioCard.astro';
@@ -18,11 +26,19 @@ interface Props {
 }
 const { num = homeNum.examples } = Astro.props;
 
-const featured = ['home-services', 'dental', 'industrial-distributor']
-  .map((id) => scenarios.find((s) => s.id === id))
-  .filter((s): s is (typeof scenarios)[number] => !!s);
 const smallest = Math.min(...scenarios.map((s) => s.employees));
 const largest = Math.max(...scenarios.map((s) => s.employees));
+const max = Math.max(...scenarios.map((s) => s.upside.annualValue));
+// Whole thousands, rounded down so rounding never inflates ("$244K"). Exact figures are in each panel.
+const short = (n: number) => (n >= 1e6 ? `$${(Math.floor(n / 1e5) / 10).toFixed(1)}M` : `$${number(Math.floor(n / 1000))}K`);
+const rows = scenarios.map((s, i) => ({
+  s,
+  i,
+  on: i === 0,
+  tabId: `sx-tab-${s.id}`,
+  panelId: `sx-panel-${s.id}`,
+  width: `${((s.upside.annualValue / max) * 100).toFixed(2)}%`,
+}));
 ---
 <section id="examples" data-section="examples" class="section" aria-labelledby="examples-title">
   <div class="wrap">
@@ -30,21 +46,196 @@ const largest = Math.max(...scenarios.map((s) => s.employees));
       num={num}
       eyebrow="Illustrative examples"
       titleId="examples-title"
-      subtitle={`Six fictional businesses, from ${number(smallest)} to ${number(largest)} staff. Each shows which agents it uses, how long they take to go live and every line of the math.`}
+      subtitle={`Six fictional businesses, from ${number(smallest)} to ${number(largest)} staff. Pick one to see its modeled value, from the base case to the upside, and exactly where that value comes from.`}
     ><span slot="title" data-motion="split">Find a business like yours, with the math shown.</span></SectionHeader>
-    <div class="stat-ledger sc-preview" style={`--cols: ${featured.length}`} data-reveal data-motion="stagger">
-      {featured.map((s) => <ScenarioCard scenario={s} variant="compact" />)}
-    </div>
-    <div class="sc-preview__foot" data-reveal>
-      <p class="sc-preview__note">Fictional businesses. Modeled estimates, not client results.</p>
-      <a class="link-arrow" href={url('/results/#examples')}><span>See all six scenarios and their assumptions</span><Icon name="arrow-right" /></a>
+
+    <div class="sx" data-sx data-reveal>
+      <div class="sx__side">
+        <div class="sx__head">
+          <p class="type-label sx__label">Modeled value a year</p>
+          <ul class="sx__legend" role="list" aria-hidden="true">
+            <li><span class="sx__key"></span>Base case</li>
+            <li><span class="sx__key sx__key--up"></span>Upside</li>
+          </ul>
+        </div>
+        <div class="sx__tabs" role="tablist" aria-label="Illustrative businesses" aria-orientation="vertical">
+          {rows.map(({ s, i, on, tabId, panelId, width }) => (
+            <button
+              type="button"
+              role="tab"
+              class="sx-row"
+              id={tabId}
+              aria-controls={panelId}
+              aria-selected={on ? 'true' : 'false'}
+              tabindex={on ? 0 : -1}
+              style={`--i: ${i}`}
+            >
+              <span class="sx-row__meta">{s.industry}<span class="sx-row__staff"> · {number(s.employees)} staff</span></span>
+              <span class="sx-row__name">{s.business}</span>
+              <span class="sx-row__range">{short(s.annualValue)} <span class="sx-row__to">to</span> {short(s.upside.annualValue)}<span class="sr-only"> a year, base case to upside</span></span>
+              <span class="sx-row__track" aria-hidden="true">
+                <span class="sx-row__bar" style={`--w: ${width}`}>
+                  <i style={`--v: ${s.annualValue}`}></i><i style={`--v: ${s.upside.annualValue - s.annualValue}`}></i>
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+        <div class="sx__foot">
+          <p class="sx__note">Fictional businesses. Modeled estimates, not client results. The base case uses typical published rates; the upside moves the same rates to the optimistic end of the evidence, never past it.</p>
+          <a class="link-arrow" href={url('/results/#examples')}><span>See all six with the full math</span><Icon name="arrow-right" /></a>
+        </div>
+      </div>
+
+      <div class="sx__panels">
+        {rows.map(({ s, on, tabId, panelId }) => (
+          <div class="sx-panel" role="tabpanel" id={panelId} aria-labelledby={tabId} hidden={!on}>
+            <ScenarioCard scenario={s} variant="compact" />
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 </section>
 
 <style>
-  /* 3-up figures: the reference's .ex-grid size, so $169,275 fits a third of the column. */
-  .sc-preview :global(.stat__fig) { font-size: clamp(3rem, 2.4rem + 2vw, 4rem); }
-  .sc-preview__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; margin-top: 18px; }
-  .sc-preview__note { font-size: 0.8125rem; color: var(--fg-3); }
+  .sx { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px clamp(32px, 4.5vw, 64px); align-items: start; }
+  /* The ledger (with its note and the link to all six) stays in view while a long panel is read. */
+  .sx__side { position: sticky; top: calc(var(--header-h) + 24px); }
+  .sx__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line-accent); }
+  .sx__label { color: var(--fg-2); }
+  .sx__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.75rem; line-height: 1.4; color: var(--fg-2); }
+  .sx__legend > li { display: inline-flex; align-items: center; gap: 7px; }
+  .sx__key { flex: none; width: 10px; height: 10px; border-radius: 2px; background: var(--viz-result); }
+  .sx__key--up { background: var(--viz-accent); }
+  .sx__tabs { display: grid; }
+
+  /* One business: industry and size, name and range, then its range bar on the shared scale. */
+  .sx-row {
+    position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "meta meta" "name range" "bar bar";
+    column-gap: 16px; width: 100%; padding: 14px 16px 16px 18px; text-align: left; color: var(--fg);
+    border-bottom: 1px solid var(--line); cursor: pointer; transition: background-color 0.2s;
+  }
+  .sx-row::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: -1px; width: 2px; background: var(--accent-line);
+    transform: scaleY(0); transform-origin: top; transition: transform 0.3s var(--ease-out-soft);
+  }
+  .sx-row[aria-selected='true'] { background: var(--raised); }
+  .sx-row[aria-selected='true']::before { transform: none; }
+  .sx-row:focus-visible { outline-offset: -2px; }
+  @media (hover: hover) {
+    .sx-row:not([aria-selected='true']):hover { background: color-mix(in srgb, var(--raised) 55%, transparent); }
+  }
+  .sx-row__meta { grid-area: meta; font-size: 0.8125rem; line-height: 1.4; color: var(--fg-3); }
+  .sx-row__name { grid-area: name; margin-top: 2px; font-size: 1rem; font-weight: 550; line-height: 1.35; }
+  .sx-row__range { grid-area: range; align-self: end; font-size: 0.875rem; font-weight: 600; line-height: 1.35; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .sx-row__to { font-weight: 450; color: var(--fg-3); }
+  .sx-row__track { grid-area: bar; display: block; height: 8px; margin-top: 12px; }
+  .sx-row__bar {
+    display: flex; gap: 2px; width: var(--w); height: 100%; transform-origin: left center;
+    transition: transform 0.9s var(--ease-out-soft) calc(0.15s + var(--i, 0) * 60ms);
+  }
+  .sx-row__bar > i { flex: var(--v) 1 0; min-width: 2px; background: var(--viz-context); transition: background-color 0.25s; }
+  .sx-row__bar > i + i { background: var(--viz-other); border-radius: 0 var(--radius-data) var(--radius-data) 0; }
+  .sx-row[aria-selected='true'] .sx-row__bar > i { background: var(--viz-result); }
+  .sx-row[aria-selected='true'] .sx-row__bar > i + i { background: var(--viz-accent); }
+  /* The bars grow when the explorer reveals. */
+  :global(html.js) .sx:not(.is-visible) .sx-row__bar { transform: scaleX(0); }
+
+  /* Switching business: the panel settles in and its bars grow again. */
+  .sx-panel { transition: opacity 0.3s var(--ease-out-soft), transform 0.3s var(--ease-out-soft); }
+  .sx-panel.is-pre { opacity: 0; transform: translateY(8px); transition: none; }
+  .sx-panel.is-pre :global(.vb__bar) { transform: scaleX(0); transition: none; }
+
+  .sx__foot { display: grid; justify-items: start; gap: 6px; margin-top: 20px; }
+  .sx__note { max-width: 60ch; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+
+  @media (width < 64rem) {
+    /* Chips, then the panel, then the note and link. */
+    .sx { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .sx__side { display: contents; }
+    .sx__tabs { order: 1; }
+    .sx__panels { order: 2; }
+    .sx__foot { order: 3; margin-top: 4px; }
+    .sx__head { display: none; }
+    /* A strip of chips: industry over range. */
+    .sx__tabs {
+      display: flex; gap: 8px; margin-inline: calc(-1 * var(--spacing-gutter)); padding: 2px var(--spacing-gutter) 8px;
+      overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: var(--spacing-gutter); scrollbar-width: none;
+    }
+    .sx__tabs::-webkit-scrollbar { display: none; }
+    .sx-row {
+      flex: none; width: auto; grid-template-columns: auto; grid-template-areas: "meta" "range"; row-gap: 2px;
+      min-height: 56px; padding: 9px 16px 10px; border: 0; border-radius: var(--radius-tile);
+      box-shadow: inset 0 0 0 1px var(--line-strong); scroll-snap-align: start;
+    }
+    .sx-row::before, .sx-row__staff, .sx-row__name, .sx-row__track { display: none; }
+    .sx-row__meta { font-weight: 500; color: var(--fg-2); }
+    .sx-row__range { align-self: start; }
+    .sx-row[aria-selected='true'] { background: var(--color-ink); box-shadow: none; }
+    .sx-row[aria-selected='true'] .sx-row__meta { color: var(--color-on-2); }
+    .sx-row[aria-selected='true'] .sx-row__range { color: var(--color-on); }
+    .sx-row[aria-selected='true'] .sx-row__to { color: var(--color-on-3); }
+    .sx-row:focus-visible { outline-offset: 2px; }
+  }
 </style>
+
+<script>
+  // Tabs over the six panels (WAI-ARIA tabs pattern with automatic activation). Both arrow axes work,
+  // since the ledger is vertical on desktop and a chip strip on smaller screens.
+  function initExplorer(root: HTMLElement) {
+    if (root.dataset.ready === 'true') return;
+    root.dataset.ready = 'true';
+    const list = root.querySelector<HTMLElement>('[role="tablist"]');
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    if (!list || !tabs.length) return;
+    const panelOf = (t: HTMLElement) => document.getElementById(t.getAttribute('aria-controls') ?? '');
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const wide = window.matchMedia('(min-width: 64rem)');
+    const orient = () => list.setAttribute('aria-orientation', wide.matches ? 'vertical' : 'horizontal');
+    orient();
+    wide.addEventListener('change', orient);
+
+    const select = (tab: HTMLButtonElement, focus = false) => {
+      if (focus) tab.focus({ preventScroll: true });
+      // In the chip strip, bring the chosen chip fully into view (never scrolls the page sideways).
+      if (!wide.matches) {
+        const box = list.getBoundingClientRect();
+        const r = tab.getBoundingClientRect();
+        const pad = 16;
+        if (r.left < box.left + pad) list.scrollBy({ left: r.left - box.left - pad, behavior: calm.matches ? 'auto' : 'smooth' });
+        else if (r.right > box.right - pad) list.scrollBy({ left: r.right - box.right + pad, behavior: calm.matches ? 'auto' : 'smooth' });
+      }
+      if (tab.getAttribute('aria-selected') === 'true') return;
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        const panel = panelOf(t);
+        if (panel) panel.hidden = !on;
+      });
+      const panel = panelOf(tab);
+      if (panel && !calm.matches) {
+        panel.classList.add('is-pre');
+        void panel.offsetWidth; // commit the start state before letting it transition
+        requestAnimationFrame(() => panel.classList.remove('is-pre'));
+      }
+    };
+
+    tabs.forEach((t) => t.addEventListener('click', () => select(t)));
+    list.addEventListener('keydown', (e) => {
+      const i = tabs.indexOf(e.target as HTMLButtonElement);
+      if (i < 0) return;
+      let n = -1;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') n = (i + 1) % tabs.length;
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'Home') n = 0;
+      else if (e.key === 'End') n = tabs.length - 1;
+      if (n < 0) return;
+      e.preventDefault();
+      select(tabs[n], true);
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-sx]').forEach(initExplorer);
+</script>

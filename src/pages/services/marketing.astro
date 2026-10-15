@@ -4,6 +4,8 @@
 // for your marketer, not instead of them) and 13 (margin and double-counted sales), plus the customer-
 // data guardrail and the e-commerce example link from the critique's missing content.
 // Numbers come from @/data/worth (the worked example), never retyped. Section ids follow COPY.md §5.
+// Critique 2026-10-14: the demo follows the opening "usual leaks" section, so it is the second thing
+// a phone reader reaches; backgrounds alternate paper and sunken from there.
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/blocks/PageHero.astro';
 import Section from '@/components/ui/Section.astro';
@@ -136,8 +138,16 @@ const faq = [
     </ol>
   </Section>
 
-  <Section id="capabilities" tightTop aria-labelledby="capabilities-title">
-    <SectionHeader num="02" eyebrow="What it does" subtitle="It does the analysis a good marketing lead would do, every day, across every account." titleId="capabilities-title"><span slot="title" data-motion="split">A marketing director that tests, measures and reports.</span></SectionHeader>
+  <Section id="demo" tone="sunken" aria-labelledby="demo-title">
+    <SectionHeader num="02" eyebrow="See it work" titleId="demo-title"><span slot="title" data-motion="split">Watch an ad audit turn into a test plan.</span>
+      <p>The agent connects to the accounts, finds the waste, launches tests and moves budget, then reports what changed.</p>
+      <a class="link-arrow demo-all" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
+    </SectionHeader>
+    <div data-reveal><MarketingDemo /></div>
+  </Section>
+
+  <Section id="capabilities" aria-labelledby="capabilities-title">
+    <SectionHeader num="03" eyebrow="What it does" subtitle="It does the analysis a good marketing lead would do, every day, across every account." titleId="capabilities-title"><span slot="title" data-motion="split">A marketing director that tests, measures and reports.</span></SectionHeader>
     <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="cells" items={capabilities} cols={3} label="Capabilities" /></div>
     <div class="roles" data-reveal>
       <p class="type-label roles__label">Who does what</p>
@@ -152,21 +162,13 @@ const faq = [
     </div>
   </Section>
 
-  <Section id="demo" tone="sunken" aria-labelledby="demo-title">
-    <SectionHeader num="03" eyebrow="See it work" titleId="demo-title"><span slot="title" data-motion="split">Watch an ad audit turn into a test plan.</span>
-      <p>The agent connects to the accounts, finds the waste, launches tests and moves budget, then reports what changed.</p>
-      <a class="link-arrow demo-all" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
-    </SectionHeader>
-    <div data-reveal><MarketingDemo /></div>
-  </Section>
-
-  <Section id="how-it-works" aria-labelledby="how-title">
+  <Section id="how-it-works" tone="sunken" aria-labelledby="how-title">
     <SectionHeader num="04" eyebrow="How it works" subtitle="A steady weekly rhythm, with every change logged and every big decision left to you." titleId="how-title"><span slot="title" data-motion="split">Audit, fix, test, repeat.</span></SectionHeader>
-    <div data-motion="draw stagger" data-draw-target=".steps__rope line" data-stagger-target=".step" data-start="top 85%" data-end="top 45%"><Steps steps={steps} label="How the Marketing Director works" /></div>
+    <div data-motion="draw stagger" data-draw-target=".steps__rope line" data-stagger-target=".step" data-start="top 85%" data-end="top 45%"><Steps steps={steps} surface="sunken" label="How the Marketing Director works" /></div>
     <p class="note-line note-line--rule" data-reveal><Icon name="clock" />How fast tests produce answers depends on your spend and traffic. We’d rather wait than call a winner on noise.</p>
   </Section>
 
-  <Section id="guardrails" tightTop aria-labelledby="guardrails-title">
+  <Section id="guardrails" aria-labelledby="guardrails-title">
     <SectionHeader num="05" eyebrow="Guardrails" subtitle="The agent works inside limits you set. The big decisions stay with you." titleId="guardrails-title"><span slot="title" data-motion="split">Your budget, your brand, your rules.</span></SectionHeader>
     <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="guard" items={guardrails} cols={4} label="Guardrails" /></div>
   </Section>

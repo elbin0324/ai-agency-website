@@ -3,6 +3,9 @@
 // Services (COPY.md §2.4, DESIGN.md §6.6): the four-column service ledger. Each column opens on a
 // tagged mini-window vignette, then the service art, name, one value line, three highlights and a link
 // to the service page. Names, links and highlights come from src/data/services.ts.
+// 2026-10-14 critique round: the consulting-cost teaser left Why us; its point lives on here as one line on
+// the AI Consulting column (time from src/data/consulting.ts; no price while site.consultingPrice is null,
+// "a fraction of the cost" per DECISIONS.md 2026-10-12), linking to the sourced comparison.
 // Keep id="services": it is the anchor from COPY.md and may be linked from other pages.
 import Section from '@/components/ui/Section.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
@@ -11,6 +14,7 @@ import ServiceArt from './story/ServiceArt.astro';
 import ServiceVignette from './story/ServiceVignette.astro';
 import { homeNum } from './story/sections';
 import { services, type ServiceSlug } from '@/data/services';
+import { ours } from '@/data/consulting';
 import { site } from '@/config/site';
 import { url } from '@/lib/url';
 
@@ -21,6 +25,8 @@ const value: Record<ServiceSlug, string> = {
   sales: 'Researches each prospect and writes the email a thoughtful person would send.',
   consulting: 'Reviews your books and operations, then ranks where to cut costs and fix pricing.',
 };
+// "Typically 3 to 5 weeks from kickoff to readout" → "Typically 3 to 5 weeks".
+const consultTime = ours.time.match(/^Typically \d+ to \d+ weeks/)?.[0] ?? 'Typically a few weeks';
 ---
 <Section id="services" tightTop aria-labelledby="services-title">
   <SectionHeader
@@ -39,6 +45,9 @@ const value: Record<ServiceSlug, string> = {
         <p class="svc-col__value">{value[s.slug]}</p>
         <ul class="ledger-list" role="list">
           {s.highlights.map((h) => <li>{h}</li>)}
+          {s.slug === 'consulting' && (
+            <li class="svc-col__note"><span>{consultTime}, at a fraction of a traditional engagement’s cost.{' '}<a class="link" href={url('/services/consulting/#comparison')}>Compare the cost</a></span></li>
+          )}
         </ul>
         <a class="link-arrow" href={url(s.href)}><span>{s.linkLabel}</span><Icon name="arrow-right" /></a>
       </article>
@@ -56,6 +65,7 @@ const value: Record<ServiceSlug, string> = {
      across the row whatever their length (the column keeps the global .svc-col padding and rules). */
   .svc-col { display: grid; grid-row: span 6; grid-template-rows: subgrid; align-content: start; }
   .svc-col > :global(.link-arrow) { align-self: end; }
+  .svc-col__note { color: var(--fg-2); text-wrap: pretty; }
 
   /* Laptops (1024-1279px): four columns leave each vignette about 200px wide, which truncates its title
      and chips, so the ledger goes 2-up a breakpoint early (same rules global.css uses under 1024px). */

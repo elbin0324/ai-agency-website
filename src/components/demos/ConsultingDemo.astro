@@ -32,7 +32,7 @@ const ids = (s: string) => s.replace(/\b([a-z]+)-(\d+)\b/g, `$1-${WJ}$2`);
   steps={demo.steps}
   title={`${site.name} Consulting · Margin review · ${business.name}`}
   columns="30% 70%"
-  tabs={[{ id: 'panel', label: 'Sources & findings' }, { id: 'canvas', label: 'Analysis' }]}
+  tabs={[{ id: 'panel', label: 'Sources & findings', short: 'Findings' }, { id: 'canvas', label: 'Analysis' }]}
   activeTab="canvas"
   height={540}
   mobileHeight={470}

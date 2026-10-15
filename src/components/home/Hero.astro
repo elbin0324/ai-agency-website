@@ -3,7 +3,8 @@
 // Copy: COPY.md §2.1 with CRITIQUE.md edit 8 (an AI agent defined in the subhead; the fixed-price
 // pilot chip), tightened. Layout and CSS ported from design-lab/reference/index.html (.hero*):
 // eyebrow and display H1 on 7 columns, lead and proof chips on 5, the CTA under the H1, then the
-// live agent console (FIG. 1) and the trust strip (DESIGN.md §5, §6.11, §6.17, §7.2).
+// interactive agent console (FIG. 1, ./hero/HeroConsole.astro) and the trust strip (DESIGN.md §5, §6.11,
+// §6.17, §7.2).
 // The H1 is site.tagline; its last two words are the page's one brass italic phrase (§2.3).
 // Keep id="hero": it is the anchor from COPY.md.
 import Eyebrow from '@/components/ui/Eyebrow.astro';
@@ -77,6 +78,12 @@ const proof = [
   .hero__chips :global(.icon) { color: var(--color-brass-600); }
   /* The trust strip's own bottom rule doubles as the top rule of the integrations ledger below. */
   .hero :global(.hero__trust) { margin-top: clamp(24px, 3vw, 36px); }
+  /* 1024-1279px: the right column is too narrow for two proof points side by side, so they stack,
+     one line each (no break inside "fixed-price") */
+  @media (64rem <= width < 80rem) {
+    .hero__chips { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .hero__chips li { white-space: nowrap; }
+  }
   @media (width < 64rem) {
     .hero__title, .hero__lead, .hero__actions, .hero__chips { grid-column: 1 / -1; }
     .hero__lead { margin-top: 20px; }

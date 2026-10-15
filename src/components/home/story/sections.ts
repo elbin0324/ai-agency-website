@@ -2,19 +2,24 @@
 // page order"). Unnumbered: the hero, the integrations strip, the navy calculator band and the final CTA
 // (they use an eyebrow or no rule at all, as in design-lab/reference/index.html).
 //
-//   01 Outcomes (home-hero) · 02 Services · 03 See it work (theater) · 04 Illustrative examples (results)
-//   05 How it works · 06 Why us · 07 Security and control · 08 Industries · 09 FAQ
+//   01 Agent demos (theater) · 02 Where to start · 03 A day with your AI workforce · 04 Services
+//   05 Illustrative examples · 06 How it works · 07 Why us · 08 Security and control · 09 Industries · 10 FAQ
 //
-// home-story's components read their numbers from here; the other owners' entries are listed so every
-// section can agree on one sequence. Change them here if a section moves.
+// 2026-10-14 trim (critique round): the "Same team. More gets done." ledger (Outcomes) is off the page; the
+// theater and the day story are numbered too, so the sequence never skips. src/pages/index.astro passes
+// demos and day to DemoTheater and DayStory; every other section reads its own entry. Change them here if
+// a section moves.
 export const homeNum = {
-  outcomes: '01',
-  services: '02',
-  demos: '03',
-  examples: '04',
-  process: '05',
-  whyUs: '06',
-  security: '07',
-  industries: '08',
-  faq: '09',
+  demos: '01',
+  start: '02',
+  day: '03',
+  services: '04',
+  examples: '05',
+  process: '06',
+  whyUs: '07',
+  security: '08',
+  industries: '09',
+  faq: '10',
+  /** Kept for Outcomes.astro, which is no longer on the page. */
+  outcomes: '02',
 } as const;

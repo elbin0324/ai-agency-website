@@ -2,6 +2,9 @@
 // Day story, 9:40 am: a website chat becomes a booked job. OWNER: home-daystory.
 // Left: what the customer sees (the client's chat widget, .aw-doc paper). Right: the agent's steps.
 // Prices come from the Customer Agent demo's price book (DEMOS.md §1); people from its dispatch board.
+// The scroll build plays the conversation: the customer's messages arrive whole, the agent's replies
+// stream in word by word, the thread scrolls up like a real chat, and each step behind the scenes
+// checks off as the conversation reaches it. The markup is the finished thread.
 import Icon from '@/components/ui/Icon.astro';
 import { business } from './day-data';
 
@@ -27,10 +30,12 @@ const acts = [
       <span class="sc-widget__name"><b>{business.name}</b><span>AI assistant · Replies instantly</span></span>
     </div>
     <div class="sc-msgs">
-      {msgs.map((m) => <p class:list={['sc-msg', `sc-msg--${m.who}`]} data-ds="msg">{m.text}</p>)}
-      <div class="sc-booked" data-ds="booked">
-        <Icon name="calendar-check" size={18} />
-        <span><b>Booked: AC repair, today 1:00–3:00 pm</b><span>Alicia T. · Confirmation sent by text</span></span>
+      <div class="sc-msgs__stack" data-ds="stack">
+        {msgs.map((m) => <p class:list={['sc-msg', `sc-msg--${m.who}`]} data-ds="msg" data-ds-stream={m.who === 'ai' ? '' : undefined}>{m.text}</p>)}
+        <div class="sc-booked" data-ds="booked">
+          <Icon name="calendar-check" size={18} />
+          <span><b>Booked: AC repair, today 1:00–3:00 pm</b><span>Alicia T. · Confirmation sent by text</span></span>
+        </div>
       </div>
     </div>
   </div>
@@ -60,7 +65,8 @@ const acts = [
   .sc-widget__name span { font-size: 0.75rem; color: var(--color-ink-3); }
 
   /* Bottom-aligned like a real chat: if the window is short, the oldest message clips at the top. */
-  .sc-msgs { display: flex; flex: 1; flex-direction: column; justify-content: flex-end; gap: 8px; min-height: 0; overflow: hidden; padding: 12px 14px 14px; }
+  .sc-msgs { display: flex; flex: 1; flex-direction: column; justify-content: flex-end; min-height: 0; overflow: hidden; padding: 12px 14px 14px; }
+  .sc-msgs__stack { position: relative; display: flex; flex-direction: column; gap: 8px; }
   .sc-msg { max-width: 86%; padding: 8px 12px; border-radius: 12px; font-size: 0.8125rem; line-height: 1.45; }
   .sc-msg--them { align-self: flex-end; border-bottom-right-radius: 4px; background: var(--color-ink); color: var(--color-paper-raised); }
   .sc-msg--ai { align-self: flex-start; border-bottom-left-radius: 4px; background: var(--color-paper-sunken); color: var(--color-ink); }

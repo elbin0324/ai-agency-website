@@ -11,9 +11,11 @@ export type DemoCopy = {
   anchor: string;
   /** Tab label ("Customer Agent"). */
   label: string;
+  /** One-word label for tight spots ("Customer"): the /demos/ chapter nav under 1280px. */
+  short: string;
   icon: IconName;
-  /** Home theater: the one-line intro over the window. */
-  intro: string;
+  /** Home theater picker card: the job in a few words, "Late-night chat" → "booked job" (read as "… becomes …"). */
+  outcome: { from: string; to: string };
   /** /demos/: the section rule name. */
   eyebrow: string;
   headline: string;
@@ -33,7 +35,8 @@ const service = (slug: 'marketing' | 'sales' | 'consulting') => {
 
 const copy: Record<DemoId, Omit<DemoCopy, 'id' | 'anchor' | 'label' | 'icon'>> = {
   customer: {
-    intro: 'A late-night website chat becomes a booked job, with the office closed.',
+    short: 'Customer',
+    outcome: { from: 'Late-night chat', to: 'booked job' },
     eyebrow: 'AI Agents · Customer Agent',
     headline: 'A late-night chat becomes a booked job.',
     promise:
@@ -46,7 +49,8 @@ const copy: Record<DemoId, Omit<DemoCopy, 'id' | 'anchor' | 'label' | 'icon'>> =
     link: { label: 'Explore the Customer Agent', href: role('customer') },
   },
   analyst: {
-    intro: 'A distributor’s messy sales export becomes a chart and a plain-English answer.',
+    short: 'Analyst',
+    outcome: { from: 'Messy export', to: 'clear answer' },
     eyebrow: 'AI Agents · Analyst Agent',
     headline: 'A messy export becomes a clear answer.',
     promise:
@@ -59,7 +63,8 @@ const copy: Record<DemoId, Omit<DemoCopy, 'id' | 'anchor' | 'label' | 'icon'>> =
     link: { label: 'Explore the Analyst Agent', href: role('analyst') },
   },
   assistant: {
-    intro: 'An overflowing inbox becomes a short list, plus tasks, a meeting and a deck.',
+    short: 'Assistant',
+    outcome: { from: 'Overflowing inbox', to: 'short list' },
     eyebrow: 'AI Agents · Executive Assistant',
     headline: 'An overflowing inbox becomes a short list.',
     promise:
@@ -72,7 +77,8 @@ const copy: Record<DemoId, Omit<DemoCopy, 'id' | 'anchor' | 'label' | 'icon'>> =
     link: { label: 'Explore the Executive Assistant', href: role('assistant') },
   },
   marketing: {
-    intro: 'A dental group’s ads get audited, tested and rebalanced within set limits.',
+    short: 'Marketing',
+    outcome: { from: 'Ad audit', to: 'running tests' },
     eyebrow: 'AI Marketing Director',
     headline: 'An ad audit becomes a running test plan.',
     promise:
@@ -85,7 +91,8 @@ const copy: Record<DemoId, Omit<DemoCopy, 'id' | 'anchor' | 'label' | 'icon'>> =
     link: service('marketing'),
   },
   sales: {
-    intro: 'One prospect gets real research and a personal email, shown next to a generic AI one.',
+    short: 'Sales',
+    outcome: { from: 'Cold prospect', to: 'personal email' },
     eyebrow: 'AI Sales Agent',
     headline: 'A cold prospect becomes a personal email.',
     promise:
@@ -98,7 +105,8 @@ const copy: Record<DemoId, Omit<DemoCopy, 'id' | 'anchor' | 'label' | 'icon'>> =
     link: service('sales'),
   },
   consulting: {
-    intro: 'A restaurant group’s P&L becomes a ranked list of savings and a 90-day plan.',
+    short: 'Consulting',
+    outcome: { from: 'P&L', to: 'ranked savings plan' },
     eyebrow: 'AI Consulting',
     headline: 'A P&L becomes a ranked plan.',
     promise:

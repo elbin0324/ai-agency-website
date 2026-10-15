@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button.astro';
 import { site } from '@/config/site';
 import { url } from '@/lib/url';
 import { referencedIds } from '@/components/results/sources';
+import { sources } from '@/data/benchmarks';
 import type { ResultCardProps } from './types';
 import './demo.css';
 
@@ -27,6 +28,7 @@ const {
   heading = 'Result',
   headingLevel = 3,
   mathHref = '/results/#examples',
+  mathLabel = 'See the math',
   replay = true,
   cta = true,
   class: className,
@@ -35,9 +37,10 @@ const labels = Array.isArray(label) ? label : [label];
 const H = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
 
 // Internal source ids in a basis line ("… (cx-20, cx-18).", "(… typical, time-01)", "(time-01: …)") read
-// like editor notes, so they move out of the sentence into a "Sources" line under it. Each id links to its
-// row in the methodology on /results/ when that row exists (referencedIds); otherwise it stays plain text.
-// Demo data may put a word joiner after the hyphen ("cx-⁠20"), so the pattern allows one.
+// like editor notes, so they move out of the sentence into a plain "2 sources" line under it. It links to the
+// first of them that the methodology on /results/ lists (referencedIds), or to the methodology when none is
+// listed; the publications' short names sit in its title. Demo data may put a word joiner after the hyphen
+// ("cx-⁠20"), so the pattern allows one.
 const ID = String.raw`[a-z]+-⁠?\d+`;
 const idOnlyGroup = new RegExp(String.raw`\s*\((${ID}(?:,\s*${ID})*)\)`, 'g');
 const idAtGroupEnd = new RegExp(String.raw`[,;]\s*(${ID})(?=\))`, 'g');
@@ -60,7 +63,20 @@ function splitBasis(basis: string) {
     .trim();
   return { text, ids };
 }
-const tiles = metrics.map((m) => ({ ...m, ...splitBasis(m.basis) }));
+// "Hennessey Digital, 2025 Lead Form …" -> "Hennessey Digital": the publication, for the tooltip.
+const shortName = (id: string) => sources.find((s) => s.id === id)?.citation.split(',')[0]?.trim() ?? id;
+const tiles = metrics.map((m) => {
+  const { text, ids } = splitBasis(m.basis);
+  const first = ids.find((id) => listed.has(id));
+  return {
+    ...m,
+    text,
+    ids,
+    srcLabel: `${ids.length} source${ids.length === 1 ? '' : 's'}`,
+    srcHref: first ? `/results/#src-${first}` : '/results/#methodology',
+    srcNames: ids.map(shortName).join('; '),
+  };
+});
 ---
 <article class:list={['result-card', className]} data-result-card>
   <div class="result-card__top">
@@ -77,13 +93,7 @@ const tiles = metrics.map((m) => ({ ...m, ...splitBasis(m.basis) }));
         <span class="result-tile__basis">{m.text}</span>
         {m.ids.length > 0 && (
           <span class="result-tile__src">
-            Sources:{' '}
-            {m.ids.map((id, i) => (
-              <Fragment>
-                {i > 0 && ', '}
-                {listed.has(id) ? <a class="link" href={url(`/results/#src-${id}`)}>{id}</a> : <span>{id}</span>}
-              </Fragment>
-            ))}
+            <a class="link" href={url(m.srcHref)} title={m.srcNames}>{m.srcLabel}</a>
           </span>
         )}
       </div>
@@ -91,7 +101,7 @@ const tiles = metrics.map((m) => ({ ...m, ...splitBasis(m.basis) }));
   </div>
   {note && <p class="math result-card__note">{note}</p>}
   <div class="result-card__foot">
-    <a class="link result-card__math" href={url(mathHref)}>See the math</a>
+    <a class="link result-card__math" href={url(mathHref)}>{mathLabel}</a>
     {replay && <Button variant="secondary" size="sm" icon="rotate-ccw" data-demo-replay>Replay</Button>}
     {cta && <Button href={site.cta.href} size="sm" icon="arrow-right">{site.cta.label}</Button>}
   </div>
@@ -100,6 +110,6 @@ const tiles = metrics.map((m) => ({ ...m, ...splitBasis(m.basis) }));
 <style>
   .result-card__note { margin-top: 14px; }
   .result-card__math { font-size: 0.875rem; }
-  .result-tile__src { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.5; color: var(--color-ink-3); }
-  .result-tile__src a, .result-tile__src span { white-space: nowrap; }
+  .result-tile__src { display: block; margin-top: 4px; font-size: 0.8125rem; line-height: 1.5; color: var(--color-ink-3); }
+  .result-tile__src a { white-space: nowrap; }
 </style>

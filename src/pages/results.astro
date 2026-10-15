@@ -1,7 +1,7 @@
 ---
 // OWNER: results
-// Savings and examples (COPY.md §9 with CRITIQUE.md edits 9 and 10, and the "Proof you can check
-// yourself" retitle). Background sequence (DESIGN.md §5): paper hero → navy calculator → paper scenarios
+// Value calculator and examples (COPY.md §9 with CRITIQUE.md edits 9 and 10, the "Proof you can check
+// yourself" retitle, and the five-lever calculator from the 2026-10-14 founder decisions). Background sequence (DESIGN.md §5): paper hero → navy calculator → paper scenarios
 // → sunken worked examples → paper methodology → sunken proof → navy final CTA. Section numbers restart
 // on this page. Anchors other pages use: #calculator, #examples, #methodology (plus #scenario-{id},
 // #worked-examples, #example-{id} and #src-{id}).
@@ -21,31 +21,31 @@ import { scenarios } from '@/data/scenarios';
 import { number } from '@/lib/format';
 import { url } from '@/lib/url';
 
-const title = 'Savings calculator and examples';
+const title = 'Value calculator and examples';
 const description =
-  'Estimate what AI agents could save your business, then walk through worked examples with every assumption shown. Modeled estimates, not promises.';
+  'Estimate what AI agents could be worth to your business, from team time to pricing, then walk through worked examples with every assumption shown. Modeled estimates, not promises.';
 const smallest = Math.min(...scenarios.map((s) => s.employees));
 const largest = Math.max(...scenarios.map((s) => s.employees));
 ---
 <BaseLayout title={title} description={description}>
   <PageHero
-    crumbs={[{ label: 'Results' }]}
-    eyebrow="Savings and examples"
+    crumbs={[{ label: 'Savings' }]}
+    eyebrow="Value and examples"
     title="Check the math before you *commit*."
-    subtitle="Estimate what AI agents could save your business. Then walk through six industry scenarios and a worked example for each service, with every assumption on the page."
-    primary={{ label: 'Estimate your savings', href: '#calculator', icon: 'arrow-right' }}
+    subtitle="Estimate what AI could be worth to your business across five levers, from team time to pricing. Then walk through six industry scenarios and a worked example for each service, with every assumption on the page."
+    primary={{ label: 'Run your numbers', href: '#calculator', icon: 'arrow-right' }}
     secondary={{ label: 'See the examples', href: '#examples' }}
     micro="Every number here is a modeled estimate or an illustrative example. None are client results."
   >
     <LabelGuide slot="art" />
   </PageHero>
 
-  <Section id="calculator" tone="navy" aria-labelledby="calculator-title">
+  <Section id="calculator" tone="navy" class="calc-band" aria-labelledby="calculator-title">
     <SectionHeader
       num="01"
-      eyebrow="Savings calculator"
+      eyebrow="Value calculator"
       titleId="calculator-title"
-      subtitle="Five inputs with conservative defaults. Change anything and the estimate updates, with the formula under the result."
+      subtitle="Five levers, each a range from typical to optimistic rates. Count the ones that fit, change any number, and open the math under each one."
     ><span slot="title" data-motion="split">Start with your own numbers.</span></SectionHeader>
     <div data-reveal>
       <RoiCalculator variant="full" id="roi" />
@@ -114,12 +114,16 @@ const largest = Math.max(...scenarios.map((s) => s.employees));
     eyebrow="Free AI assessment"
     title="Get an estimate built on your numbers."
     subtitle="On a free 30-minute call we size the opportunities task by task, then send a written summary with every assumption shown."
+    from="results"
     secondary={{ label: 'See how we work', href: '/approach/' }}
     micro="No cost, no obligation."
   />
 </BaseLayout>
 
 <style>
+  /* The navy band clips its background art with overflow: hidden, which would also stop the calculator's
+     readout (and its mobile total) from staying in view. clip paints the same but isn't a scroll box. */
+  :global(.calc-band) { overflow: hidden; overflow: clip; }
   .results-note { margin-top: 20px; font-size: 0.8125rem; line-height: 1.55; color: var(--fg-3); }
   .proof { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 24px; }
   .proof__col { grid-column: span 5; }

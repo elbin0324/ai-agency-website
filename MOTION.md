@@ -39,6 +39,7 @@ Each word rises out of its own mask the first time the heading enters (at `top 8
 - **Accessible text.** A heading keeps one `aria-label` with the whole sentence while it is split. On a non-heading, the pieces are hidden from screen readers and a visually hidden copy is read instead.
 - **Fallback.** A heading that contains a link or button, or runs longer than 24 words, gets a plain fade-up instead of the word split.
 - **Use on** H1, H2, CTA headlines and short display lines. Never on body copy.
+- **The word rise is rationed (2026-10-14).** It plays only on the page H1, the closing CTA headline (inside the navy `.cta` band, which `CtaBand` marks up for you) and a display line that opts in with `data-split="feature"` (the one Statement line per page), so at most three per page. Every other `data-motion="split"` heading, which means most section H2s, gets the section-head fade instead: opacity only, 400ms, no rise. Pages keep the same attribute; `motion.ts` decides which treatment applies.
 
 ### `tilt-in`: the product settles into place
 
@@ -161,7 +162,7 @@ The button leans up to 6px toward a fine pointer and settles back when the point
 
 ## 4. Restraint rules
 
-1. **One or two effects per section.** Typically that's a `split` heading plus one of `tilt-in`, `stagger`, `count` or `draw`. Several effects in one section read as noise, not polish.
+1. **One or two effects per section, and the headline rise at most three times per page.** A section heading fades in; spend the rest of the budget on one effect that shows work happening (`tilt-in` on the page's main product window, `count`, `draw`, `stagger`). The word-by-word rise belongs to the page H1, the closing CTA headline and one Statement line (`data-split="feature"`); repeated on every H2 it becomes a tic and delays reading. Several effects in one section read as noise, not polish.
 2. **Never on body text.** `split` is for headings and short display lines, and parallax is for decoration only. Paragraphs, lists, forms and legal text don't move.
 3. **Never inside demos.** The demo engine owns everything inside `[data-demo]`, and motion.ts ignores attributes there (in dev it logs a warning). `tilt-in`, `parallax` or `spotlight` may sit on the demo's root window itself.
 4. **Not in the first viewport,** except `split` on the hero H1 and `magnetic` on the hero CTA. Hero windows render flat, and nothing in the first viewport is hidden for long.

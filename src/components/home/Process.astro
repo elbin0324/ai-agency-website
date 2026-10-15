@@ -1,9 +1,11 @@
 ---
 // OWNER: home-story
 // How it works (COPY.md §2.8, DESIGN.md §6.21): four steps on the rising halyard line, each with a
-// duration and what you get. A three-fact ledger underneath answers the questions owners ask next
-// (CRITIQUE.md: time to go live, staff time, when the benefit arrives). Durations: COPY.md Appendix A #6;
-// staff time: Appendix A #7; full benefit: CRITIQUE.md edit 14.
+// duration and what you get. Underneath, "What you pay for, and when" (2026-10-14 critique round: the
+// buyer's first question was answered only inside a closed FAQ): the three stages and how each is priced,
+// in the approved FAQ and /approach/ engagement wording, never a price (BRIEF.md). Durations: COPY.md
+// Appendix A #6 (the pilot's 4 to 8 weeks = Design 1 to 2 + Build and pilot 3 to 6, as on /approach/);
+// staff time: Appendix A #7. Founder to confirm the structural terms (see Engagements.astro).
 // Keep id="process": it is the anchor from COPY.md and may be linked from other pages.
 import Section from '@/components/ui/Section.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
@@ -40,11 +42,25 @@ const steps = [
   },
 ];
 
-const facts = [
-  { k: 'First agent live', v: 'Typically 2 to 4 weeks after kickoff' },
-  { k: 'Your team’s time', v: 'A couple of hours in week one, then a short weekly check-in' },
-  { k: 'Full benefit', v: 'Usually 2 to 3 months, as routine work runs without review' },
+// Each stage names the steps above it covers, so the strip reads as the price of the same journey.
+const pricing = [
+  {
+    covers: 'Assess',
+    price: 'Free',
+    body: 'A 30-minute call, then your top opportunities in writing within about 3 business days. No obligation.',
+  },
+  {
+    covers: 'Design, build and pilot',
+    price: 'One fixed price',
+    body: 'For one job, agreed in writing before work starts. Typically 4 to 8 weeks to the pilot report, with the first agent live in 2 to 4. No obligation to continue.',
+  },
+  {
+    covers: 'Run and improve',
+    price: 'A flat monthly fee',
+    body: 'Covers monitoring, upkeep, changes within scope and AI usage at the agreed volumes. Outside costs, like phone minutes, at cost. No long-term contract.',
+  },
 ];
+
 ---
 <Section id="process" tightTop aria-labelledby="process-title">
   <SectionHeader
@@ -57,33 +73,40 @@ const facts = [
   <div data-motion="draw" data-draw-target=".steps__rope line" data-start="top 85%" data-end="top 45%"><Steps steps={steps} label={`How an engagement with ${site.name} works`} /></div>
 
   <div class="proc-foot" data-reveal>
-    <dl class="proc-facts">
-      {facts.map((f) => (
-        <div>
-          <dt class="type-label">{f.k}</dt>
-          <dd>{f.v}</dd>
-        </div>
+    <h3 class="type-label proc-price__title" id="process-pricing">What you pay for, and when</h3>
+    <ol class="proc-price" role="list" aria-labelledby="process-pricing">
+      {pricing.map((p) => (
+        <li>
+          <p class="proc-price__covers"><span class="sr-only">Covers: </span>{p.covers}</p>
+          <p class="proc-price__fig">{p.price}</p>
+          <p class="proc-price__body">{p.body}</p>
+        </li>
       ))}
-    </dl>
+    </ol>
     <div class="proc-foot__row">
-      <p>Timelines depend on scope and on how quickly we can get access to your tools.</p>
-      <a class="link-arrow" href={url(site.ctas.approach.href)}><span>See our full approach</span><Icon name="arrow-right" /></a>
+      <p class="proc-foot__payback">Every proposal puts our fee next to the modeled savings, so you see the payback before you sign.</p>
+      <a class="link-arrow" href={url('/approach/#engagements')}><span>How pricing works</span><Icon name="arrow-right" /></a>
     </div>
+    <p class="proc-foot__note">Your team’s time: a couple of hours in week one, then a short weekly check-in. Timelines depend on scope and on how quickly we can get access to your tools.</p>
   </div>
 </Section>
 
 <style>
   .proc-foot { margin-top: clamp(40px, 5vw, 64px); }
-  .proc-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line); }
-  .proc-facts > div { padding: 20px 24px 22px; border-left: 1px solid var(--line); }
-  .proc-facts > div:first-child { padding-left: 0; border-left: 0; }
-  .proc-facts dd { margin-top: 8px; font-size: 1rem; font-weight: 550; line-height: 1.45; color: var(--fg); text-wrap: pretty; }
-  .proc-foot__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; margin-top: 14px; }
-  .proc-foot__row p { font-size: 0.8125rem; color: var(--fg-3); }
+  .proc-price__title { color: var(--fg-3); }
+  .proc-price { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line); }
+  .proc-price > li { padding: 20px 24px 24px; border-left: 1px solid var(--line); }
+  .proc-price > li:first-child { padding-left: 0; border-left: 0; }
+  .proc-price__covers { font-family: var(--font-mono); font-size: .75rem; font-weight: 500; line-height: 1.2; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .proc-price__fig { margin-top: 12px; font-family: var(--font-serif); font-size: var(--text-h3); font-weight: 420; line-height: 1.2; letter-spacing: -.014em; color: var(--fg); }
+  .proc-price__body { margin-top: 8px; max-width: 40ch; font-size: .9375rem; line-height: 1.55; color: var(--fg-2); text-wrap: pretty; }
+  .proc-foot__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; margin-top: 16px; }
+  .proc-foot__payback { font-size: 1rem; font-weight: 550; line-height: 1.45; color: var(--fg); text-wrap: pretty; }
+  .proc-foot__note { margin-top: 6px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
   @media (width < 48rem) {
-    .proc-facts { grid-template-columns: minmax(0, 1fr); }
-    .proc-facts > div, .proc-facts > div:first-child { padding: 16px 0 18px; border-left: 0; }
-    .proc-facts > div + div { border-top: 1px solid var(--line); }
+    .proc-price { grid-template-columns: minmax(0, 1fr); }
+    .proc-price > li, .proc-price > li:first-child { padding: 18px 0 20px; border-left: 0; }
+    .proc-price > li + li { border-top: 1px solid var(--line); }
   }
   @media (width < 40rem) { .proc-foot__row { flex-direction: column; align-items: flex-start; } }
 </style>

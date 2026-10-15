@@ -1,11 +1,17 @@
 ---
 // Closing CTA band (DESIGN.md §6.24, §7.6). Renders its own section.
 //   tone navy (default): .band-navy.cta, copy on 7 cols (eyebrow, .type-h2 without italic, lead,
-//     .btn-brass + .btn-outline-dark, micro line) and the sail engraving on 5 cols.
+//     .btn-brass + .btn-outline-dark, micro line) and the art on 5 cols:
+//       art "plan" (default, also `true`): the written plan the assessment ends with, as a paper document,
+//         so the most valuable spot on the page shows what the visitor gets. Its three lines are
+//         `leaveWith` when given (then no separate row renders below), else site.assessmentPlan.
+//       art "sail": the sail engraving (its HALYARD label and dictionary caption follow site.brandStory),
+//         with the "What you leave with" row below. art false: no art.
 //   tone paper / sunken: a mid-page CTA, no art: headline on 6 cols, lead + .btn-primary + .btn-secondary
 //     on the right 6 (stacked under 1024px).
 // Optional "What you leave with" row (label on 3 cols, list on 9) and a closing note.
-// Brand-story pieces of the sail (the HALYARD label and the dictionary caption) follow site.brandStory.
+// The navy band's headline is the page's closing headline moment: it carries the word rise
+// (data-motion="split"; MOTION.md §4.1 rations that rise to the H1, this line and one Statement).
 //
 //   <CtaBand eyebrow="Free AI assessment" title="Which agent would give you the most time back?" subtitle="…"
 //     secondary={site.ctas.calculator} micro="No cost, no obligation. Written summary either way." />
@@ -15,6 +21,7 @@ import Eyebrow from '@/components/ui/Eyebrow.astro';
 import Icon from '@/components/ui/Icon.astro';
 import type { IconName } from '@/components/ui/icons';
 import { site, emailReady } from '@/config/site';
+import { contactUrl, type Interest } from '@/lib/url';
 
 type Cta = { label: string; href: string; icon?: IconName };
 type LeaveItem = string | { title: string; body?: string };
@@ -26,13 +33,17 @@ interface Props {
   subtitle?: string;
   /** Primary CTA (default: site.cta with an arrow). */
   primary?: Cta;
+  /** Context for the default primary CTA: /contact/?interest=…&from=… (src/lib/url.ts contactUrl), so the
+   *  intake preselects the service and records the page. Ignored when `primary` is passed. */
+  interest?: Interest;
+  from?: string;
   /** Second action (outline on navy, secondary on paper). */
   secondary?: Cta;
   /** Micro line under the buttons. Use {email} to insert site.email as a mailto link. */
   micro?: string;
   tone?: 'navy' | 'paper' | 'sunken';
-  /** The sail engraving (navy only; default true). */
-  art?: boolean;
+  /** Art beside the copy (navy only): the written plan (default), the sail engraving, or none. */
+  art?: boolean | 'plan' | 'sail';
   leaveWith?: LeaveItem[];
   leaveWithLabel?: string;
   /** Closing line under the list ("The findings are yours to keep…"). */
@@ -44,14 +55,23 @@ interface Props {
 }
 
 const {
-  id = 'cta', eyebrow, title, subtitle, primary, secondary, micro, tone = 'navy', art = true, leaveWith = [],
+  id = 'cta', eyebrow, title, subtitle, primary, interest, from, secondary, micro, tone = 'navy', art = true, leaveWith = [],
   leaveWithLabel = 'What you leave with', note, titleId = `${id}-title`, reveal = true, class: className,
 } = Astro.props;
 
 const dark = tone === 'navy';
-const showArt = dark && art;
-const primaryCta: Cta = primary ?? { label: site.cta.label, href: site.cta.href, icon: 'arrow-right' };
+const artKind = !dark || art === false ? null : art === 'sail' ? 'sail' : 'plan';
+const showArt = artKind !== null;
+const primaryHref = interest || from ? contactUrl({ interest, from }) : site.cta.href;
+const primaryCta: Cta = primary ?? { label: site.cta.label, href: primaryHref, icon: 'arrow-right' };
 const leave = leaveWith.map((l) => (typeof l === 'string' ? { title: l } : l));
+// The plan document carries the "What you leave with" lines itself, so the row below only renders
+// without it (sail art, no art, or a paper / sunken band).
+const plan = site.assessmentPlan;
+const planItems: { title: string; body?: string }[] = leave.length > 0 ? leave : plan.items;
+const planLabel = leave.length > 0 ? leaveWithLabel : plan.label;
+const planNote = planItems.some((l) => l.body?.includes(plan.note)) ? null : plan.note;
+const showLeaveRow = leave.length > 0 && artKind !== 'plan';
 const revealAttr = reveal ? { 'data-reveal': '' } : {};
 // A micro line built around {email} is dropped while site.email is still the placeholder (emailReady).
 const showMicro = !!micro && (emailReady || !micro.includes('{email}'));
@@ -69,7 +89,7 @@ const gradId = `sail-wash-${id}`;
       <div class="cta-grid__copy" {...revealAttr}>
         <div class="cta__head">
           {eyebrow && <Eyebrow as="p">{eyebrow}</Eyebrow>}
-          <h2 class="type-h2" id={titleId}>{title}</h2>
+          <h2 class="type-h2" id={titleId} data-motion={dark ? 'split' : undefined}>{title}</h2>
         </div>
         <div class="cta__body">
           {subtitle && <p class="type-lead">{subtitle}</p>}
@@ -88,7 +108,24 @@ const gradId = `sail-wash-${id}`;
           )}
         </div>
       </div>
-      {showArt && (
+      {artKind === 'plan' && (
+        <div class="cta-grid__art cta-plan" {...revealAttr}>
+          <article class="plan-sheet" aria-labelledby={`${id}-plan-title`}>
+            <p class="plan-sheet__k">{planLabel}</p>
+            <h3 class="plan-sheet__t" id={`${id}-plan-title`}>{plan.title}</h3>
+            <ol class="plan-sheet__list">
+              {planItems.map((l, i) => (
+                <li>
+                  <span class="plan-sheet__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <div><b>{l.title}</b>{l.body && <p>{l.body}</p>}</div>
+                </li>
+              ))}
+            </ol>
+            {planNote && <p class="plan-sheet__note"><Icon name="check" />{planNote}</p>}
+          </article>
+        </div>
+      )}
+      {artKind === 'sail' && (
         <figure class="cta-grid__art" aria-hidden="true" {...revealAttr}>
           <svg class="sail" viewBox="0 0 460 430" focusable="false">
             <defs><linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D1AE6C" stop-opacity=".10" /><stop offset="1" stop-color="#D1AE6C" stop-opacity="0" /></linearGradient></defs>
@@ -114,7 +151,7 @@ const gradId = `sail-wash-${id}`;
         </figure>
       )}
     </div>
-    {leave.length > 0 && (
+    {showLeaveRow && (
       <div class="leave-with" {...revealAttr}>
         <span class="type-label leave-with__label">{leaveWithLabel}</span>
         <ol class="leave-with__list">
@@ -147,6 +184,33 @@ const gradId = `sail-wash-${id}`;
   .cta--light .type-lead { margin-top: 0; }
   .cta--light .cta__btns { margin-top: 24px; }
   .cta__note { margin-top: 20px; font-size: 0.875rem; color: var(--fg-3); }
+
+  /* The written plan: a paper document on navy (DESIGN.md §1: documents keep paper styling inside the
+     product surface), a second sheet behind it for depth and the result card's 2px brass top rule.
+     Ink text on paper-raised; the numbers are the small brass step numerals. */
+  .cta-plan { display: flex; justify-content: flex-end; }
+  .plan-sheet { position: relative; isolation: isolate; width: 100%; max-width: 440px; padding: 26px 28px 22px; border-radius: var(--radius-card); background: var(--color-paper-raised); color: var(--color-ink); box-shadow: inset 0 2px 0 var(--color-brass-500), 0 1px 2px rgb(7 17 29 / 0.3), 0 28px 56px -28px rgb(7 17 29 / 0.7); }
+  .plan-sheet::before { content: ""; position: absolute; inset: 12px -12px -12px 12px; z-index: -1; border-radius: var(--radius-card); background: rgb(251 248 242 / 0.08); box-shadow: inset 0 0 0 1px rgb(251 248 242 / 0.12); }
+  .plan-sheet__k { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.2; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-ink-3); }
+  .plan-sheet__t { margin-top: 10px; font-family: var(--font-serif); font-size: 1.5rem; font-weight: 400; line-height: 1.2; letter-spacing: -0.014em; text-wrap: balance; color: var(--color-ink); }
+  .plan-sheet__list { margin-top: 18px; border-top: 1px solid var(--color-rule-strong); }
+  .plan-sheet__list > li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 14px 0; }
+  .plan-sheet__list > li + li { border-top: 1px solid var(--color-rule); }
+  .plan-sheet__list > li:last-child { padding-bottom: 4px; }
+  .plan-sheet__n { padding-top: 2px; font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--color-brass-700); }
+  .plan-sheet__list b { display: block; font-size: 1rem; font-weight: 600; line-height: 1.4; color: var(--color-ink); }
+  .plan-sheet__list p { margin-top: 3px; font-size: 0.875rem; line-height: 1.5; color: var(--color-ink-2); }
+  .plan-sheet__note { display: flex; align-items: flex-start; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-rule); font-size: 0.875rem; line-height: 1.5; color: var(--color-ink-2); }
+  .plan-sheet__note :global(.icon) { flex: none; width: 16px; height: 16px; margin-top: 2px; color: var(--color-brass-600); }
+  @media (width < 64rem) {
+    .cta-plan { justify-content: flex-start; margin-top: 16px; }
+    .cta-grid__art.cta-plan { max-width: 560px; }
+  }
+  @media (width < 40rem) {
+    .cta-grid__art.cta-plan { max-width: none; margin-right: 12px; }
+    .plan-sheet { padding: 22px 20px 18px; }
+    .plan-sheet__t { font-size: 1.3125rem; }
+  }
   @media (width < 64rem) {
     .cta-grid--solo .cta-grid__copy, .cta--light .cta__head, .cta--light .cta__body { grid-column: 1 / -1; }
   }

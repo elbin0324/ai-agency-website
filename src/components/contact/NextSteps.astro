@@ -1,15 +1,18 @@
 ---
 // OWNER: pages-misc
-// Beside the form on /contact/: "What happens next" (COPY.md §11.3, id "what-happens-next") as a short
-// vertical run of knots on a brass rule, then the free assessment (§11.4, id "assessment") as
-// "What you leave with". Anchors stay so other pages can link to them.
+// Below the intake on /contact/ (the live estimate now sits beside the form): "What happens next"
+// (COPY.md §11.3, id "what-happens-next") as three knots on a brass rule (a row on desktop, a vertical
+// run on smaller screens), then the free assessment (§11.4, id "assessment") as "What you leave with",
+// numbered 1 to 3, beside a sample summary (SampleSummary.astro, id "sample-summary") whose three parts
+// carry the same numbers. Anchors stay so other pages can link to them.
 import Icon from '@/components/ui/Icon.astro';
 import Button from '@/components/ui/Button.astro';
+import SampleSummary from './SampleSummary.astro';
 import { site } from '@/config/site';
 
 const steps = [
   { title: 'We reply within one business day', body: 'We find a 30-minute slot that suits you. Video or phone, your choice.' },
-  { title: 'We talk through your business', body: 'How work flows, where the hours go and which tools you use. No preparation needed, though one painful example helps.' },
+  { title: 'We talk through your business', body: 'We come with a draft estimate built from your answers, then check it against how your work really flows. No preparation needed.' },
   { title: 'You get a written summary', body: 'Typically within 3 business days, from the people who would build your agents. Yours to keep.' },
 ];
 
@@ -27,7 +30,7 @@ const leaveWith = [
     </div>
   )}
 
-  <section id="what-happens-next" class="nxt__block" aria-labelledby="next-title">
+  <section id="what-happens-next" class="nxt__block nxt__block--next" aria-labelledby="next-title">
     <p class="type-label nxt__label">What happens next</p>
     <h2 class="type-h3 nxt__title" id="next-title">Three steps, no pressure.</h2>
     <ol class="nxt__steps" role="list">
@@ -45,18 +48,28 @@ const leaveWith = [
   <section id="assessment" class="nxt__block nxt__block--leave" aria-labelledby="assessment-title">
     <p class="type-label nxt__label">The free assessment</p>
     <h2 class="type-h3 nxt__title" id="assessment-title">What you leave with.</h2>
-    <ul class="nxt__leave" role="list">
-      {leaveWith.map((l) => <li><Icon name="check" />{l}</li>)}
-    </ul>
+    <ol class="nxt__leave" role="list">
+      {leaveWith.map((l, i) => <li><span class="fig-legend__n" aria-hidden="true">{i + 1}</span>{l}</li>)}
+    </ol>
+    <p class="nxt__sample-link"><a class="link" href="#sample-summary">See a sample summary</a> for a fictional roofing company, with the same three parts numbered.</p>
     <p class="nxt__candid">
       <b>It isn’t a hard sell.</b> If AI isn’t the right fix for your business right now, we’ll say so and tell you what we’d do instead.
     </p>
     <p class="nxt__micro"><Icon name="lock" />Free, with no obligation. We never ask for passwords or system access on the call.</p>
   </section>
+
+  <div id="sample-summary" class="nxt__sample">
+    <SampleSummary />
+  </div>
 </div>
 
 <style>
-  .nxt { display: grid; gap: 40px; }
+  .nxt { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 40px 24px; align-items: start; }
+  .nxt__book { grid-column: 1 / -1; }
+  .nxt__block { grid-column: 1 / -1; min-width: 0; }
+  /* "What you leave with" stays in view beside the taller sample on desktop. */
+  .nxt__block--leave { grid-column: 1 / span 5; position: sticky; top: calc(var(--header-h) + 24px); }
+  .nxt__sample { grid-column: 7 / span 6; min-width: 0; }
   .nxt__book { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: var(--radius-tile); box-shadow: inset 0 0 0 1px var(--line-strong); }
   .nxt__book-text { font-size: 0.9375rem; font-weight: 550; color: var(--fg); }
   .nxt__label { color: var(--accent); }
@@ -72,10 +85,22 @@ const leaveWith = [
   .nxt__step-title { margin-top: 6px; font-size: 1.0625rem; font-weight: 600; line-height: 1.35; color: var(--fg); }
   .nxt__step-body { margin-top: 4px; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
 
-  .nxt__block--leave { padding-top: 32px; border-top: 1px solid var(--line); }
+  /* Desktop: the three steps sit in a row on one brass line, each knot on the line. */
+  @media (width >= 64rem) {
+    .nxt__steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 30px; }
+    .nxt__step, .nxt__step:last-child { padding: 22px 0 0; border-left: 0; border-top: 1px solid color-mix(in srgb, var(--color-brass-500) 45%, transparent); }
+    .nxt__knot { left: 0; top: -6px; }
+  }
+  .nxt__block--next { padding-bottom: clamp(36px, 4vw, 56px); border-bottom: 1px solid var(--line); }
+  @media (width < 64rem) {
+    .nxt__block, .nxt__block--leave, .nxt__sample { grid-column: 1 / -1; max-width: 40rem; }
+    .nxt__block--leave { position: static; }
+  }
   .nxt__leave { display: grid; gap: 12px; margin-top: 20px; }
-  .nxt__leave > li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg); }
-  .nxt__leave :global(.icon) { margin-top: 3px; color: var(--accent); }
+  .nxt__leave > li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; font-size: 0.9375rem; line-height: 1.5; color: var(--fg); }
+  .nxt__leave .fig-legend__n { margin-top: 0; }
+  .nxt__sample-link { margin-top: 14px; font-size: 0.875rem; line-height: 1.5; color: var(--fg-3); }
+  .nxt__sample-link .link { font-weight: 550; color: var(--fg); }
   .nxt__candid { margin-top: 20px; padding: 14px 16px; border-radius: var(--radius-tile); background: var(--color-paper-sunken); box-shadow: inset 2px 0 0 var(--color-brass-500); font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
   .nxt__candid b { font-weight: 600; color: var(--fg); }
   .nxt__micro { display: flex; gap: 8px; margin-top: 16px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }

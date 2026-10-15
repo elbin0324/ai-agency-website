@@ -1,0 +1,104 @@
+---
+// OWNER: results (calculator)
+// One calculator input: label and number field on one row, the slider under them, help and error
+// below (DESIGN.md §6.13 and §6.22). The slider moves through stopsFor(key) (finer at the small end);
+// the number field takes any valid value and shows thousands separators. The client script in
+// RoiCalculator.astro wires both; ids are prefixed so two calculators can share a page.
+import Icon from '@/components/ui/Icon.astro';
+import { leverDefaults, leverInputMeta } from '@/data/roi';
+import { fieldInfo, fieldText, stopIndex, stopsFor, valueText, type InputKey } from './view';
+
+interface Props {
+  k: InputKey;
+  /** Id prefix of the calculator instance. */
+  prefix: string;
+  value?: number;
+  /** Show the help line (the full calculator); otherwise it stays for screen readers only. */
+  showHelp?: boolean;
+  class?: string;
+}
+
+const { k, prefix, value = leverDefaults[k], showHelp = true, class: className } = Astro.props;
+const meta = leverInputMeta[k];
+const info = fieldInfo[k];
+const stops = stopsFor(k);
+const pos = stopIndex(stops, value);
+const fill = (pos / Math.max(stops.length - 1, 1)) * 100;
+const ids = { label: `${prefix}-${k}-label`, num: `${prefix}-${k}`, help: `${prefix}-${k}-help`, err: `${prefix}-${k}-error` };
+---
+<div class:list={['calc-field vf', className]} data-field={k} data-stops={JSON.stringify(stops)}>
+  <div class="calc-field__top vf__top">
+    <label for={ids.num} id={ids.label}>{meta.label}</label>
+    <span class:list={['vf-num', info.wide && 'vf-num--wide']}>
+      {info.prefix && <span class="vf-num__fix" aria-hidden="true">{info.prefix}</span>}
+      <input
+        class="vf-num__input"
+        id={ids.num}
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        spellcheck="false"
+        value={fieldText(value)}
+        aria-describedby={`${ids.help} ${ids.err}`}
+        data-num
+      />
+      {info.suffix && <span class="vf-num__fix" aria-hidden="true">{info.suffix}</span>}
+    </span>
+  </div>
+  <input
+    class="range vf__range"
+    type="range"
+    min="0"
+    max={stops.length - 1}
+    step="1"
+    value={pos}
+    aria-labelledby={ids.label}
+    aria-describedby={ids.help}
+    aria-valuetext={valueText(k, value)}
+    style={`--fill: ${fill}%`}
+    data-range
+  />
+  <p class:list={['field__hint vf__help', !showHelp && 'sr-only']} id={ids.help}>{meta.help}</p>
+  <p class="field__error vf__error" id={ids.err} hidden data-error>
+    <Icon name="circle-alert" size={14} /><span>Enter a number between {meta.min.toLocaleString('en-US')} and {meta.max.toLocaleString('en-US')}.</span>
+  </p>
+</div>
+
+<style>
+  .vf__top { align-items: center; }
+  .vf__top label { line-height: 1.4; }
+  .vf__range { margin-top: 8px; }
+  .vf__help { margin-top: 4px; max-width: 62ch; }
+  .vf__error { margin-top: 6px; }
+  .vf__error :global(.icon) { margin-top: 2px; }
+
+  .vf-num {
+    display: inline-flex; flex: none; align-items: center; gap: 4px; width: 7.5rem; height: 44px; padding: 0 12px;
+    border: 1px solid var(--color-field); border-radius: var(--radius-control); background: var(--color-paper-raised);
+    font-size: 1rem; color: var(--color-ink-3); cursor: text; transition: border-color 0.15s;
+  }
+  .vf-num--wide { width: 9.25rem; }
+  .vf-num:hover { border-color: var(--color-ink-2); }
+  .vf-num:focus-within { outline: 2px solid var(--color-focus); outline-offset: 2px; border-color: var(--color-ink); }
+  .vf-num:has([aria-invalid='true']) { border-color: var(--color-danger); box-shadow: inset 0 0 0 1px var(--color-danger); }
+  .vf-num__fix { flex: none; font-size: 0.9375rem; font-weight: 500; }
+  .vf-num__input {
+    width: 100%; min-width: 0; height: 100%; padding: 0; border: 0; background: transparent; outline: none;
+    font-family: var(--font-sans); font-size: 1rem; font-weight: 600; text-align: right; color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (width < 40rem) {
+    .vf__top label { flex: 1 1 auto; min-width: 0; }
+    .vf-num { width: 6.75rem; padding: 0 10px; }
+    .vf-num--wide { width: 8.25rem; }
+  }
+  /* Touch screens: the slider thumb grows from 20px to 28px (the size of iOS's own) to grab and drag, and
+     the input gets a 44px-tall tap area (DESIGN.md) while the drawn track stays 4px, centred; the smaller
+     top margin keeps the track where it was. */
+  @media (pointer: coarse) {
+    .vf__range { height: 44px; margin-top: 2px; }
+    .vf__range::-webkit-slider-thumb { width: 28px; height: 28px; margin-top: -12px; }
+    .vf__range::-moz-range-thumb { width: 26px; height: 26px; }
+  }
+</style>

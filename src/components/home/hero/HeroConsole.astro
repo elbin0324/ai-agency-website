@@ -1,173 +1,251 @@
 ---
 // Hero agent console, the annotated FIG. 1 (DESIGN.md §5, §6.10, §6.11, §9.4). OWNER: home-hero.
-// Ported from design-lab/reference/index.html (.con-*), with sample data from ./console-data.ts.
-// The window is decorative product UI: role="img" with a one-sentence summary; nothing inside is focusable.
-// Live behavior (rows slide in, clock ticks, counters count) lives in ./console-live.ts.
-// Layout: sidebar + main + rail at 1280px and up; agent strip + main + rail from 1024px;
-// one column below 1024px; on phones the simplified console: agent strip, 2 KPIs, approvals, 3 log rows.
+// A small working product, not a picture of one: pick an agent or a period, switch the log tabs,
+// review a request and approve or decline it. Behavior lives in ./console-app.ts, sample data in
+// ./console-data.ts, and the figures both sides print in ./console-model.ts.
+// This file renders the first state (All agents, 7 days), which is also the page without JavaScript.
+//
+// Accessibility: the window is a labelled region (described by the summary below), every control is
+// a real button (aria-pressed toggles, a tablist for the log, disclosure buttons for Review), and a
+// polite status line announces what each action changed. The live ticker is not announced; it pauses
+// while the pointer or keyboard focus is inside, offscreen, in a hidden tab, and from its own button.
+//
+// Layout: sidebar + main + rail at 1280px and up; agent chips + main + rail from 1024px; one column
+// below 1024px; on phones the simplified console: agent chips, 2 KPIs, the requests, 3 log rows.
+// Heights are reserved (fixed body from 1024px, fixed request cards, fixed log rows), so nothing on
+// the page moves when the content changes. An open request overlays what sits below it.
 import Icon from '@/components/ui/Icon.astro';
 import Badge from '@/components/ui/Badge.astro';
 import Logo from '@/components/ui/Logo.astro';
 import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
-// The weekly budget cap is the Marketing demo's, so every mention on the site says the same number.
-import { budgetCap } from '@/components/demos/marketing/data';
+import ConsoleRow from './ConsoleRow.astro';
 import {
-  agent, agentShort, approvals, business, counters, hoursByAgent, hoursTotal, initialRows, legend,
-  liveRows, roster, scene, sparkline, statusChip, type LogRow,
+  agent, agentShort, approvals, business, clockLabel, decisionRows, hoursByAgent, hoursTotal, legend,
+  liveRows, logRows, model, roster, rowTime, scene, toolCount, valueMath,
 } from './console-data';
+import { currency, number } from '@/lib/format';
+import { url } from '@/lib/url';
+import { PERIODS, fmtH, fmtN, series, sparkGeometry, subHtml, tasks, tiles, unitText, type View } from './console-model';
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const h = Math.floor(scene.minutes / 60);
-const clock = `${DAYS[scene.day]} ${((h + 11) % 12) + 1}:${String(scene.minutes % 60).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+const view: View = { agent: 'all', period: '7d', tally: {}, pending: approvals.map((a) => a.id), approved: [] };
+const kpiTiles = tiles(model, view);
+const geo = sparkGeometry(series(model, view));
 
+// First paint matches what the script shows for All agents / 7 days / All: the 6 newest rows of the week.
+const shown = new Set(logRows.filter((r) => (r.day ?? 0) <= 6).slice(0, 6));
 const maxHours = Math.max(...hoursByAgent.map((a) => a.hours));
-const fmt1 = (n: number) => n.toFixed(1);
+const waiting = approvals.length;
+const headSub = `<b class="num-tab">${tasks(model, 'all', '7d', {}).toLocaleString('en-US')}</b> tasks ${model.periods['7d'].phrase} · <span class="you">${waiting} waiting on you</span>`;
 
-// Sparkline in a 60 x 22 box: context line, then the latest step and dot in the accent.
-const lo = Math.min(...sparkline);
-const hi = Math.max(...sparkline);
-const pts = sparkline.map((v, i) => [
-  +((i * 60) / (sparkline.length - 1)).toFixed(1),
-  +(22 - ((v - lo) / (hi - lo)) * 20).toFixed(1),
-]);
-const ctxPath = 'M' + pts.slice(0, -1).map((p) => p.join(' ')).join(' L');
-const [px, py] = pts[pts.length - 2];
-const [lx, ly] = pts[pts.length - 1];
+const tabs = [
+  { id: 'all', label: 'All' },
+  { id: 'you', label: 'Needs you' },
+  { id: 'handoff', label: 'Handoffs' },
+];
 
 const summary =
-  `Illustration: the agent console of ${business.name}, a fictional ${business.employees}-person ${business.kind}, ` +
-  `on a Tuesday evening with the office closed. Five agents are at work and every action is logged with its time, ` +
-  `the latest a booked AC repair. ${counters.waitingOnYou} items wait for the owner's approval, ` +
-  `and results are tracked in hours: ${fmt1(hoursTotal)} hours back over the last 7 days.`;
+  `Interactive illustration: the agent console of ${business.name}, a fictional ${business.employees}-person ` +
+  `${business.kind}, on a Tuesday evening with the office closed. Five agents are at work and every action is ` +
+  `logged with its time. ${waiting} requests wait for the owner's approval: first emails from the Sales Agent and ` +
+  `a budget move from the Marketing Director. Results are tracked in hours: ${fmtH(hoursTotal)} hours back over ` +
+  `the last 7 days. Pick an agent or a period to filter, review a request, then approve or decline it.`;
 
-const rowAttrs = (row: LogRow) => ({
-  'data-agent': row.agent,
-  'data-inquiry': row.effect?.inquiry ? '1' : undefined,
-  'data-resolved': row.effect?.resolved ? '1' : undefined,
-  'data-minutes': row.effect?.minutes ? String(row.effect.minutes) : undefined,
-});
+/** "[1]" in the email copy becomes a numbered source marker. */
+const markers = (text: string) =>
+  text.replace(/\[(\d)\]/g, '<span class="marker" aria-hidden="true">$1</span><span class="sr-only"> (source $1)</span>');
+
+const lines = Object.fromEntries(
+  approvals.map((a) => [a.id, { pending: roster.find((r) => r.appr === a.id)?.line ?? '', approved: a.done.approved.line, declined: a.done.declined.line }]),
+);
+const json = JSON.stringify({ model, scene, lines }).replace(/</g, '\\u003c');
 ---
 <figure class="con-figure" data-console data-day={scene.day} data-minutes={scene.minutes}>
-  <div class="app-window" role="img" aria-label={summary} data-motion="tilt-in">
+  <p class="con-hint" data-hint hidden>
+    <span class="con-hint__k">Try it</span><span>Approve a request, or pick an agent</span>
+    <Icon name="arrow-right" class="con-hint__arrow" />
+  </p>
+
+  <div class="app-window con-win" role="region" aria-label="Agent console, interactive demo" aria-describedby="con-summary" data-motion="tilt-in">
+    <p id="con-summary" class="sr-only">{summary}</p>
     <div class="aw-bar">
       <span class="aw-dots"><i></i><i></i><i></i></span>
       <span class="aw-crumb con-crumb">
         <Logo variant="dark" href={null} wordmark={false} size={18} />
         <b>{business.name}</b>
-        <span class="aw-crumb__sep con-lg">/</span><span class="con-lg">Agent activity</span>
+        <span class="aw-crumb__sep con-lg" aria-hidden="true">/</span><span class="con-lg" data-crumb>Agent activity</span>
       </span>
       <span class="aw-meta">
-        <span class="aw-seg con-lg"><span>Today</span><span class="is-on">7 days</span><span>30 days</span></span>
-        <span class="live" data-live hidden><i></i>Live</span>
-        <span class="aw-status num-tab con-wide" data-clock>{clock}</span>
+        <span class="aw-seg con-period con-md" role="group" aria-label="Time period">
+          {PERIODS.map((p) => (
+            <button type="button" data-period={p} aria-pressed={p === '7d' ? 'true' : 'false'}>{model.periods[p].label}</button>
+          ))}
+        </span>
+        <button type="button" class="live con-live" data-live hidden>
+          <i></i><span data-live-label>Live</span><span class="sr-only" data-live-sr>: pause updates</span>
+        </button>
+        <span class="aw-status num-tab con-lg" data-clock>{clockLabel(scene.day, scene.minutes)}</span>
         <span class="aw-tag">Illustrative</span>
       </span>
     </div>
 
     <div class="con-body">
       <div class="con-side">
-        <div class="con-side__head"><span class="aw-label">Agents</span><span>{roster.length} working</span></div>
-        <ul class="con-agents">
-          {roster.map((r, i) => (
-            <li class:list={['con-agent', i === 0 && 'is-sel']}>
+        <div class="con-side__head"><span class="aw-label" id="con-agents-label">Agents</span><span>{roster.length} working</span></div>
+        <div class="con-agents" role="group" aria-labelledby="con-agents-label">
+          <button type="button" class="con-agent" data-agent="all" aria-pressed="true">
+            <span class="vg-glyph con-glyph"><Icon name="users" /></span>
+            <span class="con-agent__text"><b>All agents</b><small>{roster.length} on shift</small></span>
+          </button>
+          {roster.map((r) => (
+            <button type="button" class="con-agent" data-agent={r.id} aria-pressed="false">
               <span class="vg-glyph con-glyph"><Icon name={agent(r.id).icon} /></span>
-              <span class="con-agent__text"><b>{agent(r.id).name}</b><small>{r.line}</small></span>
-              <span class:list={['con-state', r.state === 'you' && 'con-state--you']}></span>
-            </li>
+              <span class="con-agent__text"><b>{agent(r.id).name}</b><small data-line={r.id}>{r.line}</small></span>
+              <span class:list={['con-state', r.state === 'you' && 'is-you']} data-state={r.id} data-sr-you="Waiting on you" data-sr-ok="Working">
+                <span class="sr-only">{r.state === 'you' ? 'Waiting on you' : 'Working'}</span>
+              </span>
+            </button>
           ))}
-        </ul>
+        </div>
         <div class="con-guard">
-          <p><Icon name="shield-check" /><span><b>Guardrails on</b>Sends, refunds and budget moves wait for your approval.</span></p>
+          <p><Icon name="shield-check" /><span><b>Guardrails on</b>First emails, refunds and moves between Google and Meta wait for your OK.</span></p>
         </div>
       </div>
 
       <div class="con-main">
-        <div class="con-strip" tabindex="0" role="group" aria-label="Agents on shift">
-          {roster.map((r) => <span><Icon name={agent(r.id).icon} />{agentShort[r.id]}</span>)}
+        <div class="con-strip" role="group" aria-label="Filter by agent">
+          <button type="button" class="con-chip" data-agent="all" aria-pressed="true"><Icon name="users" />All</button>
+          {roster.map((r) => (
+            <button type="button" class="con-chip" data-agent={r.id} aria-pressed="false">
+              <Icon name={agent(r.id).icon} />{agentShort[r.id]}
+              <span class:list={['con-chip__dot', r.state === 'you' && 'is-you']} data-state={r.id} data-sr-you=", waiting on you" data-sr-ok="">
+                <span class="sr-only">{r.state === 'you' ? ', waiting on you' : ''}</span>
+              </span>
+            </button>
+          ))}
         </div>
 
         <div class="con-head">
-          <div>
-            <p class="con-head__title">Agent activity</p>
-            <p class="con-head__sub"><b class="num-tab" data-count="tasks">{counters.tasksToday}</b> tasks today · <span class="you">{counters.waitingOnYou} waiting on you</span></p>
+          <div class="con-head__text">
+            <p class="con-head__title" data-view-title>Agent activity</p>
+            <p class="con-head__sub" data-head-sub set:html={headSub} />
           </div>
-          <Badge variant="running" icon="refresh-cw" class="con-wide">Connected to 9 tools</Badge>
+          <Badge variant="running" icon="refresh-cw" class="con-tools con-wide">Connected to {toolCount} tools</Badge>
+          <button type="button" class="app-btn con-clear" data-clear hidden><Icon name="x" />All agents</button>
         </div>
 
-        <div class="con-kpis">
+        <div class="con-kpis" data-kpis>
           <span class="fig-knot con-knot" aria-hidden="true">1</span>
-          <div class="kpi">
-            <span class="kpi__label">Hours back, 7 days</span>
-            <span class="kpi__value"><span class="num-tab" data-count="hours">{fmt1(hoursTotal)}</span><small>h</small></span>
-            <span class="kpi__delta"><b class="is-good">▲ {fmt1(counters.hoursDelta)} h</b>vs prior week</span>
-            <svg class="kpi__spark" viewBox="-3 -3 66 28" aria-hidden="true">
-              <path d={ctxPath} fill="none" stroke="var(--viz-context)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-              <path d={`M${px} ${py} L${lx} ${ly}`} fill="none" stroke="var(--viz-accent)" stroke-width="2" stroke-linecap="round" />
-              <circle cx={lx} cy={ly} r="3" fill="var(--viz-accent)" stroke="var(--color-navy-700)" stroke-width="2" />
-            </svg>
-          </div>
-          <div class="kpi">
-            <span class="kpi__label">First reply, median</span>
-            <span class="kpi__value">{counters.firstReplySec}<small>sec</small></span>
-            <span class="kpi__delta">Chat, text and email</span>
-          </div>
-          <div class="kpi">
-            <span class="kpi__label">Resolved without staff</span>
-            <span class="kpi__value"><span class="num-tab" data-count="resolved">{counters.resolved}</span><small>of <span class="num-tab" data-count="inquiries">{counters.inquiries}</span></small></span>
-            <span class="kpi__delta">Inquiries, 7 days</span>
-          </div>
-          <div class="kpi">
-            <span class="kpi__label">Ad spend moved</span>
-            <span class="kpi__value">${counters.adSpendMoved}</span>
-            {/* One line, no "weekly": the tile has 121 to 138px at desktop widths; the console is already in its 7-day view */}
-            <span class="kpi__delta">Within your {budgetCap}% cap</span>
-          </div>
+          {kpiTiles.map((t, i) => (
+            <div class="kpi" data-kpi={i}>
+              <span class="kpi__label" data-k-label>{t.label}</span>
+              <span class="kpi__value"><span class="num-tab" data-k-value data-n={t.n}>{fmtN(t.n, t.fmt)}</span><small data-k-unit>{unitText(t)}</small></span>
+              <span class="kpi__delta" data-k-sub set:html={subHtml(t)} />
+              {i === 0 && (
+                <svg class="kpi__spark" viewBox="-3 -3 66 28" aria-hidden="true">
+                  <path data-spark-ctx d={geo.ctx} fill="none" stroke="var(--viz-context)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  <path data-spark-last d={geo.last} fill="none" stroke="var(--viz-accent)" stroke-width="2" stroke-linecap="round" />
+                  <circle data-spark-dot cx={geo.dot[0]} cy={geo.dot[1]} r="3" fill="var(--viz-accent)" stroke="var(--color-navy-700)" stroke-width="2" />
+                </svg>
+              )}
+            </div>
+          ))}
         </div>
 
         <div class="con-card con-feed-card">
           <span class="fig-knot con-knot" aria-hidden="true">3</span>
           <div class="con-card__head">
-            <span class="aw-label">Activity log</span>
-            <span class="aw-seg con-wide"><span class="is-on">All</span><span>Needs you</span><span>Handoffs</span></span>
-          </div>
-          <div class="con-feed-wrap">
-            <ol class="con-feed" data-feed>
-              {initialRows.map((row) => (
-                <li class="con-row" {...rowAttrs(row)}>
-                  <span class="con-row__time num-tab">{row.time}</span>
-                  <span class="vg-glyph con-glyph"><Icon name={agent(row.agent).icon} /></span>
-                  <span class="con-row__body">
-                    <span class="con-row__meta"><b>{agent(row.agent).name}</b><span class="con-row__via"> · {row.via}</span></span>
-                    <span class="con-row__text">{row.text}</span>
-                  </span>
-                  <Badge variant={statusChip[row.status].variant}>{row.chip ?? statusChip[row.status].label}</Badge>
-                </li>
+            <span class="aw-label" id="con-log-label">Activity log</span>
+            <span class="aw-seg con-tabs con-wide" role="tablist" aria-labelledby="con-log-label">
+              {tabs.map((t, i) => (
+                <button type="button" role="tab" id={`con-tab-${t.id}`} data-tab={t.id} aria-controls="con-log"
+                  aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>{t.label}</button>
               ))}
-            </ol>
+            </span>
+          </div>
+          <div class="con-feed-wrap" id="con-log" role="tabpanel" aria-labelledby="con-tab-all" tabindex="0">
+            <div class="con-feed-inner" data-feed-inner>
+              <ol class="con-feed" data-feed aria-label="Log entries, newest first">
+                {logRows.map((row) => <ConsoleRow row={row} time={rowTime(row)} hidden={!shown.has(row)} />)}
+              </ol>
+              <p class="con-feed-note" data-feed-note hidden>
+                <span data-note-text></span>
+                <button type="button" class="con-link" data-show-period></button>
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="con-rail">
-        <div class="con-card con-card--appr">
+      <div class="con-rail" data-rail>
+        <div class="con-card con-card--appr" role="group" aria-labelledby="con-appr-label">
           <span class="fig-knot con-knot" aria-hidden="true">2</span>
-          <div class="con-card__head"><span class="aw-label">Waiting on you</span><Badge variant="count">{counters.waitingOnYou}</Badge></div>
-          <div class="con-appr">
-            {approvals.map((a) => (
-              <div class="con-appr__item">
-                <span class="con-appr__who"><span>{a.who}</span><Badge variant="attention">Your OK</Badge></span>
-                <p class="con-appr__what">{a.what}<span>{a.sub}</span></p>
-                <span class="con-appr__act"><span class="app-btn">Review</span><span class="app-btn app-btn--primary">Approve</span></span>
-              </div>
-            ))}
+          <div class="con-card__head">
+            <span class="aw-label" id="con-appr-label">Waiting on you</span>
+            <span class="count" data-appr-count>{waiting}</span>
+          </div>
+          <div class="con-appr-box">
+            <ul class="con-appr" data-appr-list>
+              {approvals.map((a) => (
+                <li class="con-appr__item" data-appr={a.id}>
+                  <span class="con-appr__who"><span>{a.who}</span><Badge variant="attention">Your OK</Badge></span>
+                  <p class="con-appr__what">{a.what}<span>{a.sub}</span></p>
+                  <div class="con-appr__detail" id={`con-appr-${a.id}`} hidden>
+                    {a.email && (
+                      <>
+                        <div class="aw-doc con-mail">
+                          <p class="con-mail__to"><span>To</span> {a.email.to}</p>
+                          <p class="con-mail__subject"><span>{a.email.subject}</span><small>Draft {a.email.draft}</small></p>
+                          <div class="con-mail__body">
+                            <p>{a.email.greeting}</p>
+                            {a.email.body.map((p) => <p set:html={markers(p)} />)}
+                            <p class="con-mail__sign">{a.email.signature}</p>
+                            <p class="con-mail__opt">{a.email.optOut}</p>
+                          </div>
+                        </div>
+                        <ol class="con-sources" aria-label="Sources">
+                          {a.email.sources.map((s, i) => <li><span class="marker" aria-hidden="true">{i + 1}</span><span class="sr-only">Source {i + 1}: </span>{s}</li>)}
+                        </ol>
+                      </>
+                    )}
+                    {a.budget && (
+                      <>
+                        <table class="con-budget">
+                          <thead><tr>{a.budget.head.map((c) => <th scope="col">{c}</th>)}</tr></thead>
+                          <tbody>{a.budget.rows.map((r) => <tr><th scope="row">{r[0]}</th><td>{r[1]}</td><td>{r[2]}</td></tr>)}</tbody>
+                        </table>
+                        <p class="con-appr__note">{a.budget.why}</p>
+                        <p class="con-appr__note"><b>The move:</b> {a.budget.plan}</p>
+                        <p class="con-appr__note"><b>Estimate:</b> {a.budget.expect}</p>
+                        <p class="math con-appr__math">{a.budget.math}</p>
+                      </>
+                    )}
+                  </div>
+                  <div class="con-appr__act">
+                    <button type="button" class="app-btn con-review" data-review={a.id} aria-expanded="false" aria-controls={`con-appr-${a.id}`}>
+                      Review<span class="sr-only">: {a.what}</span><Icon name="chevron-down" />
+                    </button>
+                    <span class="con-appr__decide">
+                      <button type="button" class="app-btn con-decline" data-decide={a.id} data-outcome="declined">Decline<span class="sr-only">: {a.what}</span></button>
+                      <button type="button" class="app-btn app-btn--primary" data-decide={a.id} data-outcome="approved">Approve<span class="sr-only">: {a.what}</span></button>
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div class="con-appr__done" data-appr-done hidden>
+              <span class="con-appr__done-icon"><Icon name="circle-check" size={28} /></span>
+              <p><b>All caught up</b>Nothing is waiting on you. New requests show up here.</p>
+              <button type="button" class="app-btn" data-reset><Icon name="rotate-ccw" />Reset the demo</button>
+            </div>
           </div>
         </div>
+
         <div class="con-card con-card--hours">
-          <div class="con-card__head"><span class="aw-label">Hours back by agent</span><span class="con-card__note">7 days</span></div>
+          <div class="con-card__head"><span class="aw-label">Hours back by agent</span><span class="con-card__note" data-hours-note>{model.periods['7d'].label}</span></div>
           <ul class="con-hours">
             {hoursByAgent.map((a) => (
-              <li class="con-hbar" data-hbar={a.id} data-hours={a.hours}>
-                <span class="con-hbar__top"><span>{agent(a.id).name}</span><b><span class="num-tab" data-hbar-val>{fmt1(a.hours)}</span> h</b></span>
+              <li class="con-hbar" data-hbar={a.id}>
+                <span class="con-hbar__top"><span>{agent(a.id).name}</span><b><span class="num-tab" data-hbar-val data-n={a.hours}>{fmtH(a.hours)}</span> h</b></span>
                 <span class="con-hbar__track"><span class="con-hbar__fill" data-hbar-fill style={`width:${((a.hours / maxHours) * 100).toFixed(1)}%`}></span></span>
               </li>
             ))}
@@ -177,19 +255,13 @@ const rowAttrs = (row: LogRow) => ({
     </div>
   </div>
 
-  <template data-live-rows>
-    {liveRows.map((row) => (
-      <li class="con-row" {...rowAttrs(row)}>
-        <span class="con-row__time num-tab"></span>
-        <span class="vg-glyph con-glyph"><Icon name={agent(row.agent).icon} /></span>
-        <span class="con-row__body">
-          <span class="con-row__meta"><b>{agent(row.agent).name}</b><span class="con-row__via"> · {row.via}</span></span>
-          <span class="con-row__text">{row.text}</span>
-        </span>
-        <Badge variant={statusChip[row.status].variant}>{row.chip ?? statusChip[row.status].label}</Badge>
-      </li>
-    ))}
-  </template>
+  <p class="sr-only" role="status" data-announce></p>
+
+  <template data-live-rows>{liveRows.map((row) => <ConsoleRow row={row} />)}</template>
+  <template data-decisions>{decisionRows.map((d) => <ConsoleRow row={d.row} decision={`${d.id}-${d.outcome}`} />)}</template>
+  <template data-chip="approved"><Badge variant="done">Approved</Badge></template>
+  <template data-chip="declined"><Badge variant="running" icon="x">Declined</Badge></template>
+  <script type="application/json" is:inline data-console-model set:html={json} />
 
   <figcaption class="con-caption">
     <div class="con-legend">
@@ -199,86 +271,184 @@ const rowAttrs = (row: LogRow) => ({
       <IllustrativeLabel />
     </div>
     <p class="fig-caption"><b>FIG. 1</b> The agent console with sample data. {business.name} is a fictional {business.employees}-person {business.kind}.</p>
+    <p class="con-valmath"><span class="math">Value of the work = hours back × {currency(valueMath.rate)} + jobs recovered × {currency(valueMath.jobProfit, { cents: true })} ({currency(valueMath.call.price)} × {valueMath.call.margin}% gross profit). 30 days: {number(valueMath.hours30, 1)} h × {currency(valueMath.rate)} + {number(valueMath.jobsMonth, 1)} × {currency(valueMath.jobProfit, { cents: true })} ≈ {currency(valueMath.value30)}.</span> <a class="link" href={url('/results/#example-customer')}>See the full example</a></p>
   </figcaption>
 </figure>
 
 <script>
-  import { initConsoles } from './console-live';
+  import { initConsoles } from './console-app';
   initConsoles();
 </script>
 
 <style>
-  /* ---- Figure and window ---------------------------------------------------------------- */
+  /* ---- Figure, hint and window --------------------------------------------------------- */
   .con-figure { position: relative; margin: clamp(36px, 4vw, 48px) 0 0; }
   .con-figure::before { content: ""; position: absolute; left: 12%; right: 12%; top: -40px; height: 160px; z-index: -1; background: radial-gradient(closest-side, rgb(209 174 108 / .22), transparent); filter: blur(24px); pointer-events: none; }
+  /* "Try it": paper copy above the window (marketing words never go inside it), gone after a first click */
+  .con-hint { position: absolute; right: 2px; bottom: calc(100% + 10px); display: flex; align-items: center; gap: 10px; font-size: .8125rem; line-height: 1.3; color: var(--color-ink-2); opacity: 0; transform: translateY(4px); transition: opacity .5s var(--ease-out-soft), transform .5s var(--ease-out-soft); pointer-events: none; }
+  .con-hint.is-on { opacity: 1; transform: none; }
+  .con-hint__k { font-family: var(--font-mono); font-size: .75rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--color-brass-700); }
+  .con-hint :global(.con-hint__arrow) { width: 14px; height: 14px; color: var(--color-brass-700); transform: rotate(90deg); }
+
   .con-crumb :global(.brand) { gap: 0; }
   .con-crumb :global(.brand__mark) { width: 18px; height: 18px; }
   .con-crumb b { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
-  .con-body { display: grid; grid-template-columns: 212px minmax(0, 1fr) 300px; }
+  /* ---- Controls: shared states ------------------------------------------------------------ */
+  .con-win button { cursor: pointer; }
+  .con-win .aw-seg > button { transition: color .15s, background-color .15s; }
+  .con-win .aw-seg > button:hover { color: var(--color-on); }
+  .con-win .aw-seg > button:focus-visible, .con-agent:focus-visible, .con-chip:focus-visible { outline-offset: 2px; }
+  .con-tabs > [aria-selected="true"] { color: var(--color-on); background: var(--color-navy-600); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+  .con-win .app-btn { transition: color .15s, background-color .15s, box-shadow .15s; }
+  .con-win .app-btn:not(.app-btn--primary):hover { color: var(--color-on); box-shadow: inset 0 0 0 1px rgb(224 191 127 / .5); }
+  .con-win .app-btn--primary:hover { background: var(--color-white); }
+  .con-win .app-btn :global(.icon) { width: 14px; height: 14px; }
+  .con-live { height: 24px; margin: 0 -6px; padding: 0 6px; border-radius: 999px; transition: color .15s, background-color .15s; }
+  .con-live:hover { background: rgb(255 255 255 / .05); }
+  .con-live.is-held > i::after { animation: none; }
+  .con-live.is-off { color: var(--color-on-3); }
+  .con-live.is-off > i::after { animation: none; }
 
-  /* ---- Sidebar: agents on shift --------------------------------------------------------- */
-  .con-side { display: flex; flex-direction: column; padding: 18px 12px 14px; background: var(--color-navy-850); border-right: 1px solid var(--color-rule-dark); }
+  .con-body { display: grid; grid-template-columns: 224px minmax(0, 1fr) 300px; }
+
+  /* ---- Sidebar: agents on shift, each a filter ---------------------------------------- */
+  .con-side { display: flex; flex-direction: column; min-height: 0; padding: 18px 12px 14px; background: var(--color-navy-850); border-right: 1px solid var(--color-rule-dark); }
   .con-side__head { display: flex; justify-content: space-between; align-items: center; padding: 0 8px 12px; font-size: 12px; color: var(--color-on-3); }
   .con-agents { display: grid; gap: 2px; }
-  .con-agent { display: grid; grid-template-columns: 28px minmax(0, 1fr) 8px; align-items: center; gap: 10px; padding: 8px; border-radius: 9px; }
-  .con-agent.is-sel { background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .con-agent { display: grid; grid-template-columns: 28px minmax(0, 1fr) 8px; align-items: center; gap: 8px 10px; width: 100%; padding: 8px; border-radius: 9px; text-align: left; transition: background-color .15s, box-shadow .15s; }
+  .con-agent:hover { background: rgb(255 255 255 / .045); }
+  .con-agent[aria-pressed="true"] { background: var(--color-navy-600); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
   .con-agent__text { min-width: 0; line-height: 1.4; }
-  .con-agent b { display: block; font-size: 12.5px; font-weight: 550; color: var(--color-on); white-space: nowrap; }
+  .con-agent b { display: block; overflow: hidden; font-size: 13px; font-weight: 550; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
   .con-agent small { display: block; overflow: hidden; font-size: 12px; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
+  .con-agent[aria-pressed="true"] small { color: var(--color-on-2); }
   .con-glyph { width: 28px; height: 28px; border-radius: 8px; }
   .con-glyph :global(.icon) { width: 14px; height: 14px; }
-  .con-state { width: 7px; height: 7px; border-radius: 50%; background: var(--color-sage); box-shadow: 0 0 0 3px rgb(140 197 166 / .12); }
-  .con-state--you { background: var(--color-sky); box-shadow: 0 0 0 3px rgb(143 184 224 / .16); }
+  .con-state { width: 7px; height: 7px; border-radius: 50%; background: var(--color-sage); box-shadow: 0 0 0 3px rgb(140 197 166 / .12); transition: background-color .3s; }
+  .con-state.is-you { background: var(--color-sky); box-shadow: 0 0 0 3px rgb(143 184 224 / .16); }
   .con-guard { margin-top: auto; padding: 14px 8px 2px; border-top: 1px solid var(--color-rule-dark); }
   .con-guard p { display: flex; gap: 10px; font-size: 12px; line-height: 1.45; color: var(--color-on-3); }
-  .con-guard b { display: block; font-size: 12.5px; font-weight: 550; color: var(--color-on); }
-  .con-guard :global(.icon) { margin-top: 1px; color: var(--color-brass-300); }
+  .con-guard b { display: block; font-size: 13px; font-weight: 550; color: var(--color-on); }
+  .con-guard :global(.icon) { flex: none; margin-top: 1px; color: var(--color-brass-300); }
 
   /* ---- Main column ---------------------------------------------------------------------- */
   .con-main { min-width: 0; padding: 18px; }
   .con-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
-  .con-head__title { font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; color: var(--color-on); }
-  .con-head__sub { margin-top: 5px; font-size: 12.5px; line-height: 1.4; color: var(--color-on-3); }
-  .con-head__sub b { font-weight: 550; color: var(--color-on-2); }
-  .con-head__sub .you { font-weight: 550; color: var(--color-sky); }
-  .con-strip { display: none; gap: 6px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
-  .con-strip:focus-visible { outline: 2px solid var(--color-brass-300); outline-offset: 2px; border-radius: 8px; }
-  .con-strip > span { display: inline-flex; align-items: center; gap: 6px; flex: none; height: 28px; padding: 0 10px 0 8px; border-radius: 999px; font-size: 12px; color: var(--color-on-2); background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
-  .con-strip :global(.icon) { width: 13px; height: 13px; color: var(--color-brass-300); }
+  .con-head__text { min-width: 0; }
+  .con-head__title { font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; color: var(--color-on); white-space: nowrap; }
+  .con-head__sub { margin-top: 5px; overflow: hidden; font-size: 13px; line-height: 1.4; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
+  .con-head__sub :global(b) { font-weight: 550; color: var(--color-on-2); }
+  .con-head__sub :global(.you) { font-weight: 550; color: var(--color-sky); }
+  .con-head :global(.con-tools) { flex: none; }
+  .con-clear { flex: none; }
+
+  /* Agent chips (below 1280px, where the sidebar hides) */
+  .con-strip { display: none; gap: 6px; margin: -3px -3px 9px; padding: 3px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+  .con-strip::-webkit-scrollbar { display: none; }
+  .con-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; flex: none; height: 32px; padding: 0 12px 0 10px; border-radius: 999px; font-size: 12px; font-weight: 550; color: var(--color-on-2); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); transition: color .15s, background-color .15s, box-shadow .15s; }
+  .con-chip:last-child { margin-right: 24px; }
+  .con-chip:hover { color: var(--color-on); background: rgb(255 255 255 / .04); }
+  .con-chip[aria-pressed="true"] { color: var(--color-on); background: var(--color-navy-600); box-shadow: inset 0 0 0 1px rgb(169 180 194 / .38); }
+  .con-chip :global(.icon) { width: 13px; height: 13px; color: var(--color-brass-300); }
+  .con-chip__dot { width: 6px; height: 6px; margin-left: 1px; border-radius: 50%; background: var(--color-sage); }
+  .con-chip__dot.is-you { background: var(--color-sky); }
 
   .con-kpis { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .con-kpis .kpi__label, .con-kpis .kpi__delta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .con-kpis .kpi__delta { display: block; }
+  .con-kpis .kpi__delta :global(b) { margin-right: 5px; }
+  .con-kpis .kpi__delta :global(.you) { font-weight: 550; color: var(--color-sky); }
+  .con-kpis.is-swap .kpi > :not(.kpi__spark) { animation: con-swap .3s var(--ease-out-soft); }
   /* the sparkline sits beside the value, clear of the label and the delta line */
   .kpi__spark { position: absolute; top: 35px; right: 14px; width: 56px; height: 20px; }
+  .kpi__spark path, .kpi__spark circle { transition: d .4s var(--ease-out-soft), cx .4s var(--ease-out-soft), cy .4s var(--ease-out-soft); }
 
   .con-card { position: relative; min-width: 0; border-radius: 12px; background: var(--color-navy-700); box-shadow: inset 0 0 0 1px var(--color-rule-dark), inset 0 1px 0 rgb(255 255 255 / .03); }
   .con-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 42px; padding: 0 14px; border-bottom: 1px solid var(--color-rule-dark); }
   .con-card__note { font-size: 12px; color: var(--color-on-3); }
 
-  /* ---- Activity log: fixed-height rows so new arrivals never shift the page -------------- */
+  /* ---- Activity log: fixed-height rows, so new arrivals and filters never shift the page -- */
   .con-feed-card { --row-h: 58px; --rows: 6; }
   .con-feed-wrap { position: relative; height: calc(var(--row-h) * var(--rows)); overflow: hidden; border-radius: 0 0 12px 12px; }
-  .con-feed { transition: transform .6s var(--ease-out-soft); }
-  .con-row { display: grid; grid-template-columns: 56px 28px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; height: var(--row-h); padding: 0 14px; }
-  .con-row + .con-row { border-top: 1px solid var(--color-rule-dark); }
-  .con-row.is-new { animation: var(--animate-row-in); }
-  .con-row.is-leaving { opacity: 0; transition: opacity .5s var(--ease-out-soft); }
-  .con-row__time { font-family: var(--font-mono); font-size: 12px; color: var(--color-on-3); white-space: nowrap; }
-  .con-row__body { min-width: 0; }
-  .con-row__meta { display: block; overflow: hidden; font-size: 12px; line-height: 16px; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
-  .con-row__meta b { font-weight: 550; color: var(--color-on-2); }
-  .con-row__text { display: block; margin-top: 2px; overflow: hidden; font-size: 13px; line-height: 19px; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+  .con-feed-wrap:focus-visible { outline-offset: -2px; }
+  .con-feed-inner { transition: transform .6s var(--ease-out-soft); }
+  .con-feed-inner.is-swap { animation: con-fade .25s var(--ease-out-soft); }
+  /* Rows render from ConsoleRow.astro and from <template>s, so their rules are global under .con-feed */
+  .con-feed :global(.con-row) { display: grid; grid-template-columns: 56px 28px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; height: var(--row-h); padding: 0 14px; }
+  .con-feed :global(.con-row:not([hidden]) ~ .con-row:not([hidden])) { border-top: 1px solid var(--color-rule-dark); }
+  .con-feed :global(.con-row.is-new) { animation: var(--animate-row-in); }
+  .con-feed :global(.con-glyph) { width: 28px; height: 28px; border-radius: 8px; }
+  .con-feed :global(.con-glyph .icon) { width: 14px; height: 14px; }
+  .con-feed :global(.con-row__time) { font-family: var(--font-mono); font-size: 12px; color: var(--color-on-3); white-space: nowrap; }
+  .con-feed :global(.con-row__body) { min-width: 0; }
+  .con-feed :global(.con-row__meta) { display: block; overflow: hidden; font-size: 12px; line-height: 16px; color: var(--color-on-3); white-space: nowrap; text-overflow: ellipsis; }
+  .con-feed :global(.con-row__meta b) { font-weight: 550; color: var(--color-on-2); }
+  .con-feed :global(.con-row--you .con-row__via) { color: var(--color-sky); }
+  .con-feed :global(.con-row__text) { display: block; margin-top: 2px; overflow: hidden; font-size: 13px; line-height: 19px; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
+  .con-feed-note { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-height: var(--row-h); padding: 8px 14px 8px 110px; border-top: 1px solid var(--color-rule-dark); font-size: 12px; line-height: 1.4; color: var(--color-on-3); }
+  .con-feed-note.is-empty { justify-content: center; min-height: calc(var(--row-h) * 2); padding-left: 14px; border-top: 0; text-align: center; }
+  .con-link { min-height: 24px; font-size: 12px; font-weight: 550; color: var(--color-on-2); text-decoration: underline; text-decoration-color: var(--color-brass-400); text-underline-offset: 3px; }
+  .con-link:hover { color: var(--color-on); }
 
-  /* ---- Rail: approvals and hours back --------------------------------------------------- */
+  /* ---- Rail: requests and hours back ---------------------------------------------------- */
   .con-rail { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 18px 18px 18px 0; }
-  .con-appr { display: grid; gap: 8px; padding: 10px; }
-  .con-appr__item { padding: 11px 12px; border-radius: 10px; background: var(--color-navy-800); box-shadow: inset 0 0 0 1px rgb(143 184 224 / .22); }
+  /* The box reserves two requests' height; the cards inside size to their content */
+  .con-card--appr { --item-h: 160px; }
+  .con-card--appr .count { transition: opacity .2s; }
+  .con-appr-box { position: relative; height: calc(var(--item-h) * 2 + 28px); }
+  .con-appr { display: flex; flex-direction: column; gap: 8px; height: 100%; padding: 10px; }
+  .con-appr__item { display: flex; flex-direction: column; flex: none; padding: 11px 12px; border-radius: 10px; background: var(--color-navy-800); box-shadow: inset 0 0 0 1px rgb(143 184 224 / .22); }
+  .con-appr.has-open > .con-appr__item:not(.is-open) { visibility: hidden; }
+  /* An open request lifts over what sits below it (the hours card, or the log in one column) */
+  .con-appr__item.is-open { position: absolute; z-index: 7; top: 10px; left: 10px; right: 10px; height: auto; max-height: var(--open-max, 520px); box-shadow: inset 0 0 0 1px rgb(143 184 224 / .34); animation: con-open .25s var(--ease-out-soft); }
   .con-appr__who { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; line-height: 1.4; color: var(--color-on-3); }
-  .con-appr__what { margin: 6px 0 10px; font-size: 13px; font-weight: 550; line-height: 1.4; color: var(--color-on); }
+  .con-appr__who > span:first-child { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .con-appr__what { margin: 6px 0 0; font-size: 13px; font-weight: 550; line-height: 1.4; color: var(--color-on); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .con-appr__what span { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--color-on-3); }
-  .con-appr__act { display: flex; gap: 6px; }
-  .con-hours { display: grid; gap: 9px; padding: 12px 14px 14px; }
-  .con-hbar { display: grid; gap: 4px; }
+  .con-appr__item.is-open .con-appr__what { display: block; }
+  .con-appr__item.is-open .con-appr__what span { display: none; }
+  .con-appr__detail { flex: 1 1 auto; min-height: 0; margin: 10px -12px 0; padding: 0 12px 2px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--color-navy-500) transparent; }
+  .con-appr__detail.is-clipped { -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); mask-image: linear-gradient(#000 calc(100% - 28px), transparent); }
+  .con-appr__note { margin-top: 8px; font-size: 12px; line-height: 1.5; color: var(--color-on-2); }
+  .con-appr__note b { font-weight: 600; color: var(--color-on); }
+  .con-appr__math { margin-top: 6px; font-size: 12px; }
+  .con-appr__act { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: auto; padding-top: 10px; }
+  .con-appr__decide { display: flex; gap: 6px; }
+  .con-review :global(.icon) { transition: transform .2s var(--ease-out-soft); }
+  .con-review[aria-expanded="true"] :global(.icon) { transform: rotate(180deg); }
+  .con-win .con-decline { box-shadow: none; }
+  .con-appr__done { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; text-align: center; }
+  .con-appr__done-icon { color: var(--color-sage); }
+  .con-appr__done p { max-width: 30ch; font-size: 13px; line-height: 1.45; color: var(--color-on-3); }
+  .con-appr__done b { display: block; margin-bottom: 2px; font-size: 15px; font-weight: 600; color: var(--color-on); }
+
+  /* The drafted email (the client's document: paper inside the window) and its sources */
+  .con-mail { font-size: 13px; line-height: 1.5; }
+  .con-mail__to { overflow: hidden; padding: 8px 12px 0; font-size: 12px; color: var(--color-ink-2); white-space: nowrap; text-overflow: ellipsis; }
+  .con-mail__to span { color: var(--color-ink-3); }
+  .con-mail__subject { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 1px 12px 8px; border-bottom: 1px solid var(--color-rule); font-weight: 600; color: var(--color-ink); }
+  .con-mail__subject small { flex: none; font-size: 12px; font-weight: 400; color: var(--color-ink-3); }
+  .con-mail__body { padding: 10px 12px 12px; color: var(--color-ink); }
+  .con-mail__body p + p { margin-top: 8px; }
+  .con-mail__body :global(.marker) { width: 18px; height: 18px; font-size: 12px; }
+  .con-mail__sign { font-weight: 550; }
+  .con-mail .con-mail__opt { font-size: 12px; line-height: 1.45; color: var(--color-ink-3); }
+  .con-sources { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 12px; line-height: 18px; color: var(--color-on-2); }
+  .con-sources li { display: flex; align-items: center; gap: 6px; }
+  .con-sources .marker { width: 18px; height: 18px; margin: 0; font-size: 12px; }
+  /* The budget move: last 30 days by channel */
+  .con-budget { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .con-budget th, .con-budget td { height: 26px; padding: 0 2px; border-bottom: 1px solid var(--color-rule-dark); text-align: right; white-space: nowrap; }
+  .con-budget th:first-child { text-align: left; }
+  .con-budget thead th { font-family: var(--font-mono); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--color-on-3); }
+  .con-budget tbody th { font-weight: 400; color: var(--color-on-2); }
+  .con-budget td { font-weight: 550; color: var(--color-on); }
+  .con-budget tbody tr:last-child > * { border-bottom: 0; font-weight: 600; }
+
+  .con-hours { display: grid; gap: 7px; padding: 10px 14px 12px; }
+  .con-hbar { display: grid; gap: 4px; transition: opacity .25s; }
+  .con-hbar.is-dim { opacity: .38; }
   .con-hbar__top { display: flex; justify-content: space-between; font-size: 12px; line-height: 1.4; color: var(--color-on-2); }
   .con-hbar__top b { font-weight: 600; color: var(--color-on); }
   .con-hbar__track { display: block; height: 6px; }
@@ -288,15 +458,30 @@ const rowAttrs = (row: LogRow) => ({
   .con-knot { top: -12px; left: -10px; }
   .con-legend { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; margin-top: 18px; }
   .con-caption .fig-caption { margin-top: 10px; }
+  .con-valmath { margin-top: 4px; font-size: 0.8125rem; line-height: 1.55; color: var(--color-ink-3); text-wrap: pretty; }
+  .con-valmath .math { font-size: 0.75rem; }
+
+  @keyframes con-swap { from { opacity: .25; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  @keyframes con-fade { from { opacity: .3; } to { opacity: 1; } }
+  @keyframes con-open { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
   /* ---- Responsive ----------------------------------------------------------------------- */
   @media (width >= 64rem) {
-    /* With the rail beside it, the log card grows to the rail's height so both columns end on one
-       line: the six rows share the extra height (sized against the wrapper, a size container). */
+    /* A fixed body: the log's six rows share the height the rail needs (rows sized against the
+       wrapper, a size container), and nothing inside can change the window's height. */
+    .con-body { height: 646px; }
     .con-main { display: flex; flex-direction: column; }
-    .con-feed-card { display: flex; flex: 1 0 auto; flex-direction: column; }
-    .con-feed-wrap { flex: 1 0 auto; height: auto; min-height: calc(var(--row-h) * var(--rows)); container-type: size; }
-    .con-row { height: max(var(--row-h), calc(100cqh / var(--rows))); }
+    .con-feed-card { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; }
+    .con-feed-wrap { flex: 1 1 auto; height: auto; min-height: 0; container-type: size; }
+    .con-feed :global(.con-row) { height: max(var(--row-h), calc(100cqh / var(--rows))); }
+    .con-feed-note { min-height: max(var(--row-h), calc(100cqh / var(--rows))); }
+    /* An open request takes the whole rail: the hours card steps aside (the body's height is fixed) */
+    .con-rail.has-open .con-card--hours { display: none; }
+    .con-rail.has-open .con-card--appr { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; }
+    .con-rail.has-open .con-appr-box { flex: 1 1 auto; height: auto; min-height: 0; }
+    .con-appr__item.is-open { bottom: 10px; max-height: none; }
+    /* the rail is 280 to 300px wide, so the email preview runs at the 12px floor there */
+    .con-mail { font-size: 12px; }
   }
   @media (width < 80rem) {
     .con-body { grid-template-columns: minmax(0, 1fr) 280px; }
@@ -304,36 +489,46 @@ const rowAttrs = (row: LogRow) => ({
     .con-strip { display: flex; }
   }
   @media (width < 64rem) {
-    /* One column: strip, head, KPIs, then the approvals (the control point) before the log */
+    /* One column: chips, head, KPIs, then the requests (the control point) before the log */
     .con-lg { display: none; }
     .con-body { display: flex; flex-direction: column; padding-top: 14px; }
     .con-main { display: contents; }
     .con-main > *, .con-rail { margin-inline: 14px; }
-    .con-strip { order: 1; }
+    .con-strip { order: 1; margin-inline: 11px; }
     .con-head { order: 2; }
     .con-kpis { order: 3; }
     .con-rail { order: 4; padding: 0; margin-bottom: 14px; }
     .con-feed-card { order: 5; margin-bottom: 14px; }
     .con-card--hours { display: none; }
-    .con-appr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .con-card--appr { --item-h: 128px; }
+    /* One column: an open request lifts over the log below it, edge to edge with the card */
+    .con-appr__item.is-open { top: 0; left: 0; right: 0; border-radius: 0 0 12px 12px; box-shadow: inset 0 0 0 1px rgb(143 184 224 / .34), 0 20px 40px -16px rgb(0 0 0 / .55); }
+    .con-figure.is-reviewing .con-feed-card > .con-knot { opacity: 0; }
   }
   @media (width < 48rem) {
-    /* Phones: agent strip, 2 KPIs, the approvals card, 3 log rows */
-    .aw-dots, .kpi__spark, .con-crumb :global(.brand), .con-figure :global(.con-wide) { display: none; }
+    /* Phones: agent chips, 2 KPIs, the requests, 3 log rows; 44px targets for every control */
+    .aw-dots, .kpi__spark, .con-crumb :global(.brand), .con-figure :global(.con-wide), .con-md { display: none; }
+    .con-hint { left: 0; right: auto; }
     .con-main > *, .con-rail { margin-inline: 12px; }
+    .con-strip { margin-inline: 9px; }
+    .con-chip { height: 40px; padding: 0 14px 0 12px; font-size: 13px; }
     .con-head { margin-bottom: 12px; }
+    .con-clear { height: 40px; padding: 0 12px; }
     .con-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
     .con-kpis > .kpi:nth-of-type(n + 3) { display: none; }
     .con-rail { margin-bottom: 12px; }
-    .con-appr { grid-template-columns: minmax(0, 1fr); }
+    .con-card--appr { --item-h: 164px; }
+    .con-win .con-appr__act .app-btn { height: 40px; padding: 0 12px; font-size: 13px; }
     .con-feed-card { margin-bottom: 12px; --row-h: 80px; --rows: 3; }
-    .con-row { grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-areas: "glyph meta chip" "glyph text text"; align-content: center; align-items: start; row-gap: 3px; }
-    .con-row__time, .con-row__via { display: none; }
-    .con-row > .con-glyph { grid-area: glyph; }
-    .con-row__body { display: contents; }
-    .con-row__meta { grid-area: meta; align-self: center; }
-    .con-row > :global(.chip) { grid-area: chip; }
-    .con-row__text { grid-area: text; margin-top: 0; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .con-feed :global(.con-row) { grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-areas: "glyph meta chip" "glyph text text"; align-content: center; align-items: start; row-gap: 3px; }
+    .con-feed :global(.con-row__time), .con-feed :global(.con-row__via) { display: none; }
+    .con-feed :global(.con-row--you .con-row__via) { display: inline; }
+    .con-feed :global(.con-row > .con-glyph) { grid-area: glyph; }
+    .con-feed :global(.con-row__body) { display: contents; }
+    .con-feed :global(.con-row__meta) { grid-area: meta; align-self: center; }
+    .con-feed :global(.con-row > .chip) { grid-area: chip; }
+    .con-feed :global(.con-row__text) { grid-area: text; margin-top: 0; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .con-feed-note { padding-left: 54px; }
     .con-legend .fig-legend { flex-direction: column; gap: 10px; }
   }
 </style>

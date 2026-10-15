@@ -32,7 +32,10 @@ const description =
   'An AI-powered review of your financials and operations that ranks savings, pricing and automation opportunities by value, effort and payback. Fixed fee.';
 
 // The page uses two fictional businesses: the worked example (hero and "What it's worth") and the
-// demo's restaurant group. Both are named where the page switches between them.
+// demo's restaurant group. Both are named where the page switches between them. Critique 2026-10-14:
+// the demo now follows the opening section (it was 14 screens down on phones), and the FAQ and hero
+// micro line say how the free assessment differs from the paid review. On phones the comparison section
+// sheds its repeats (the "Have a quote?" callout folds into the line under the CTA).
 const worth = getWorth('consulting')!;
 
 // The most affordable traditional option for the same scope (modeled), for the "why" paragraph.
@@ -97,6 +100,10 @@ const faq = [
     a: 'Because much of a traditional fee pays for people reading your data by hand. AI does that part in days. You still get an experienced person checking every finding and building the plan, and you pay a fixed fee for the review, not an hourly bill.',
   },
   {
+    q: 'How is this different from the free assessment?',
+    a: 'The free assessment is a 30-minute call built on what you tell us, including the short intake form: your top three opportunities and a rough, modeled estimate. AI Consulting spends 3 to 5 weeks inside your books and operating data: every opportunity sized from your own transactions and ranked by payback, a 90-day plan, a 12-month roadmap and the working model. The assessment tells you whether a review is worth doing, and what the fixed fee would be, before you commit to anything.',
+  },
+  {
     q: 'How is this different from what my accountant does?',
     a: 'Your accountant keeps the books accurate, compliant and filed. We use those books, plus your operational data, to look forward: where you’re losing margin, what to fix first and what it’s worth. We’re happy to work alongside your accountant.',
   },
@@ -126,7 +133,7 @@ const faq = [
     subtitle="A consulting-style review of your books and operations that ranks every saving, pricing gap and process fix by value, effort and payback. AI does the weeks of data work a firm would bill for; a person checks every finding."
     chips={['Every number traceable', 'Opportunities ranked by payback', 'A 90-day plan', 'Fixed fee, agreed up front']}
     secondary={{ label: 'Compare it with a consulting firm', href: '#comparison' }}
-    micro="Same scope as a consulting engagement. A fixed fee, not billable hours. Weeks, not months."
+    micro="The free assessment: 30 minutes, your top three opportunities and a rough estimate. The review: 3 to 5 weeks inside your books, with every opportunity sized from your own data."
   >
     <HeroOpportunities slot="art" />
   </PageHero>
@@ -144,13 +151,21 @@ const faq = [
     </ul>
   </Section>
 
-  <Section id="capabilities" tightTop aria-labelledby="capabilities-title">
-    <SectionHeader num="02" eyebrow="What it does" subtitle="AI reads every transaction and builds the models. A person checks the findings and makes the recommendations." titleId="capabilities-title"><span slot="title" data-motion="split">The analysis a good consultant would do, done in days.</span></SectionHeader>
+  <Section id="demo" tone="sunken" aria-labelledby="demo-title">
+    <SectionHeader num="02" eyebrow="See it work" titleId="demo-title"><span slot="title" data-motion="split">{"Watch a P&L turn into a ranked plan."}</span>
+      <p>A second fictional business: {demoBusiness.name}, two restaurants and a catering kitchen. Watch the agent read its P&amp;L, rank the savings and lay out the roadmap.</p>
+      <a class="link-arrow demo-all" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
+    </SectionHeader>
+    <div data-reveal><ConsultingDemo /></div>
+  </Section>
+
+  <Section id="capabilities" aria-labelledby="capabilities-title">
+    <SectionHeader num="03" eyebrow="What it does" subtitle="AI reads every transaction and builds the models. A person checks the findings and makes the recommendations." titleId="capabilities-title"><span slot="title" data-motion="split">The analysis a good consultant would do, done in days.</span></SectionHeader>
     <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="cells" items={capabilities} cols={3} label="Capabilities" /></div>
   </Section>
 
   <Section id="deliverables" tone="sunken" aria-labelledby="deliverables-title">
-    <SectionHeader num="03" eyebrow="What you get" subtitle="Just what you need to decide and act, and the working model behind every number." titleId="deliverables-title"><span slot="title" data-motion="split">Six deliverables. No 80-page binder.</span></SectionHeader>
+    <SectionHeader num="04" eyebrow="What you get" subtitle="Just what you need to decide and act, and the working model behind every number." titleId="deliverables-title"><span slot="title" data-motion="split">Six deliverables. No 80-page binder.</span></SectionHeader>
     <ol class="dlv" role="list" data-reveal data-motion="stagger">
       {deliverables.map((d, i) => (
         <li class="dlv__item">
@@ -167,7 +182,7 @@ const faq = [
   </Section>
 
   <Section id="how-it-works" aria-labelledby="how-title">
-    <SectionHeader num="04" eyebrow="How it works" titleId="how-title"><span slot="title" data-motion="split">From your data to a roadmap, in weeks.</span>
+    <SectionHeader num="05" eyebrow="How it works" titleId="how-title"><span slot="title" data-motion="split">From your data to a roadmap, in weeks.</span>
       <p>Typically 3 to 5 weeks from kickoff to readout. Most of that goes to gathering data and fitting short interviews into your team’s week. <b class="text-fg">The analysis itself takes days, not weeks of billed hours.</b></p>
     </SectionHeader>
     <div data-motion="draw stagger" data-draw-target=".steps__rope line" data-stagger-target=".step"><Steps steps={steps} label="How a review works" /></div>
@@ -178,7 +193,7 @@ const faq = [
   </Section>
 
   <Section id="comparison" tone="sunken" aria-labelledby="comparison-title">
-    <SectionHeader num="05" eyebrow="Compare the options" subtitle="What each kind of provider charges for a diagnostic and prioritized roadmap, from public records, and how long it takes." titleId="comparison-title"><span slot="title" data-motion="split">The same core deliverable. Not the same bill or the same wait.</span></SectionHeader>
+    <SectionHeader num="06" eyebrow="Compare the options" subtitle="From public records: what each kind of provider charges for this work, and how long you wait for recommendations." titleId="comparison-title"><span slot="title" data-motion="split">The same core deliverable. Not the same bill or the same wait.</span></SectionHeader>
     <div data-reveal>
       <CostLedger />
     </div>
@@ -189,30 +204,24 @@ const faq = [
         <p>In ours, AI does the reading, categorizing and modeling across every transaction. People spend their hours checking the findings and making the recommendations. That’s how the fee stays fixed and the work typically takes 3 to 5 weeks.</p>
         <div class="why__ctas">
           <Button href={site.cta.href} variant="secondary" icon="arrow-right">Get a fixed-fee quote</Button>
-          <a class="link-arrow" href="#how-it-works"><span>See how the review works</span><Icon name="arrow-right" /></a>
+          <a class="link-arrow why__how" href="#how-it-works"><span>See how the review works</span><Icon name="arrow-right" /></a>
         </div>
-        <p class="why__micro">The free assessment comes first. You see the scope and the fixed fee in writing before any work starts.</p>
+        <p class="why__micro">The free assessment comes first. You see the scope and the fixed fee in writing before any work starts.<span class="why__quote-line"> Have a quote from a consulting firm? Bring it, and we’ll compare it for the same scope.</span></p>
       </div>
       <div class="why__aside">
         <Callout variant="note" title="When a firm is the better choice." icon="scale">
           Months of hands-on change management, a sale or merger, or a question that needs a specialist in your exact industry. If that’s what you need, we’ll say so.
         </Callout>
-        <Callout variant="tip" title="Have a quote from a consulting firm?" icon="receipt">
-          Bring it to the assessment, and we’ll show you how our fixed fee compares for the same scope.
-        </Callout>
+        <div class="why__quote">
+          <Callout variant="tip" title="Have a quote from a consulting firm?" icon="receipt">
+            Bring it to the assessment, and we’ll show you how our fixed fee compares for the same scope.
+          </Callout>
+        </div>
       </div>
     </div>
   </Section>
 
-  <Section id="demo" aria-labelledby="demo-title">
-    <SectionHeader num="06" eyebrow="See it work" titleId="demo-title"><span slot="title" data-motion="split">{"Watch a P&L turn into a ranked plan."}</span>
-      <p>A second fictional business: {demoBusiness.name}, two restaurants and a catering kitchen. Watch the agent read its P&amp;L, rank the savings and lay out the roadmap.</p>
-      <a class="link-arrow demo-all" href={url('/demos/')}><span>See all six demos</span><Icon name="arrow-right" /></a>
-    </SectionHeader>
-    <div data-reveal><ConsultingDemo /></div>
-  </Section>
-
-  <Section id="guardrails" tightTop aria-labelledby="guardrails-title">
+  <Section id="guardrails" aria-labelledby="guardrails-title">
     <SectionHeader num="07" eyebrow="How we keep it honest" subtitle="A roadmap is only useful if you trust the numbers behind it." titleId="guardrails-title"><span slot="title" data-motion="split">Analysis you can check.</span></SectionHeader>
     <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="guard" items={guardrails} cols={3} label="How we keep the analysis honest" /></div>
   </Section>
@@ -267,6 +276,15 @@ const faq = [
   .why__copy > .why__micro { margin-top: 12px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
   .why__aside { display: grid; align-content: start; gap: 14px; }
   @media (width < 64rem) { .why { grid-template-columns: minmax(0, 1fr); } }
+  /* Phones: body-size paragraphs, and no jump back up to "How it works", which the reader just passed. */
+  .why__quote-line { display: none; }
+  @media (width < 40rem) {
+    .why__copy > p { font-size: 1rem; line-height: 1.6; }
+    .why__how { display: none; }
+    /* the "Have a quote?" callout becomes one sentence under the CTA */
+    .why__quote { display: none; }
+    .why__quote-line { display: inline; }
+  }
 
   .demo-all { margin-top: 8px; }
 

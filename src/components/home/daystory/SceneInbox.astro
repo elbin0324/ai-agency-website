@@ -1,18 +1,23 @@
 ---
 // Day story, 7:30 am: the Executive Assistant sorts the overnight inbox. OWNER: home-daystory.
-// Rendered inside the moment's app window (DayStory.astro). Final state in the markup; the scroll
-// timeline in day-motion.ts hides the chips and counts first, then plays them in.
+// Rendered inside the moment's app window (DayStory.astro). The markup is the final state (every row
+// tagged, counts filled). The scroll build in day-motion.ts starts from an unsorted inbox: rows are
+// tagged one by one while the counts climb and the "left to sort" count falls; in the pinned stage the
+// routine rows (filed, assigned) then slide out, the rest close up and a receipt line takes their place.
 import Icon from '@/components/ui/Icon.astro';
 import { inbox, inboxTotal } from './day-data';
 
 type Row = { who: string; subj: string; status: 'you' | 'done'; label: string };
+// Arrival order. Visible rows are a sample of the 38: two need the owner, two drafts, two tasks, two filed.
 const rows: Row[] = [
   { who: 'Dana Kim, Alder Court HOA', subj: 'Quote for three boiler replacements?', status: 'you', label: 'Needs you' },
-  { who: 'Tom Reyes', subj: 'Can we move Thursday’s maintenance visit?', status: 'you', label: 'Draft · your OK' },
   { who: 'County Permit Office', subj: 'Permit approved: 418 Birch Rd.', status: 'done', label: 'To Marcus R.' },
+  { who: 'Tom Reyes', subj: 'Can we move Thursday’s maintenance visit?', status: 'you', label: 'Draft · your OK' },
   { who: 'Ridgeline Supply', subj: 'Your Q4 price list is attached', status: 'done', label: 'Filed' },
   { who: 'Priya Nair', subj: 'Question about invoice #4471', status: 'you', label: 'Draft · your OK' },
   { who: 'Warranty desk', subj: 'Compressor claim approved, unit 3B', status: 'done', label: 'To Renee K.' },
+  { who: 'Marta Ruiz', subj: 'Water stain after Friday’s repair', status: 'you', label: 'Needs you' },
+  { who: 'Hollis Insurance', subj: 'Policy renewal documents', status: 'done', label: 'Filed' },
 ];
 const counts = [
   { n: inbox.needYou, label: 'Need you', you: true },
@@ -20,12 +25,13 @@ const counts = [
   { n: inbox.tasks, label: 'Tasks assigned', you: false },
   { n: inbox.filed, label: 'Filed', you: false },
 ];
+const handled = inbox.tasks + inbox.filed;
 ---
 <div class="sc">
   <div class="sc-head">
     <p class="aw-label">Overnight · {inboxTotal} emails</p>
     <span class="sc-state">
-      <span class="chip chip-running" data-ds="sorting">Sorting<span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+      <span class="chip chip-running" data-ds="sorting">Sorting · <b class="num-tab" data-ds-left={inboxTotal}>0</b> left</span>
       <span class="chip chip-done" data-ds="sorted"><Icon name="check" />Sorted</span>
     </span>
   </div>
@@ -39,16 +45,20 @@ const counts = [
     ))}
   </ul>
 
-  <ul class="sc-mail" role="list">
-    {rows.map((r) => (
-      <li class="sc-mail__row">
-        <span class="sc-mail__txt"><b>{r.who}</b><span>{r.subj}</span></span>
-        <span class:list={['chip', r.status === 'you' ? 'chip-attention' : 'chip-done']} data-ds="mailchip">
-          <Icon name={r.status === 'you' ? 'user-check' : 'check'} />{r.label}
-        </span>
-      </li>
-    ))}
-  </ul>
+  <div class="sc-mailwrap">
+    <ul class="sc-mail" role="list">
+      {rows.map((r) => (
+        <li class="sc-mail__row" data-ds-row data-ds-done={r.status === 'done' ? '' : undefined}>
+          <span class="sc-mail__dot" data-ds="unread" aria-hidden="true"></span>
+          <span class="sc-mail__txt"><b>{r.who}</b><span>{r.subj}</span></span>
+          <span class:list={['chip', r.status === 'you' ? 'chip-attention' : 'chip-done']} data-ds="mailchip">
+            <Icon name={r.status === 'you' ? 'user-check' : 'check'} />{r.label}
+          </span>
+        </li>
+      ))}
+    </ul>
+    <p class="sc-receipt" data-ds="receipt"><Icon name="check" />{handled} handled without you: {inbox.filed} filed, {inbox.tasks} sent to the team</p>
+  </div>
 </div>
 
 <style>
@@ -56,7 +66,8 @@ const counts = [
   .sc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .sc-state { display: inline-grid; justify-items: end; }
   .sc-state > * { grid-area: 1 / 1; }
-  /* Final state: sorted. The scroll timeline swaps "Sorting" in first. */
+  .sc-state b { font-weight: 600; }
+  /* Final state: sorted. The scroll build shows "Sorting · n left" first. */
   [data-ds="sorting"] { opacity: 0; visibility: hidden; }
 
   .sc-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
@@ -66,13 +77,24 @@ const counts = [
   .sc-count.is-you span { color: var(--color-sky); }
   .sc-count .icon { width: 12px; height: 12px; stroke-width: 2; }
 
-  .sc-mail { display: grid; min-height: 0; overflow: hidden; border-radius: var(--radius-tile); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
-  .sc-mail__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; padding: 10px 14px; }
+  .sc-mailwrap { position: relative; display: flex; flex-direction: column; min-height: 0; }
+  .sc-mail { display: grid; align-content: start; min-height: 0; overflow: hidden; border-radius: var(--radius-tile); box-shadow: inset 0 0 0 1px var(--color-rule-dark); }
+  .sc-mail__row { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 14px 10px 12px; }
   .sc-mail__row + .sc-mail__row { border-top: 1px solid var(--color-rule-dark); }
-  .sc-mail__txt { display: grid; min-width: 0; }
+  .sc-mail__dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--color-sky); opacity: 0; }
+  .sc-mail__txt { display: grid; flex: 1; min-width: 0; }
   .sc-mail__txt b, .sc-mail__txt span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .sc-mail__txt b { font-size: 0.8125rem; font-weight: 550; color: var(--color-on); }
   .sc-mail__txt span { font-size: 0.75rem; color: var(--color-on-3); }
+  .sc-mail__row .chip { flex: none; }
+
+  /* The receipt replaces the routine rows once they leave (pinned stage only): the list box fills the
+     window, the routine rows slide out, the rest close up and the receipt sits at the bottom. */
+  .sc-receipt { display: none; }
+  :global(.is-pinned) .sc-mailwrap { flex: 1; }
+  :global(.is-pinned) .sc-mail { flex: 1; }
+  :global(.is-pinned) .sc-receipt { position: absolute; right: 1px; bottom: 1px; left: 1px; display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--color-rule-dark); border-radius: 0 0 var(--radius-tile) var(--radius-tile); background: var(--color-navy-850); font-size: 0.75rem; line-height: 1.3; color: var(--color-on-2); opacity: 0; visibility: hidden; }
+  :global(.is-pinned) .sc-receipt .icon { flex: none; width: 14px; height: 14px; color: var(--color-sage); }
 
   @container (width < 520px) {
     .sc-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }

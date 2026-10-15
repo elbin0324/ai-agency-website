@@ -1,15 +1,21 @@
 ---
 // OWNER: services-b
-// "What it's worth" for the Sales Agent. The worked example (@/data/worth, id 'sales') values the rep's
-// time only, so this card leads with the hours back and the unchanged quality bar, shows the dollar
-// value as a secondary, labeled line, and states plainly what cold email can and can't promise.
-// Same card language as WorthExample (tags, business, ledgers, MathLedger, footnote); figures are read
-// from the example, never retyped.
+// "What it's worth" for the Sales Agent. The worked example (@/data/worth, id 'sales') counts rep time only.
+// Critique 2026-10-14 ("the page argued the buyer out of the service"): keep the honesty, change the frame.
+// The card now leads with the pipeline the outreach opens (held meetings and qualified opportunities as a
+// base-to-upside range, from BENCHMARKS.md's 0.7 to 1.5 held meetings per 1,000 prospects) next to what one
+// account is worth (added revenue, not gross profit), then the counted value (rep hours back) as the second
+// line. A fit line says who it pays off for, and the warmer use (personal notes to lapsed accounts, as in
+// the Ironvale scenario) is named and left uncounted. Pipeline is shown, never added to the value.
+// Same card language as WorthExample (tags, business, ledgers, MathLedger, footnote); every figure is read
+// from the example, never retyped. Rows read by label: the baseline "… emails a month" and "Typical
+// contract", and the math rows "For context: (upside) held meetings / qualified opportunities".
 import Icon from '@/components/ui/Icon.astro';
 import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
 import LedgerRows from '@/components/blocks/LedgerRows.astro';
 import MathLedger from '@/components/blocks/MathLedger.astro';
 import { getWorth } from '@/data/worth';
+import { site } from '@/config/site';
 import { currency, number } from '@/lib/format';
 import { url } from '@/lib/url';
 
@@ -20,20 +26,18 @@ const { class: className } = Astro.props;
 
 const ex = getWorth('sales')!;
 const row = (re: RegExp) => ex.math.find((r) => re.test(r.label));
-const hoursOf = (s?: string) => (s ? Number.parseFloat(s.replace(/[^0-9.]/g, '')) : Number.NaN);
-const before = hoursOf(row(/^prospecting time today/i)?.value);
-const after = hoursOf(row(/^prospecting time after/i)?.value);
-const perEmailBefore = ex.baseline.find((b) => /time per email/i.test(b.label))?.value.split(' (')[0];
-const perEmailAfter = ex.after.find((b) => /time per email/i.test(b.label))?.value;
-const volume = ex.baseline.find((b) => /emails a month/i.test(b.label))?.value;
-// "About 1-2 held meetings a year at this volume" -> "about 1 to 2 held meetings a year" (prose ranges use "to").
-const meetings = ex.after.find((b) => /realistically/i.test(b.label))?.value;
-const meetingsText = meetings
-  ? meetings.replace(/ at this volume$/i, '').replace(/(\d)\s*-\s*(\d)/g, '$1 to $2').replace(/^About/, 'about')
-  : 'very few held meetings a year';
+const num = (s?: string) => (s ? Number.parseFloat(s.replace(/[^0-9.]/g, '')) : Number.NaN);
+const rateIn = (re: RegExp) => row(re)?.formula?.match(/×\s*([\d.]+)\s*÷\s*1,000/)?.[1];
+
+const meet = { base: num(row(/^for context: held meetings/i)?.value), up: num(row(/^for context: upside held meetings/i)?.value) };
+const opps = { base: num(row(/^for context: qualified opportunities/i)?.value), up: num(row(/^for context: upside qualified opportunities/i)?.value) };
+const rate = { base: rateIn(/^for context: held meetings/i), up: rateIn(/^for context: upside held meetings/i) };
+const volume = num(ex.baseline.find((b) => /emails a month/i.test(b.label))?.value);
+const contract = num(ex.baseline.find((b) => /typical contract/i.test(b.label))?.value);
+const hasPipeline = [meet.base, meet.up, opps.base, opps.up, volume].every(Number.isFinite) && !!rate.base && !!rate.up;
+const hours = { base: ex.hoursPerMonth ?? 0, up: ex.upside.hoursPerMonth ?? ex.hoursPerMonth ?? 0 };
 const [kind, rest = ''] = ex.profile.split(/:\s*/, 2);
 const size = rest.split(/\s*[(,;]/)[0]?.trim();
-const annualRow = row(/^annual value/i);
 ---
 <article class:list={['card', 'sw', className]} data-reveal>
   <div class="sw__top">
@@ -46,17 +50,33 @@ const annualRow = row(/^annual value/i);
       <h3 class="type-h3">{ex.business}</h3>
       <p class="sw__profile">{kind}{size ? ` · ${size}` : ''}</p>
       <p class="sw__summary">{ex.summary}</p>
+      <p class="sw__fit">
+        <Icon name="target" />
+        <span><b>Best fit when one new account is worth $10,000 or more a year to you:</b> commercial services, distributors, B2B and professional firms. At small ticket sizes, the time saved alone rarely makes the case.</span>
+      </p>
     </div>
     <div class="sw__fig">
-      <p class="stat__fig sw__value">{number(ex.hoursPerMonth ?? 0)}<small>hours back a month</small></p>
-      <p class="sw__lead">The same {volume} researched first emails a month, at the same quality bar. The rep reviews and approves each one{perEmailAfter ? ` in ${perEmailAfter.replace(/ to review.*$/, '')}` : ''} instead of spending {perEmailBefore} researching and writing it.</p>
-      {Number.isFinite(before) && Number.isFinite(after) && (
-        <div class="stat__bars">
-          <div class="mbar"><span class="mbar__label">By hand</span><span class="mbar__track"><span class="mbar__fill" style="width:100%"></span></span><span class="mbar__val">{number(before, 1)} h</span></div>
-          <div class="mbar"><span class="mbar__label">With the agent</span><span class="mbar__track"><span class="mbar__fill mbar__fill--accent" style={`width:${((after / before) * 100).toFixed(1)}%`}></span></span><span class="mbar__val">{number(after, 1)} h</span></div>
-        </div>
+      {hasPipeline ? (
+        <Fragment>
+          <p class="type-label sw__k">The pipeline this outreach opens</p>
+          <p class="stat__fig sw__value">{number(meet.base, 1)} to {number(meet.up, 1)}<small>held meetings a year</small></p>
+          <p class="sw__lead">From {number(volume * 12)} researched first emails a year ({number(volume)} a month), at {rate.base} to {rate.up} held meetings per 1,000 prospects. About {number(opps.base, 1)} to {number(opps.up, 1)} become qualified opportunities.</p>
+        </Fragment>
+      ) : (
+        <p class="stat__fig sw__value">{number(hours.base)}<small>hours back a month</small></p>
       )}
-      <p class="sw__money">Valued at {currency(ex.monthlyValue)} a month in rep time{annualRow?.formula ? <Fragment>: <span class="math">{annualRow.formula} = <b>{annualRow.value}</b></span></Fragment> : null}</p>
+      <dl class="sw__pair">
+        {Number.isFinite(contract) && (
+          <div>
+            <dt>One new account</dt>
+            <dd><span class="math">{currency(contract)} a month × 12 = <b>{currency(contract * 12)}</b></span> a year in added revenue, before its costs</dd>
+          </div>
+        )}
+        <div>
+          <dt>What we count: rep time</dt>
+          <dd>{number(hours.base)} to {number(hours.up)} hours back a month, worth <b>{currency(ex.annualValue)} to {currency(ex.upside.annualValue)}</b> a year</dd>
+        </div>
+      </dl>
     </div>
   </header>
 
@@ -69,7 +89,11 @@ const annualRow = row(/^annual value/i);
       <MathLedger caption="The math" rows={ex.math} />
       <div class="sw__honest">
         <Icon name="info" />
-        <p><b>What we don’t count: new business.</b> Cold email is a slow channel. At this volume it realistically yields {meetingsText}, so any contract won is upside, not the case for buying.</p>
+        <p><b>Shown, not counted: the pipeline.</b> The value above is rep time only. Whether a meeting becomes a contract depends on your offer, your price and your team, so we never add the pipeline in. What decides the payoff is what one account is worth to you. <a class="link" href={url(site.ctas.calculator.href)}>Model it with your own deal size</a>.</p>
+      </div>
+      <div class="sw__honest sw__warm">
+        <Icon name="refresh-cw" />
+        <p><b>Warmer lists work too.</b> For a distributor, the same research-and-write loop drafts a personal note to the buyer at each lapsed account, and a rep approves every one. Reactivation isn’t counted here either. <a class="link" href={url('/results/#scenario-industrial-distributor')}>See the distributor example</a>.</p>
       </div>
     </div>
   </div>
@@ -78,7 +102,7 @@ const annualRow = row(/^annual value/i);
     <p class="sw__note">Gross value before any fees. Not a quote or a guarantee. Estimates exclude the cost of the engagement.</p>
     <div class="sw__links">
       <a class="link-arrow" href={url('/results/#methodology')}><span>How we estimate</span><Icon name="arrow-right" /></a>
-      <a class="link-arrow" href={url('/results/#examples')}><span>See the full example</span><Icon name="arrow-right" /></a>
+      <a class="link-arrow" href={url('/results/#example-sales')}><span>See the full example</span><Icon name="arrow-right" /></a>
     </div>
   </footer>
 </article>
@@ -90,16 +114,24 @@ const annualRow = row(/^annual value/i);
   .sw__head { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 24px 48px; align-items: start; }
   .sw__profile { margin-top: 6px; font-size: 0.875rem; line-height: 1.5; color: var(--fg-3); }
   .sw__summary { margin-top: 14px; max-width: 58ch; font-size: 1rem; line-height: 1.6; color: var(--fg-2); }
+  .sw__fit { display: flex; gap: 12px; margin-top: 20px; max-width: 58ch; padding-top: 16px; border-top: 1px solid var(--line); font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .sw__fit > :global(.icon) { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--accent-display); }
+  .sw__fit b { font-weight: 600; color: var(--fg); }
   .sw__fig { padding-left: 28px; border-left: 1px solid var(--line-accent); }
-  .sw__value { margin-top: 0; }
-  .sw__lead { margin-top: 14px; max-width: 46ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg); }
-  .sw__fig .stat__bars { margin-top: 18px; max-width: 420px; }
-  .sw__money { margin-top: 16px; font-size: 0.875rem; line-height: 1.6; color: var(--fg-2); }
-  .sw__money .math { display: inline; }
+  .sw__k { color: var(--accent); }
+  .sw__value { margin-top: 10px; }
+  .sw__lead { margin-top: 14px; max-width: 48ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg); }
+  .sw__pair { display: grid; margin-top: 18px; border-top: 1px solid var(--line); }
+  .sw__pair > div { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 4px 16px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .sw__pair dt { font-size: 0.875rem; font-weight: 600; line-height: 1.5; color: var(--fg); }
+  .sw__pair dd { margin: 0; font-size: 0.875rem; line-height: 1.55; color: var(--fg-2); }
+  .sw__pair dd b { font-weight: 600; color: var(--fg); }
+  .sw__pair .math { display: inline; }
   .sw__body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px 48px; align-items: start; padding-top: 28px; border-top: 1px solid var(--line); }
   .sw__compare { display: grid; gap: 28px; }
   .sw__honest { display: flex; gap: 12px; margin-top: 20px; padding: 14px 16px; border-radius: var(--radius-tile); background: var(--color-paper-sunken); box-shadow: inset 2px 0 0 var(--color-brass-500); }
-  .sw__honest > :global(.icon) { width: 18px; height: 18px; margin-top: 2px; color: var(--color-brass-700); }
+  .sw__warm { margin-top: 10px; }
+  .sw__honest > :global(.icon) { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--color-brass-700); }
   .sw__honest p { font-size: 0.9375rem; line-height: 1.55; color: var(--color-ink-2); }
   .sw__honest b { font-weight: 600; color: var(--color-ink); }
   .sw__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding-top: 16px; border-top: 1px solid var(--line); }
@@ -110,5 +142,8 @@ const annualRow = row(/^annual value/i);
     .sw__fig { padding-left: 0; padding-top: 20px; border-left: 0; border-top: 1px solid var(--line-accent); }
     .sw__compare { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 40px; }
   }
-  @media (width < 48rem) { .sw__compare { grid-template-columns: minmax(0, 1fr); } }
+  @media (width < 48rem) {
+    .sw__compare { grid-template-columns: minmax(0, 1fr); }
+    .sw__pair > div { grid-template-columns: minmax(0, 1fr); }
+  }
 </style>

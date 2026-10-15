@@ -7,6 +7,9 @@
 // every other craft choice numbered on a neutral disc (.marker.is-note). Then the summary table
 // (ComparisonTable, our column on navy).
 // Markers are aria-hidden: each note quotes its phrase, so the list reads on its own.
+// Below 1024px, where the two emails would stack (critique 2026-10-14: 5,178px on a phone), a two-button
+// switch shows one email at a time with its own notes under it, the Sales Agent's first; below 768px the
+// summary table folds behind "Compare line by line". Without JavaScript both emails and the table show.
 import Icon from '@/components/ui/Icon.astro';
 import ComparisonTable from '@/components/blocks/ComparisonTable.astro';
 
@@ -75,15 +78,20 @@ const rows = [
   { label: 'Volume', cells: [no('As many as the tool allows'), yes('Small batches, capped per inbox')] },
 ];
 ---
-<div class="ec">
+<div class="ec" data-show="ours" data-ec>
   <p class="ec__setup" data-reveal>
     <span class="type-label ec__setup-k">Same sender, same prospect</span>
     <span class="ec__setup-v"><b>Parkline IT</b>, a managed IT provider for small offices, writes to <b>Dana Whitaker</b>, managing partner at Hollis &amp; Grant, a 22-person law firm. Both businesses and both people are fictional.</span>
   </p>
 
+  <div class="ec__switch" role="group" aria-label="Show one email at a time">
+    <button type="button" class="demo-tab ec__seg" aria-pressed="true" aria-controls="ec-ours" data-ec-show="ours"><Icon name="send" />By the Sales Agent</button>
+    <button type="button" class="demo-tab ec__seg" aria-pressed="false" aria-controls="ec-generic" data-ec-show="generic"><Icon name="x" />Generic AI email</button>
+  </div>
+
   <div class="ec__grid" data-reveal>
     <!-- A · generic -->
-    <figure class="ec__side ec__side--generic">
+    <figure class="ec__side ec__side--generic" id="ec-generic">
       <figcaption class="ec__head">
         <span class="chip chip-blocked"><Icon name="x" />Generic AI email</span>
         <span class="ec__meta">From an AI writing tool</span>
@@ -111,7 +119,7 @@ const rows = [
     </figure>
 
     <!-- B · ours -->
-    <figure class="ec__side ec__side--ours">
+    <figure class="ec__side ec__side--ours" id="ec-ours">
       <figcaption class="ec__head">
         <span class="chip chip-done"><Icon name="check" />Written by the Sales Agent</span>
         <span class="ec__meta">89 words · 2 facts, both sourced</span>
@@ -144,14 +152,38 @@ const rows = [
     </figure>
   </div>
 
-  <ComparisonTable
-    class="ec__table"
-    caption="Side by side"
-    rowHeaderLabel="What we compared"
-    columns={[{ label: 'Generic AI email', short: 'Generic AI email' }, { label: 'Written by the Sales Agent', short: 'Sales Agent', us: true }]}
-    rows={rows}
-  />
+  <details class="ec__more" open data-ec-more data-reveal>
+    <summary><span>Compare line by line</span><Icon name="chevron-down" /></summary>
+    <ComparisonTable
+      class="ec__table"
+      caption="Side by side"
+      rowHeaderLabel="What we compared"
+      columns={[{ label: 'Generic AI email', short: 'Generic AI email' }, { label: 'Written by the Sales Agent', short: 'Sales Agent', us: true }]}
+      rows={rows}
+      reveal={false}
+    />
+  </details>
 </div>
+
+<script>
+  // One email at a time where the two would stack (below 1024px); the switch is hidden on wider screens,
+  // where both show side by side. Below 768px the line-by-line table starts folded. The markup ships with
+  // both emails and the table visible, so nothing is lost without JavaScript.
+  const phone = window.matchMedia('(width < 48rem)');
+  document.querySelectorAll<HTMLElement>('[data-ec]').forEach((root) => {
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-ec-show]')];
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        root.dataset.show = btn.dataset.ecShow;
+        buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      });
+    });
+    const more = root.querySelector<HTMLDetailsElement>('[data-ec-more]');
+    const sync = () => { if (more) more.open = !phone.matches; };
+    sync();
+    phone.addEventListener('change', sync);
+  });
+</script>
 
 <style>
   .ec__setup { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px 24px; align-items: baseline; padding: 18px 0; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line); }
@@ -194,11 +226,32 @@ const rows = [
   .ec__src { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.5; letter-spacing: 0.02em; color: var(--color-success); }
   .ec__src > :global(.icon) { width: 12px; height: 12px; }
 
-  .ec :global(.ec__table) { margin-top: clamp(48px, 5vw, 64px); }
+  .ec__more { margin-top: clamp(48px, 5vw, 64px); }
+  .ec__more > summary { display: none; }
+
+  /* The switch: two demo-tab pills (DESIGN.md §6.12), the pressed one in ink with a brass icon. */
+  .ec__switch { display: none; gap: 4px; margin-top: 24px; padding: 4px; border-radius: 999px; background: var(--color-paper-raised); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .ec__seg { flex: 1 1 0; justify-content: center; min-height: 44px; height: auto; cursor: pointer; }
+  .ec__seg[aria-pressed="true"] { color: var(--color-on); background: var(--color-ink); }
+  .ec__seg[aria-pressed="true"] :global(.icon) { color: var(--color-brass-300); }
+  .ec__seg :global(.icon) { width: 14px; height: 14px; }
 
   @media (width < 64rem) {
     .ec__grid { grid-template-columns: minmax(0, 1fr); }
     .ec__setup-k, .ec__setup-v { grid-column: 1 / -1; }
+    .ec__side--ours { order: -1; }
+    :global(html.js) .ec__switch { display: flex; }
+    :global(html.js) .ec__switch + .ec__grid { margin-top: 20px; }
+    :global(html.js) .ec[data-show="ours"] .ec__side--generic,
+    :global(html.js) .ec[data-show="generic"] .ec__side--ours { display: none; }
+  }
+  @media (width < 48rem) {
+    .ec__more { margin-top: 28px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .ec__more > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 52px; list-style: none; cursor: pointer; font-size: 0.9375rem; font-weight: 550; color: var(--fg); }
+    .ec__more > summary::-webkit-details-marker { display: none; }
+    .ec__more > summary :global(.icon) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
+    .ec__more[open] > summary :global(.icon) { transform: rotate(180deg); }
+    .ec__more[open] { padding-bottom: 20px; }
   }
   @media (width < 40rem) {
     .ec__rows { padding: 4px 16px; }

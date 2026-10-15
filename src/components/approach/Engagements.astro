@@ -4,15 +4,18 @@
 // asked for (CRITIQUE.md edit 1 and "Pricing structure"): how each model is priced, never a price.
 // Founder to confirm each structural term (fixed-price pilot, flat monthly fee incl. agreed AI usage,
 // pass-through costs at cost, same-business-day incident notice).
+// Each plan's button carries ?plan=<id>&from=approach (src/lib/url.ts contactUrl), so the intake on
+// /contact/ notes the model the visitor picked and puts it in the summary we receive.
 import Section from '@/components/ui/Section.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
 import type { IconName } from '@/components/ui/icons';
 import { site } from '@/config/site';
-import { url } from '@/lib/url';
+import { contactUrl, url, type Plan as PlanId } from '@/lib/url';
 
 type Plan = {
+  id: PlanId;
   name: string;
   promise: string;
   facts: { k: string; v: string }[];
@@ -24,6 +27,7 @@ type Plan = {
 
 const plans: Plan[] = [
   {
+    id: 'pilot',
     name: 'Pilot',
     promise: 'Prove it on one job.',
     start: true,
@@ -45,6 +49,7 @@ const plans: Plan[] = [
     cta: 'Start with a pilot',
   },
   {
+    id: 'managed',
     name: 'Managed',
     promise: 'We run it. You get the results.',
     facts: [
@@ -65,6 +70,7 @@ const plans: Plan[] = [
     cta: 'Talk about managed agents',
   },
   {
+    id: 'partner',
     name: 'Partner',
     promise: 'Your AI team, across the business.',
     facts: [
@@ -121,7 +127,7 @@ const pricing: { icon: IconName; title: string; body: string }[] = [
           <p class="plan__note"><Icon name={p.note.icon} />{p.note.text}</p>
         )}
         <div class="plan__cta">
-          <Button href={site.cta.href} variant={p.start ? 'primary' : 'secondary'} block icon="arrow-right">{p.cta}</Button>
+          <Button href={contactUrl({ plan: p.id, from: 'approach' })} variant={p.start ? 'primary' : 'secondary'} block icon="arrow-right">{p.cta}</Button>
         </div>
       </li>
     ))}
@@ -136,7 +142,7 @@ const pricing: { icon: IconName; title: string; body: string }[] = [
     </ul>
   </div>
   <p class="plans__micro">
-    AI Consulting can also be booked as a standalone project. Want a yardstick before we talk? The <a class="link" href={url(site.ctas.calculator.href)}>savings calculator</a> estimates what your team’s time is worth each month: the most an AI program could cost and still pay for itself.
+    AI Consulting can also be booked as a standalone project. Want a yardstick before we talk? The <a class="link" href={url(site.ctas.calculator.href)}>savings calculator</a> models five levers, from team time to pricing and vendors, and shows a break-even budget: the most the agents could cost each month and still pay off.
   </p>
 </Section>
 

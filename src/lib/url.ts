@@ -46,3 +46,36 @@ export function isActive(href: string, currentPath: string, opts: { section?: bo
   if (target === current) return true;
   return !!opts.section && target !== '/' && current.startsWith(target);
 }
+
+// ---------- Contact links with context
+// Page-level CTAs and demo result cards pass what the visitor chose, so the intake can preselect it
+// and record where the lead came from (the header CTA stays plain). The intake reads:
+//   ?interest=<Interest>  preselects the matching priority (contactInterests gives the intake's label)
+//   ?plan=<Plan>          the engagement model picked on /approach/
+//   ?from=<page>          written into the hidden source field, e.g. "services/sales" or "demo-result"
+//
+//   contactUrl({ interest: 'sales', from: 'services/sales' })
+//     -> '/ai-agency-website/contact/?interest=sales&from=services%2Fsales'
+
+export type Interest = 'customer-agent' | 'analyst-agent' | 'executive-assistant' | 'marketing' | 'sales' | 'consulting';
+export type Plan = 'pilot' | 'managed' | 'partner';
+
+/** Interest id -> the agent or service name the intake shows beside each priority (intake.ts `goals[].sub`). */
+export const contactInterests: Record<Interest, string> = {
+  'customer-agent': 'Customer Agent',
+  'analyst-agent': 'Analyst Agent',
+  'executive-assistant': 'Executive Assistant',
+  marketing: 'Marketing Director',
+  sales: 'Sales Agent',
+  consulting: 'AI Consulting',
+};
+
+/** Base-aware /contact/ link carrying the visitor's context. With no options it is the plain contact URL. */
+export function contactUrl(opts: { interest?: Interest; plan?: Plan; from?: string } = {}): string {
+  const q = new URLSearchParams();
+  if (opts.interest) q.set('interest', opts.interest);
+  if (opts.plan) q.set('plan', opts.plan);
+  if (opts.from) q.set('from', opts.from);
+  const qs = q.toString();
+  return url(qs ? `/contact/?${qs}` : '/contact/');
+}

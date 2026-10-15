@@ -1,9 +1,12 @@
 ---
 // OWNER: services-a
 // Hero art for /services/ai-agents/: one morning of the three agents at one fictional business,
-// with the human control point (Waiting on you) in sky. Decorative console: role="img" plus a
-// one-sentence summary (DESIGN.md §6.10). Card and approval rules are ported from the reference
-// hero console (.con-card, .con-appr in design-lab/reference/index.html).
+// with the human control point (Waiting on you) in sky. The approval card works (founder, 2026-10-14: no
+// clickable-looking mockups): Edit makes the drafted reply editable, Approve sends it (the chip, the count
+// and the Executive Assistant's log row follow), Undo puts it back. Without JavaScript the buttons don't
+// render. A group with a one-sentence summary (DESIGN.md §6.10). Card and approval rules are ported from the reference
+// hero console (.con-card, .con-appr in design-lab/reference/index.html). Titled by business and time span,
+// not "Agents on shift", which the home page uses (critique 2026-10-14); the 12px floor holds.
 import Badge from '@/components/ui/Badge.astro';
 import Icon from '@/components/ui/Icon.astro';
 import type { IconName } from '@/components/ui/icons';
@@ -20,10 +23,10 @@ const summary =
   'Illustrative console: last night the Customer Agent booked a repair from a website chat, this morning the Analyst Agent had the weekly numbers ready, and the Executive Assistant drafted a reply that waits for your approval.';
 ---
 <figure class="ac">
-  <div class="app-window ac__win" role="img" aria-label={summary}>
+  <div class="app-window ac__win" role="group" aria-label={summary} data-ac>
     <div class="aw-bar">
       <span class="aw-dots"><i></i><i></i><i></i></span>
-      <span class="aw-crumb"><b>Agents on shift</b><span class="aw-crumb__sep">/</span>Today</span>
+      <span class="aw-crumb"><b>Larkfield Plumbing &amp; Air</b><span class="aw-crumb__sep">/</span>Since last night</span>
       <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
     </div>
     <div class="ac__body">
@@ -35,18 +38,30 @@ const summary =
               <span class="ac__time">{r.time}{r.day && <span class="ac__day">{r.day}</span>}</span>
               <span class="vg-glyph ac__glyph"><Icon name={r.icon} /></span>
               <span class="ac__text"><span class="ac__who"><b>{r.who}</b> · {r.via}</span><span class="ac__what">{r.text}</span></span>
-              <Badge variant={r.status}>{r.chip}</Badge>
+              {r.who === 'Executive Assistant' ? (
+                <Fragment>
+                  <span data-ac-ea-wait><Badge variant={r.status}>{r.chip}</Badge></span>
+                  <span data-ac-ea-done hidden><Badge variant="done">Done</Badge></span>
+                </Fragment>
+              ) : (
+                <Badge variant={r.status}>{r.chip}</Badge>
+              )}
             </li>
           ))}
         </ol>
       </div>
       <div class="con-card">
-        <div class="con-card__head"><span class="aw-label">Waiting on you</span><span class="count">2</span></div>
+        <div class="con-card__head"><span class="aw-label">Waiting on you</span><span class="count" data-ac-count>2</span></div>
         <div class="con-appr">
           <div class="con-appr__item">
-            <span class="con-appr__who"><span>Executive Assistant · reply</span><Badge variant="attention">Your OK</Badge></span>
-            <p class="con-appr__what">To a supplier: confirm Friday’s delivery<span>“Friday works. Please deliver both condensers to the shop by 10 am.”</span></p>
-            <span class="con-appr__act"><span class="app-btn">Edit</span><span class="app-btn app-btn--primary">Approve</span></span>
+            <span class="con-appr__who"><span>Executive Assistant · reply</span><span data-ac-wait><Badge variant="attention">Your OK</Badge></span><span data-ac-sent hidden><Badge variant="done">Sent</Badge></span></span>
+            <p class="con-appr__what">To a supplier: confirm Friday’s delivery<span class="ac__draft" data-ac-draft>Friday works. Please deliver both condensers to the shop by 10 am.</span></p>
+            <span class="con-appr__act ac__act">
+              <button type="button" class="app-btn" aria-pressed="false" data-ac-edit><Icon name="pen-line" /><span data-ac-edit-label>Edit</span></button>
+              <button type="button" class="app-btn app-btn--primary" data-ac-approve><Icon name="send" />Approve</button>
+              <button type="button" class="app-btn" data-ac-undo hidden><Icon name="rotate-ccw" />Undo</button>
+            </span>
+            <p class="sr-only" aria-live="polite" data-ac-live></p>
           </div>
           <div class="con-appr__item">
             <span class="con-appr__who"><span>Customer Agent · handoff</span><Badge variant="handoff">Handed off</Badge></span>
@@ -77,7 +92,7 @@ const summary =
   .ac__row { display: grid; grid-template-columns: 76px 26px minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 10px 14px; }
   .ac__row + .ac__row { border-top: 1px solid var(--color-rule-dark); }
   .ac__time { padding-top: 5px; font-family: var(--font-mono); font-size: 12px; color: var(--color-on-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .ac__day { display: block; margin-top: 2px; font-size: 11px; }
+  .ac__day { display: block; margin-top: 2px; font-size: 12px; }
   .ac__glyph { width: 26px; height: 26px; border-radius: 7px; }
   .ac__text { min-width: 0; font-size: 13px; line-height: 1.4; }
   .ac__who { display: block; font-size: 12px; color: var(--color-on-3); }
@@ -85,9 +100,80 @@ const summary =
   .ac__what { display: block; margin-top: 2px; color: var(--color-on-2); }
   .ac__row :global(.chip) { margin-top: 2px; }
 
+  /* The working approval card (see the header comment) */
+  [data-ac-wait], [data-ac-sent], [data-ac-ea-wait], [data-ac-ea-done] { display: contents; }
+  .ac__draft::before { content: '“'; }
+  .ac__draft::after { content: '”'; }
+  .ac__draft[contenteditable]:not([contenteditable="false"]) { margin-top: 6px; padding: 6px 8px; border-radius: 6px; color: var(--color-on); background: var(--color-navy-900); box-shadow: inset 0 0 0 1px var(--color-sky); cursor: text; }
+  .ac__act { display: none; }
+  :global(html.js) .ac__act { display: flex; }
+  .ac__act .app-btn { cursor: pointer; transition: color .15s, background-color .15s, box-shadow .15s; }
+  .ac__act .app-btn :global(.icon) { width: 14px; height: 14px; }
+  .ac__act .app-btn:not(.app-btn--primary):hover, .ac__act .app-btn[aria-pressed="true"] { color: var(--color-on); box-shadow: inset 0 0 0 1px rgb(224 191 127 / .5); }
+  .ac__act .app-btn--primary:hover { background: var(--color-white); }
+  @media (pointer: coarse) { .ac__act .app-btn { height: 40px; padding: 0 12px; font-size: 0.8125rem; } }
+
   @media (width < 40rem) {
     .ac__row { grid-template-columns: 26px minmax(0, 1fr); }
     .ac__time { display: none; }
     .ac__row :global(.chip) { grid-column: 2; justify-self: start; margin-top: 0; }
   }
 </style>
+
+<script>
+  // The approval card works: Edit makes the drafted reply editable (Enter or Done finishes), Approve sends
+  // it (chips, the count and the log row follow, with a polite announcement), Undo puts it back in the queue.
+  document.querySelectorAll<HTMLElement>('[data-ac]').forEach((root) => {
+    const q = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
+    const draft = q('[data-ac-draft]');
+    const edit = q<HTMLButtonElement>('[data-ac-edit]');
+    const editLabel = q('[data-ac-edit-label]');
+    const approve = q<HTMLButtonElement>('[data-ac-approve]');
+    const undo = q<HTMLButtonElement>('[data-ac-undo]');
+    const count = q('[data-ac-count]');
+    const live = q('[data-ac-live]');
+    const pairs = [[q('[data-ac-wait]'), q('[data-ac-sent]')], [q('[data-ac-ea-wait]'), q('[data-ac-ea-done]')]];
+    const start = Number(count.textContent) || 2;
+
+    const setEditing = (on: boolean) => {
+      if (on) {
+        // plaintext-only keeps pasted formatting out; older engines reject it, so fall back to true.
+        try { draft.contentEditable = 'plaintext-only'; } catch { /* unsupported */ }
+        if (draft.contentEditable !== 'plaintext-only') draft.contentEditable = 'true';
+        draft.setAttribute('role', 'textbox');
+        draft.setAttribute('aria-label', 'Reply to the supplier');
+        draft.focus();
+        const range = document.createRange();
+        range.selectNodeContents(draft);
+        range.collapse(false);
+        const sel = getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      } else {
+        draft.contentEditable = 'false';
+        draft.removeAttribute('role');
+        draft.removeAttribute('aria-label');
+        if (!draft.textContent?.trim()) draft.textContent = 'Friday works. Please deliver both condensers to the shop by 10 am.';
+      }
+      edit.setAttribute('aria-pressed', String(on));
+      editLabel.textContent = on ? 'Done' : 'Edit';
+    };
+    const setSent = (sent: boolean) => {
+      if (draft.isContentEditable) setEditing(false);
+      pairs.forEach(([wait, done]) => { wait.hidden = sent; done.hidden = !sent; });
+      count.textContent = String(start - (sent ? 1 : 0));
+      edit.hidden = sent;
+      approve.hidden = sent;
+      undo.hidden = !sent;
+      live.textContent = sent ? 'Reply approved and sent to the supplier.' : 'Reply back in your queue, waiting for your OK.';
+      (sent ? undo : approve).focus();
+    };
+
+    edit.addEventListener('click', () => setEditing(!draft.isContentEditable));
+    draft.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); setEditing(false); edit.focus(); }
+    });
+    approve.addEventListener('click', () => setSent(true));
+    undo.addEventListener('click', () => setSent(false));
+  });
+</script>

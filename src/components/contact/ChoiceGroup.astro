@@ -1,0 +1,114 @@
+---
+// OWNER: pages-misc
+// A question answered by picking: a <fieldset> + <legend> of radio or checkbox option tiles
+// (DESIGN.md §6.13 `.check` with the 20px custom control, set in a ringed tile like the old interests list).
+// `layout`: 'pills' wrap in a row (short answers such as "$30 to $45"), 'tiles' sit in a 2-column grid
+// (longer answers with an optional sub-line), 'chips' are smaller wrapping pills for long pick-any lists
+// (tools), 'compact' is a 3-column grid of plain checks.
+// Validation hooks (`validate` + `msg`) are read by intake-client.ts; the error line is ready and hidden.
+import Icon from '@/components/ui/Icon.astro';
+import type { Option } from './intake';
+
+interface Props {
+  id: string;
+  name: string;
+  legend: string;
+  options: Option[];
+  type?: 'radio' | 'checkbox';
+  layout?: 'pills' | 'tiles' | 'chips' | 'compact';
+  /** Label(s) checked on first render (the default answer, e.g. "Not sure"). */
+  checked?: string | string[];
+  hint?: string;
+  optional?: boolean;
+  /** 'group' = at least one; 'goals' = at least one and at most `max`. */
+  validate?: 'group' | 'goals';
+  msg?: string;
+  max?: number;
+  /** Extra data attribute hook on each input, e.g. "data-cf-contact". */
+  inputAttr?: string;
+  /** Native `required` on the first radio (no-JS validation). */
+  required?: boolean;
+  /** Short label for the emailed summary (default: the legend). */
+  summary?: string;
+  class?: string;
+}
+
+const {
+  id, name, legend, options, type = 'radio', layout = 'pills', checked, hint, optional = false,
+  validate, msg, max, inputAttr, required = false, summary, class: className,
+} = Astro.props;
+const isChecked = (label: string) => (Array.isArray(checked) ? checked.includes(label) : checked === label);
+const hintId = hint ? `${id}-hint` : undefined;
+const extra = (i: number) => ({
+  ...(inputAttr ? { [inputAttr]: '' } : {}),
+  ...(required && type === 'radio' && i === 0 ? { required: true } : {}),
+});
+---
+<fieldset
+  class:list={['field', 'cg', `cg--${layout}`, className]}
+  id={id}
+  aria-describedby={hintId}
+  data-cf-validate={validate}
+  data-cf-msg={msg}
+  data-cf-max={max}
+  data-cf-sum={summary ?? legend}
+  data-cf-name={name}
+>
+  <legend class="field__label cg__legend">{legend}{optional && <span class="optional"> (optional)</span>}</legend>
+  {hint && <p class="field__hint cg__hint" id={hintId} data-cg-hint>{hint}</p>}
+  <p class="field__error" id={`${id}-err`} hidden><Icon name="circle-alert" /><span></span></p>
+  <div class="cg__opts">
+    {options.map((o, i) => (
+      <label class:list={['check', 'cg__opt', o.sub && 'cg__opt--sub']}>
+        <input type={type} name={name} value={o.label} checked={isChecked(o.label)} {...extra(i)} />
+        <span class="cg__text">{o.label}{o.sub && <small>{o.sub}</small>}</span>
+      </label>
+    ))}
+  </div>
+</fieldset>
+
+<style>
+  .cg { min-width: 0; margin: 0; padding: 0; border: 0; }
+  .cg__legend { margin-bottom: 6px; padding: 0; }
+  .cg__opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .cg__opt {
+    position: relative; align-items: center; min-height: 44px; padding: 10px 14px 10px 12px;
+    border-radius: var(--radius-control); background: var(--color-paper-raised);
+    box-shadow: inset 0 0 0 1px var(--color-rule-strong);
+    transition: box-shadow 0.15s, background-color 0.15s;
+  }
+  .cg__opt > input { margin-top: 0; }
+  .cg__opt:hover { box-shadow: inset 0 0 0 1px var(--color-ink-2); }
+  .cg__opt:has(input:checked) { background: var(--color-paper); box-shadow: inset 0 0 0 1.5px var(--color-ink); }
+  .cg__opt:has(input:disabled) { cursor: not-allowed; opacity: 0.5; }
+  .cg__opt:has(input:disabled):hover { box-shadow: inset 0 0 0 1px var(--color-rule-strong); }
+  .cg__text { display: grid; gap: 1px; font-weight: 500; line-height: 1.35; }
+  .cg__text small { font-size: 0.8125rem; font-weight: 400; color: var(--color-ink-3); }
+  .cg__opt--sub { align-items: flex-start; }
+  .cg__opt--sub > input { margin-top: 1px; }
+
+  .cg--tiles .cg__opts, .cg--compact .cg__opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cg--tiles .cg__opt { min-height: 48px; padding: 12px 14px; }
+  .cg--compact .cg__opts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 8px; }
+  .cg--compact .cg__opt { min-height: 44px; padding: 9px 12px 9px 10px; font-size: 0.875rem; }
+  .cg--compact .cg__text { font-weight: 400; }
+  .cg--chips .cg__opts { gap: 6px; }
+  .cg--chips .cg__opt { padding: 9px 12px 9px 10px; font-size: 0.875rem; }
+  .cg--chips .cg__text { font-weight: 400; }
+
+  /* A failed group shows one message and a red legend, not a wall of red tiles. */
+  .cg[aria-invalid="true"] > .cg__legend { color: var(--color-danger); }
+
+  @media (width < 48rem) {
+    .cg--compact .cg__opts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  /* Phones: pills become an even two-column grid (text may wrap inside a tile), so short and long answers
+     line up instead of wrapping into a ragged stack. Chips (a long pick-any list of short names) keep
+     flowing, which keeps the tools list to a few rows. */
+  @media (width < 40rem) {
+    .cg--tiles .cg__opts { grid-template-columns: minmax(0, 1fr); }
+    .cg--pills .cg__opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .cg--pills .cg__opt { padding: 10px; }
+    .cg--chips .cg__opt { padding: 9px 11px 9px 9px; }
+  }
+</style>

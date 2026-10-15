@@ -2,6 +2,8 @@
 // Day story, 6:00 pm: the end-of-day summary. OWNER: home-daystory.
 // KPI tiles (DESIGN.md §6.7 .kpi), a 7 am to 7 pm day track whose fill reaches 6 pm, and the day's
 // log with status chips (sky for the one decision still waiting). Numbers: see day-data.ts.
+// The scroll build counts the tiles up while the day track fills from 7 am; each moment's knot lights
+// as the fill passes it and its log line arrives with it. The open decision lands last.
 import Icon from '@/components/ui/Icon.astro';
 import type { IconName } from '@/components/ui/icons';
 import { moments, hoursTotal, hoursToday, jobsBooked, approvals, inbox, sales, dayPos, dayName } from './day-data';

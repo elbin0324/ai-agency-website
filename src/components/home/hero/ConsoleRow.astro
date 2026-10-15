@@ -1,0 +1,43 @@
+---
+// One activity-log row of the hero console (FIG. 1). OWNER: home-hero.
+// Used for the log as it loads, the live rows (<template>) and the rows an approval decision adds.
+// The data-* attributes are what console-app.ts filters on: agent, day (0 = today), status.
+import Icon from '@/components/ui/Icon.astro';
+import Badge from '@/components/ui/Badge.astro';
+import { agent, statusChip, type LogRow } from './console-data';
+
+interface Props {
+  row: LogRow;
+  /** Time column text; live and decision rows get theirs from the console clock. */
+  time?: string;
+  hidden?: boolean;
+  /** "sales-approved" etc.: a row added by the visitor's decision. */
+  decision?: string;
+}
+const { row, time = '', hidden = false, decision } = Astro.props;
+const a = agent(row.agent);
+const chip = statusChip[row.status];
+const declined = decision?.endsWith('declined');
+---
+<li
+  class:list={['con-row', decision && 'con-row--you']}
+  hidden={hidden}
+  data-agent={row.agent}
+  data-day={row.day ?? 0}
+  data-status={decision ? (declined ? 'declined' : 'approved') : row.status}
+  data-appr-row={row.appr}
+  data-effect={row.effect ? JSON.stringify(row.effect) : undefined}
+  data-decision={decision}
+>
+  <span class="con-row__time num-tab">{time}</span>
+  <span class="vg-glyph con-glyph"><Icon name={a.icon} /></span>
+  <span class="con-row__body">
+    <span class="con-row__meta"><b>{a.name}</b><span class="con-row__via"> · {row.via}</span></span>
+    <span class="con-row__text">{row.text}</span>
+  </span>
+  {decision ? (
+    declined ? <Badge variant="running" icon="x">Declined</Badge> : <Badge variant="done">Approved</Badge>
+  ) : (
+    <Badge variant={chip.variant}>{row.chip ?? chip.label}</Badge>
+  )}
+</li>

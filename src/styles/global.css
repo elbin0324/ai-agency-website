@@ -14,7 +14,7 @@
   /* Paper: light surfaces */
   --color-paper: #F5F0E6;           /* page */
   --color-paper-raised: #FBF8F2;    /* cards, result cards, worksheet, inputs, menus */
-  --color-paper-sunken: #EFE8DA;    /* tinted bands (demos), table heads, code */
+  --color-paper-sunken: #ECE4D4;    /* tinted bands (demos), table heads, code; deep enough to read as a new section (1.11:1 vs paper) */
   /* Ink: text and lines on paper */
   --color-ink: #0E2136;             /* primary text, primary button       14.34:1 on paper */
   --color-ink-2: #4A5868;           /* secondary text                      6.40:1 */
@@ -447,7 +447,11 @@
   .aw-title { position: absolute; left: 50%; top: 50%; max-width: 52%; overflow: hidden; transform: translate(-50%, -50%); font-size: 0.8125rem; font-weight: 550; color: var(--color-on); white-space: nowrap; text-overflow: ellipsis; }
   .aw-address { display: inline-flex; align-items: center; gap: 6px; height: 26px; min-width: 0; padding: 0 12px; border-radius: 999px; background: var(--color-navy-800); box-shadow: inset 0 0 0 1px var(--color-rule-dark); font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-on-2); white-space: nowrap; }
   .aw-meta { display: flex; flex: none; align-items: center; gap: 12px; margin-left: auto; }
-  .aw-tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--radius-chip); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; color: var(--color-brass-300); box-shadow: inset 0 0 0 1px rgb(224 191 127 / 0.3); }
+  /* The window badge stays on every window but reads as quiet meta, not a stamp: on-3 text after a 5px dot,
+     no brass ring, so it never outshouts the sky approval chips. The brass-ringed .tag stays on result cards
+     and editorial figures, where a number needs its label most. */
+  .aw-tag { display: inline-flex; align-items: center; gap: 7px; height: 22px; padding: 0; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; color: var(--color-on-3); }
+  .aw-tag::before { content: ""; flex: none; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
   .aw-status { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-on-2); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .live { display: inline-flex; align-items: center; gap: 7px; font-size: 0.75rem; font-weight: 550; color: var(--color-sage); }
   .live > i { position: relative; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
@@ -833,7 +837,9 @@
 
   /* Comparison table with the highlighted "us" column */
   .cmp { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9375rem; line-height: 1.5; }
-  .cmp caption { caption-side: top; padding-bottom: 14px; text-align: left; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-ink-3); }
+  /* A sub-block label on paper: Geist 600 sentence case, not another layer of mono caps (mono caps stay
+     for section rules, provenance tags and labels inside product windows). */
+  .cmp caption { caption-side: top; padding-bottom: 14px; text-align: left; font-size: 0.9375rem; font-weight: 600; line-height: 1.4; color: var(--color-ink); }
   .cmp th, .cmp td { padding: 16px 18px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--color-rule); }
   .cmp thead th { padding-top: 18px; padding-bottom: 14px; font-size: 0.875rem; font-weight: 600; color: var(--color-ink-2); border-bottom: 1px solid var(--color-rule-strong); }
   .cmp tbody th { width: 22%; padding-left: 0; font-weight: 600; color: var(--color-ink); }
@@ -843,15 +849,30 @@
   .cmp tbody tr:last-child .is-us { border-bottom: 0; border-radius: 0 0 var(--radius-card) var(--radius-card); }
   .cmp .is-us .icon { color: var(--color-brass-300); }
   .cmp .is-muted { color: var(--color-ink-3); }
-  @media (width < 48rem) {
-    .cmp, .cmp tbody, .cmp tr, .cmp th, .cmp td { display: block; width: auto; }
-    .cmp thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-    .cmp tbody tr { padding: 18px 0; border-bottom: 1px solid var(--color-rule); }
-    .cmp tbody th { padding: 0 0 10px; border: 0; font-size: 1rem; }
-    .cmp td { padding: 8px 0; border: 0; }
-    .cmp td::before { content: attr(data-label); display: block; margin-bottom: 2px; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-ink-3); }
-    .cmp td.is-us, .cmp tbody tr:last-child .is-us { margin-top: 6px; padding: 12px 14px; border-radius: var(--radius-tile); }
-    .cmp td.is-us::before { color: var(--color-brass-300); }
+  /* Phones (< 640px): two columns, never a wall of navy cards. Each row label is one line; under it the
+     usual way (ink-3) and ours (ink, on a raised tile with brass marks) sit side by side. The only navy
+     is our header cell. With two alternatives, ComparisonTable adds .has-switch and a switch above the
+     table picks which one fills the left column; without JS both stack there, each under its label.
+     640px and up keeps the full table. */
+  @media (width < 40rem) {
+    .cmp, .cmp thead, .cmp tbody { display: block; width: auto; }
+    .cmp tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 12px; }
+    .cmp th, .cmp td { display: block; width: auto; }
+    .cmp thead tr { align-items: end; padding-bottom: 4px; border-bottom: 1px solid var(--color-rule-strong); }
+    .cmp thead th { grid-row: 1; grid-column: 1; padding: 0 0 10px; border: 0; font-size: 0.8125rem; font-weight: 600; line-height: 1.35; color: var(--color-ink-3); }
+    .cmp thead th:first-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .cmp thead th.is-us { grid-column: 2; align-self: end; margin-bottom: 10px; padding: 9px 12px; border-radius: var(--radius-control); background: var(--color-navy-800); color: var(--color-on); box-shadow: inset 0 2px 0 var(--color-brass-400); }
+    .cmp tbody tr { padding: 14px 0 16px; border-bottom: 1px solid var(--color-rule); }
+    .cmp tbody th { grid-column: 1 / -1; width: auto; padding: 0 0 10px; border: 0; font-size: 0.9375rem; line-height: 1.4; }
+    .cmp td { grid-column: 1; padding: 10px 0 0; border: 0; font-size: 0.875rem; line-height: 1.45; color: var(--color-ink-3); }
+    .cmp td + td:not(.is-us) { padding-top: 12px; }
+    .cmp td.is-us, .cmp tbody tr:last-child .is-us { grid-column: 2; grid-row: 2 / span 2; align-self: start; padding: 10px 12px; border: 0; border-radius: var(--radius-control); background: var(--color-paper-raised); color: var(--color-ink); box-shadow: inset 0 0 0 1px var(--color-rule); }
+    .cmp .is-us .icon { color: var(--color-brass-600); }
+    .cmp td::before { content: attr(data-label); display: block; margin-bottom: 2px; font-size: 0.75rem; font-weight: 600; color: var(--color-ink-3); }
+    .cmp td.is-us::before, .cmp-block[data-alts="1"] .cmp td::before, .cmp-block.has-switch .cmp td::before { display: none; }
+    .cmp-block[data-alts="2"]:not(.has-switch) .cmp thead th:not(.is-us) { display: none; }
+    .cmp-block.has-switch[data-show="0"] .cmp [data-alt="1"],
+    .cmp-block.has-switch[data-show="1"] .cmp [data-alt="0"] { display: none; }
   }
   .cmp-bar { display: grid; gap: 6px; margin-top: 10px; }
   .cmp-bar__track { height: 10px; }

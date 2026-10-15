@@ -1,24 +1,67 @@
 ---
 // OWNER: results
-// The six per-service worked examples on /results/ (@/data/worth), one tab each in the site's demo
-// order. Each panel: the WorthExample card, then its assumptions (including what isn't counted), the
-// source ids (linked to the methodology list) and the matching demo. Deep links #example-{id}
-// (customer, analyst, assistant, marketing, sales, consulting) select the tab and scroll to it.
-import Tabs from '@/components/blocks/Tabs.astro';
+// The six per-service worked examples on /results/ (@/data/worth), led by the biggest base-case value
+// (founder decisions 2026-10-14: show the upside, lead with the biggest credible examples).
+// A comparative tab strip picks the example: each tab shows the service, its modeled value as a range
+// ("$187K to $547K") and a range bar on one shared scale (base case solid, upside extension), an
+// emphasis chart (DESIGN.md §3.1: the selected tab is ink and brass, the rest gray). Under 1024px the
+// strip scrolls sideways. Each panel: the WorthExample card (value as a base-to-upside range), then its
+// assumptions (including what isn't counted), the source ids (linked to the methodology list) and the
+// matching demo. Tabs behavior from blocks/tabs.ts (Left/Right, Home, End; automatic activation).
+// Deep links #example-{id} (customer, analyst, assistant, marketing, sales, consulting) select the tab
+// and scroll to it.
+import Icon from '@/components/ui/Icon.astro';
 import WorthExample from '@/components/blocks/WorthExample.astro';
 import { worthExamples } from '@/data/worth';
 import { demos } from '@/data/services';
+import { number } from '@/lib/format';
 import { sourceHref } from './sources';
 
 const items = demos
   .map((d) => ({ demo: d, ex: worthExamples.find((e) => e.id === d.id) }))
-  .filter((x): x is { demo: (typeof demos)[number]; ex: (typeof worthExamples)[number] } => !!x.ex);
-const tabs = items.map(({ demo }) => ({ id: demo.id, label: demo.label, icon: demo.icon }));
+  .filter((x): x is { demo: (typeof demos)[number]; ex: (typeof worthExamples)[number] } => !!x.ex)
+  .sort((a, b) => b.ex.annualValue - a.ex.annualValue);
+const max = Math.max(...items.map(({ ex }) => ex.upside.annualValue));
+// Whole thousands, rounded down so rounding never inflates ("$187K"). Exact figures are in each card.
+const short = (n: number) => (n >= 1e6 ? `$${(Math.floor(n / 1e5) / 10).toFixed(1)}M` : `$${number(Math.floor(n / 1000))}K`);
+const tabId = (id: string) => `worked-tab-${id}`;
+const panelId = (id: string) => `worked-panel-${id}`;
 ---
 <div class="svc-ex" data-svc-examples>
-  <Tabs label="Worked examples by service" tabs={tabs} idPrefix="worked" listClass="svc-ex__tabs">
-    {items.map(({ demo, ex }) => (
-      <Fragment slot={demo.id}>
+  <div class="tabs" data-tabs>
+    <div class="svx-head" aria-hidden="true">
+      <p class="type-label svx-head__label">Modeled value a year, on one scale</p>
+      <ul class="svx-head__legend" role="list">
+        <li><span class="svx-head__key"></span>Base case</li>
+        <li><span class="svx-head__key svx-head__key--up"></span>Upside</li>
+      </ul>
+    </div>
+    <div class="svx" role="tablist" aria-label="Worked examples by service">
+      {items.map(({ demo, ex }, i) => (
+        <button
+          type="button"
+          role="tab"
+          class:list={['svx-tab', i === 0 && 'is-on']}
+          id={tabId(demo.id)}
+          aria-controls={panelId(demo.id)}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+          data-tab={demo.id}
+          style={`--i: ${i}`}
+        >
+          <span class="svx-tab__name"><Icon name={demo.icon} />{demo.label}</span>
+          <span class="svx-tab__range">{short(ex.annualValue)} <span class="svx-tab__to">to</span> {short(ex.upside.annualValue)}<span class="sr-only"> a year, base case to upside</span></span>
+          <span class="svx-tab__track" aria-hidden="true">
+            <span class="svx-tab__bar" style={`--w: ${((ex.upside.annualValue / max) * 100).toFixed(2)}%`}>
+              <i style={`--v: ${ex.annualValue}`}></i><i style={`--v: ${ex.upside.annualValue - ex.annualValue}`}></i>
+            </span>
+          </span>
+        </button>
+      ))}
+    </div>
+
+    {items.map(({ demo, ex }, i) => (
+      <div role="tabpanel" id={panelId(demo.id)} aria-labelledby={tabId(demo.id)} hidden={i !== 0} class="svc-ex__tabpanel" data-tab-panel={demo.id}>
         <div class="svc-ex__panel">
           <WorthExample
             example={ex}
@@ -48,13 +91,47 @@ const tabs = items.map(({ demo }) => ({ id: demo.id, label: demo.label, icon: de
             </div>
           </div>
         </div>
-      </Fragment>
+      </div>
     ))}
-  </Tabs>
+  </div>
 </div>
 
 <style>
-  .svc-ex :global(.svc-ex__tabs) { flex-wrap: wrap; margin-bottom: 24px; }
+  /* The tab strip: six services side by side, each with its range on the shared scale. */
+  .svx-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-bottom: 12px; }
+  .svx-head__label { color: var(--fg-2); }
+  .svx-head__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.75rem; line-height: 1.4; color: var(--fg-2); }
+  .svx-head__legend > li { display: inline-flex; align-items: center; gap: 7px; }
+  .svx-head__key { flex: none; width: 10px; height: 10px; border-radius: 2px; background: var(--viz-result); }
+  .svx-head__key--up { background: var(--viz-accent); }
+  .svx { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin-bottom: 28px; border-top: 1px solid var(--line-accent); border-bottom: 1px solid var(--line); }
+  .svx-tab {
+    position: relative; display: grid; align-content: start; gap: 4px; min-width: 0; padding: 14px 16px 16px;
+    text-align: left; color: var(--fg); border-left: 1px solid var(--line); cursor: pointer; transition: background-color 0.2s;
+  }
+  .svx-tab:first-child { border-left: 0; }
+  .svx-tab::before {
+    content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 2px; background: var(--accent-line);
+    transform: scaleX(0); transform-origin: left; transition: transform 0.3s var(--ease-out-soft);
+  }
+  .svx-tab[aria-selected='true'] { background: var(--raised); }
+  .svx-tab[aria-selected='true']::before { transform: none; }
+  .svx-tab:focus-visible { outline-offset: -2px; }
+  @media (hover: hover) {
+    .svx-tab:not([aria-selected='true']):hover { background: color-mix(in srgb, var(--raised) 55%, transparent); }
+  }
+  .svx-tab__name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; font-size: 0.875rem; font-weight: 550; line-height: 1.3; }
+  .svx-tab__name :global(.icon) { flex: none; color: var(--accent-display); }
+  .svx-tab__range { font-size: 0.8125rem; font-weight: 600; line-height: 1.4; white-space: nowrap; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .svx-tab__to { font-weight: 450; color: var(--fg-3); }
+  .svx-tab__track { display: block; height: 6px; margin-top: 8px; }
+  .svx-tab__bar { display: flex; gap: 2px; width: var(--w); height: 100%; }
+  .svx-tab__bar > i { flex: var(--v) 1 0; min-width: 2px; background: var(--viz-context); transition: background-color 0.25s; }
+  .svx-tab__bar > i + i { background: var(--viz-other); border-radius: 0 var(--radius-data) var(--radius-data) 0; }
+  .svx-tab[aria-selected='true'] .svx-tab__bar > i { background: var(--viz-result); }
+  .svx-tab[aria-selected='true'] .svx-tab__bar > i + i { background: var(--viz-accent); }
+
+  .svc-ex__tabpanel { border-radius: var(--radius-card); }
   .svc-ex__panel { display: grid; gap: 28px; }
   .svc-ex__notes { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 28px 48px; padding: 0 clamp(20px, 3vw, 36px); }
   .svc-ex__label { padding-bottom: 8px; border-bottom: 1px solid var(--line-strong); color: var(--fg-2); }
@@ -73,20 +150,49 @@ const tabs = items.map(({ demo }) => ({ id: demo.id, label: demo.label, icon: de
     .svc-ex__sources a { display: inline-block; padding-block: 2px; margin-block: -2px; }
   }
   @media (width < 64rem) {
+    /* The strip scrolls sideways: each tab becomes a chip with its name and range. */
+    .svx {
+      display: flex; gap: 8px; margin-inline: calc(-1 * var(--spacing-gutter)); margin-bottom: 20px; padding: 2px var(--spacing-gutter) 8px;
+      overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: var(--spacing-gutter); scrollbar-width: none; border: 0;
+    }
+    .svx::-webkit-scrollbar { display: none; }
+    .svx-tab { flex: none; min-height: 56px; padding: 9px 16px 10px; border: 0; border-radius: var(--radius-tile); box-shadow: inset 0 0 0 1px var(--line-strong); scroll-snap-align: start; }
+    .svx-tab::before, .svx-tab__track { display: none; }
+    .svx-tab[aria-selected='true'] { background: var(--color-ink); box-shadow: none; }
+    .svx-tab[aria-selected='true'] .svx-tab__name { color: var(--color-on); }
+    .svx-tab[aria-selected='true'] .svx-tab__name :global(.icon) { color: var(--color-brass-300); }
+    .svx-tab[aria-selected='true'] .svx-tab__range { color: var(--color-on-2); }
+    .svx-tab[aria-selected='true'] .svx-tab__to { color: var(--color-on-3); }
+    .svx-tab:focus-visible { outline-offset: 2px; }
     .svc-ex__notes { grid-template-columns: minmax(0, 1fr); padding: 0; }
-  }
-  @media (width < 40rem) {
-    .svc-ex :global(.svc-ex__tabs) { flex-wrap: nowrap; }
+    .svx-head { display: none; }
   }
 </style>
 
 <script>
+  import { initTabs } from '@/components/blocks/tabs';
+
+  const root = document.querySelector<HTMLElement>('[data-svc-examples] [data-tabs]');
+  if (root) {
+    initTabs(root);
+    // In the scrolling strip (under 1024px), keep the chosen tab fully in view.
+    const list = root.querySelector<HTMLElement>('[role="tablist"]');
+    root.addEventListener('tabs:change', (e) => {
+      const tab = (e as CustomEvent<{ tab: HTMLElement }>).detail?.tab;
+      if (!list || !tab || list.scrollWidth <= list.clientWidth) return;
+      const box = list.getBoundingClientRect();
+      const r = tab.getBoundingClientRect();
+      const pad = 16;
+      const smooth = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+      if (r.left < box.left + pad) list.scrollBy({ left: r.left - box.left - pad, behavior: smooth });
+      else if (r.right > box.right - pad) list.scrollBy({ left: r.right - box.right + pad, behavior: smooth });
+    });
+  }
+
   // #example-{id}: select that tab, then scroll to the card.
   function openFromHash() {
     const m = window.location.hash.match(/^#example-([\w-]+)$/);
-    if (!m) return;
-    const root = document.querySelector<HTMLElement>('[data-svc-examples] [data-tabs]');
-    if (!root) return;
+    if (!m || !root) return;
     root.dispatchEvent(new CustomEvent('tabs:select', { detail: { id: m[1] } }));
     requestAnimationFrame(() => document.getElementById(`example-${m[1]}`)?.scrollIntoView({ block: 'start' }));
   }

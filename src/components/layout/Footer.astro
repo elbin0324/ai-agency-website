@@ -3,15 +3,18 @@
 // OWNER: foundation (layout). Words come from site.footer (COPY.md §1.2); the brand name, email,
 // phone and founder name come from site config and render only when set (the email only once
 // emailReady: never the example.com placeholder). The assessment CTA is an outline button, because the
-// brass CTA belongs to the navy band above it (DESIGN.md §2.3).
+// brass CTA belongs to the navy band above it (DESIGN.md §2.3). It shows only where it adds a path: not
+// under a navy CTA band (that band, right above, already asks), and not on /contact/ itself, so in
+// practice on the 404. The brand story lives here only; the CTA band shows the written plan instead.
 import Logo from '@/components/ui/Logo.astro';
 import Icon from '@/components/ui/Icon.astro';
 import { site, emailReady } from '@/config/site';
-import { url } from '@/lib/url';
+import { url, isActive } from '@/lib/url';
 
 const { footer } = site;
 const reach = emailReady || !!site.phone;
 const year = new Date().getFullYear();
+const onContact = isActive(site.cta.href, Astro.url.pathname);
 const brandStory = site.brandStoryLine.replace(/"([^"]+)"/g, '“$1”'); // typographic quotes
 ---
 <footer class="site-footer" id="site-footer">
@@ -21,12 +24,12 @@ const brandStory = site.brandStoryLine.replace(/"([^"]+)"/g, '“$1”'); // typ
         <Logo variant="dark" />
         <p>{site.brandLine}</p>
         <p class="tagline">{site.tagline}</p>
-        <div class="foot-cta">
+        {!onContact && <div class="foot-cta">
           <a class="btn btn-outline-dark btn-sm" href={url(site.cta.href)}>
             <span>{site.cta.label}</span><Icon name="arrow-right" class="btn__icon btn__icon--arrow" />
           </a>
           <span>{footer.ctaMicrocopy}</span>
-        </div>
+        </div>}
         {(reach || site.founderName) && (
           <p class="foot-contact">
             {reach && <>{footer.contactLine} </>}
@@ -66,6 +69,8 @@ const brandStory = site.brandStoryLine.replace(/"([^"]+)"/g, '“$1”'); // typ
   .foot-brand .tagline { margin-top: 18px; font-family: var(--font-serif); font-size: 1.375rem; font-weight: 380; letter-spacing: -.01em; color: var(--color-on); }
   .foot-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 22px; }
   .foot-cta > span { font-size: .8125rem; color: var(--color-on-3); }
+  /* A navy CTA band just above already carries the call to action: don't ask twice. */
+  :global(body:has(.cta.band-navy)) .foot-cta { display: none; }
   .foot-cols { grid-column: 7 / span 6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
   .foot-brand .foot-contact { margin-top: 18px; max-width: none; font-size: .9375rem; color: var(--color-on-2); }
   .foot-story { margin-top: 20px; max-width: 46ch; font-family: var(--font-serif); font-size: 1rem; line-height: 1.5; color: var(--color-on-2); }

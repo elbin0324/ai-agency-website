@@ -1,7 +1,8 @@
 ---
-// OWNER: results
-// Home savings band (COPY.md §2.6 with CRITIQUE.md edit 10): the ivory worksheet on the navy desk.
-// Intro on 4 columns (eyebrow, title, lead, link, short disclaimer), the compact calculator on 8.
+// OWNER: results (calculator)
+// Home value band (COPY.md §2.6, updated for the 2026-10-14 decisions): the ivory worksheet on the navy
+// desk. Intro on 4 columns (eyebrow, title, lead, short disclaimer), the compact calculator on 8: team
+// time plus customer inquiries, with a link to the full five-lever calculator on /results/.
 // Keep id="calculator": COPY.md anchors and other pages link here.
 import RoiCalculator from '@/components/results/RoiCalculator.astro';
 import { url } from '@/lib/url';
@@ -10,15 +11,15 @@ import { url } from '@/lib/url';
   <div class="wrap">
     <div class="savings">
       <div class="savings__intro" data-reveal>
-        <p class="eyebrow">Estimate your savings</p>
-        <h2 class="type-h2 savings__title" id="calculator-title" data-motion="split">What are your team’s hours worth?</h2>
+        <p class="eyebrow">Estimate the value</p>
+        <h2 class="type-h2 savings__title" id="calculator-title" data-motion="split">What are your hours and missed calls worth?</h2>
         <p class="type-lead savings__lead">
-          Five quick questions. See the hours agents could give back each month, and your <b>break-even budget</b>:
-          the most an AI program could cost and still pay for itself in time saved.
+          Four quick questions. See what agents could return in <b>staff time</b> and in <b>new jobs</b> that no longer go
+          to voicemail, as a range from typical to optimistic rates.
         </p>
         <p class="savings__note">
-          Modeled estimate, not a quote or a guarantee. Counts time saved only, at your loaded hourly cost, after time for human
-          review. <a class="link" href={url('/results/#methodology')}>See how we calculate</a>
+          Modeled estimate, not a quote or a guarantee. Profit only: staff time at its loaded cost and gross profit on
+          recovered jobs, never revenue. <a class="link" href={url('/results/#methodology')}>See how we calculate</a>
         </p>
       </div>
       <div class="savings__calc" data-reveal data-reveal-delay="80">

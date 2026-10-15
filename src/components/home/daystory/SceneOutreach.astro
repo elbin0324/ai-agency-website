@@ -2,6 +2,8 @@
 // Day story, 3:30 pm: the Sales Agent's researched first emails wait for approval. OWNER: home-daystory.
 // Same prospecting run as the hero console's approval card (property managers, 12 researched, 9 ready,
 // 3 skipped). Prospects are invented, clearly generic names (BRIEF.md honesty rules).
+// The scroll build researches the prospects one by one, writes the selected email line by line, runs
+// the checks, then stacks the finished drafts behind it while the "waiting on you" count climbs to 9.
 import Icon from '@/components/ui/Icon.astro';
 import { business, sales } from './day-data';
 
@@ -14,7 +16,7 @@ const prospects = [
 ---
 <div class="sc">
   <div class="sc__list">
-    <p class="aw-label">Researched · {sales.researched}</p>
+    <p class="aw-label">Researched · <span class="num-tab" data-ds-count={sales.researched}>{sales.researched}</span></p>
     <ul class="sc-pros" role="list">
       {prospects.map((p) => (
         <li class:list={['sc-pro', `is-${p.state}`]} data-ds="pro">
@@ -23,19 +25,22 @@ const prospects = [
         </li>
       ))}
     </ul>
-    <p class="sc-pros__more">+ {sales.ready - 3} more ready · {sales.skipped - 1} more skipped</p>
+    <p class="sc-pros__more" data-ds="more">+ {sales.ready - 3} more ready · {sales.skipped - 1} more skipped</p>
   </div>
 
   <div class="sc__draft">
-    <div class="aw-doc sc-mailer">
-      <div class="aw-doc__row"><span>To</span>Carla Benson, Northgate Property Mgmt</div>
-      <div class="aw-doc__row"><span>Subject</span>Boiler season at your downtown buildings</div>
-      <div class="aw-doc__body">
-        <p data-ds="line">Hi Carla,</p>
-        <p data-ds="line">Your August newsletter mentioned replacing the boilers in your three downtown buildings before winter. Systems that age are most of our week.</p>
-        <p data-ds="line">Could we inspect all three in one visit and send you a written plan?</p>
-        <p data-ds="line" class="sc-sign">Renee K.<span>{business.name}</span></p>
-        <p data-ds="line" class="sc-optout">Not the right person? Reply “no thanks” and we won’t write again.</p>
+    <div class="sc-deck">
+      <span class="sc-pile" data-ds="pile" aria-hidden="true"><i></i><i></i><i></i></span>
+      <div class="aw-doc sc-mailer">
+        <div class="aw-doc__row"><span>To</span>Carla Benson, Northgate Property Mgmt</div>
+        <div class="aw-doc__row"><span>Subject</span>Boiler season at your downtown buildings</div>
+        <div class="aw-doc__body">
+          <p data-ds="line">Hi Carla,</p>
+          <p data-ds="line">Your August newsletter mentioned replacing the boilers in your three downtown buildings before winter. Systems that age are most of our week.</p>
+          <p data-ds="line">Could we inspect all three in one visit and send you a written plan?</p>
+          <p data-ds="line" class="sc-sign">Renee K.<span>{business.name}</span></p>
+          <p data-ds="line" class="sc-optout">Not the right person? Reply “no thanks” and we won’t write again.</p>
+        </div>
       </div>
     </div>
     <div class="sc-checks" data-ds="checks">
@@ -43,7 +48,7 @@ const prospects = [
       <span class="chip chip-done"><Icon name="check" />Opt-out included</span>
     </div>
     <div class="sc-approve" data-ds="approve">
-      <span class="sc-approve__label"><Icon name="user-check" />Waiting on you <span class="count">{sales.ready}</span></span>
+      <span class="sc-approve__label"><Icon name="user-check" />Waiting on you <span class="count num-tab" data-ds-count={sales.ready} data-ds-from="1">{sales.ready}</span></span>
       <span class="sc-approve__btns"><span class="app-btn">Review</span><span class="app-btn app-btn--primary">Approve</span></span>
     </div>
   </div>
@@ -63,7 +68,15 @@ const prospects = [
   .sc-pros__more { margin-top: auto; font-size: 0.75rem; color: var(--color-on-3); }
 
   .sc__draft { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
-  .sc-mailer { min-height: 0; overflow: hidden; font-size: 0.8125rem; line-height: 1.5; }
+  /* The selected draft sits on a deck of the finished ones: three edges step out above it, each one
+     narrower and fainter (the scroll build stacks them as the "waiting on you" count climbs). */
+  .sc-deck { position: relative; display: flex; flex-direction: column; min-height: 0; margin-top: 22px; }
+  .sc-pile { position: absolute; inset: 0; pointer-events: none; }
+  .sc-pile > i { position: absolute; inset: 0 12px; border-radius: var(--radius-tile); background: var(--color-paper-sunken); box-shadow: 0 0 0 1px rgb(7 17 29 / 0.6); transform: translateY(-7px); }
+  .sc-pile > i:nth-child(1) { z-index: 3; }
+  .sc-pile > i:nth-child(2) { z-index: 2; inset-inline: 24px; background: var(--color-paper); opacity: 0.8; transform: translateY(-14px); }
+  .sc-pile > i:nth-child(3) { z-index: 1; inset-inline: 36px; background: var(--color-paper); opacity: 0.55; transform: translateY(-21px); }
+  .sc-mailer { position: relative; z-index: 4; min-height: 0; overflow: hidden; font-size: 0.8125rem; line-height: 1.5; }
   .sc-mailer .aw-doc__row { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .sc-sign { display: grid; line-height: 1.4; }
   .sc-sign span { font-size: 0.75rem; color: var(--color-ink-3); }

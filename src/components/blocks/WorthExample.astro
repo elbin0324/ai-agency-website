@@ -1,17 +1,23 @@
 ---
 // "What it's worth" worked example (DESIGN.md §6.4, §6.7, §6.8), fed by @/data/worth (or any object
-// of the same shape, e.g. a scenario). A card object with:
-//   provenance tags + service · the fictional business and a one-line profile · the annual-value figure
-//   (Fraunces, brass unit) with the monthly value · "Today" vs "With the agent" ledgers · the math as a
-//   compact ledger (MathLedger) · the "Not a quote…" footnote · methodology link (+ optional second link).
+// of the same shape). A card object with:
+//   provenance tags + service · the fictional business, a one-line profile and the summary · the
+//   modeled value as a range (Fraunces "$27K to $57K a year": base case to upside, brass unit) with
+//   the hours back, base and upside bars split by source (team time, added gross profit, cost savings)
+//   and the "monthly × 12" math for both cases · added revenue, reported apart from the value (which
+//   counts only its gross profit) · "Today" vs "With the agent" ledgers beside "Where the value comes
+//   from" (the bars' table twin) and the step-by-step math, base case and upside case behind a
+//   two-button switch · the "Not a quote…" footnote · methodology link (+ optional second link).
 // Numbers are never retyped: they come from the example object.
+// AgentChapter (/services/ai-agents/) shows only the top and head (it hides .worth__body and
+// .worth__foot), so the head carries the whole value story on its own.
 //
 //   <WorthExample example={getWorth('customer')} link={{ label: 'See the full example', href: '/results/#examples' }} />
 import Icon from '@/components/ui/Icon.astro';
 import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
 import LedgerRows from './LedgerRows.astro';
 import MathLedger from './MathLedger.astro';
-import type { WorthExample as Example } from '@/data/worth';
+import { leverKinds, type LeverKind, type WorthExample as Example } from '@/data/worth';
 import { currency, number } from '@/lib/format';
 import { url } from '@/lib/url';
 
@@ -57,12 +63,38 @@ const derivedProfile = (() => {
   return size ? `${kind} · ${size}` : kind;
 })();
 const profile = profileLine ?? derivedProfile;
-const monthly = currency(ex.monthlyValue);
-// The headline is rounded ("About $50,000") because the model rests on rounded inputs; the exact figure
-// stays in the math line and the ledger.
-const step = ex.annualValue >= 10000 ? 1000 : 100;
-const annualRounded = Math.round(ex.annualValue / step) * step;
-const annualRow = ex.math.find((r) => /^annual value/i.test(r.label));
+
+// Headline range: whole thousands, rounded down so rounding never inflates ("$27K to $57K"); under
+// $10,000 both ends stay exact. The exact figures sit on the bars, in the ledger and in the math.
+const base = ex.annualValue;
+const up = ex.upside.annualValue;
+const short = (n: number) => (n >= 1e6 ? `$${(Math.floor(n / 1e5) / 10).toFixed(1)}M` : `$${number(Math.floor(n / 1000))}K`);
+const fig = (n: number) => (base < 10000 ? currency(n) : short(n));
+const hoursText = ex.hoursPerMonth
+  ? ex.upside.hoursPerMonth && ex.upside.hoursPerMonth !== ex.hoursPerMonth
+    ? `${number(ex.hoursPerMonth)} to ${number(ex.upside.hoursPerMonth)} hours back a month`
+    : `${number(ex.hoursPerMonth)} hours back a month`
+  : null;
+
+const kindOrder: LeverKind[] = ['time', 'growth', 'savings'];
+const levers = [...ex.levers].sort((a, b) => kindOrder.indexOf(a.kind) - kindOrder.indexOf(b.kind));
+const kinds = kindOrder.filter((k) => levers.some((l) => l.kind === k));
+// The bars split by kind (the legend's categories); the ledger lists every lever.
+const byKind = kinds.map((k) => {
+  const of = levers.filter((l) => l.kind === k);
+  return { kind: k, base: of.reduce((t, l) => t + l.base, 0), upside: of.reduce((t, l) => t + l.upside, 0) };
+});
+const baseWidth = `${((base / up) * 100).toFixed(2)}%`;
+const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
+// Math: base rows, then the upside rows under their own caption (the "Upside · " prefix dropped).
+const baseRows = ex.math.filter((r) => !r.upside);
+const upsideRows = ex.math
+  .filter((r) => r.upside)
+  .map((r) => ({ ...r, label: capitalize(r.label.replace(/^Upside\s*·\s*/i, '')) }));
+const annualRow = baseRows.find((r) => /^annual value/i.test(r.label));
+const upsideAnnualRow = upsideRows.find((r) => /^annual value/i.test(r.label));
+const srValue = `Modeled value: ${currency(base)} a year in the base case, up to ${currency(up)} in the upside case.`;
 const revealAttr = reveal ? { 'data-reveal': '' } : {};
 ---
 <article class:list={['card', 'worth', className]} id={id} {...revealAttr}>
@@ -77,13 +109,56 @@ const revealAttr = reveal ? { 'data-reveal': '' } : {};
       <p class="worth__profile">{profile}</p>
       {summary && <p class="worth__summary">{ex.summary}</p>}
     </div>
+
     <div class="worth__fig">
-      <p class="stat__fig worth__value"><span class="worth__about">About</span><span>{currency(annualRounded)}</span><small>a year</small></p>
-      <p class="worth__value-note">
-        {monthly} a month{ex.hoursPerMonth ? <Fragment> · {number(ex.hoursPerMonth)} hours back a month</Fragment> : null}
-      </p>
-      {annualRow?.formula && <p class="math">{annualRow.formula} = <b>{annualRow.value}</b></p>}
+      <div class="vr">
+        <p class="vr__fig" aria-hidden="true">
+          <span class="vr__end"><span class="vr__k">Base case</span><span class="vr__n">{fig(base)}</span></span>
+          <span class="vr__to">to</span>
+          <span class="vr__end vr__end--up"><span class="vr__k">Upside</span><span class="vr__n">{fig(up)}</span></span>
+          <small class="vr__unit">a year</small>
+        </p>
+        <p class="sr-only">{srValue}</p>
+      </div>
+      {hoursText && <p class="worth__value-note">{hoursText}</p>}
+
+      <div class="vb">
+        {kinds.length > 1 ? (
+          <ul class="vb__legend" role="list">
+            {kinds.map((k) => <li data-kind={k}><span class="vb__key" style={`--k: ${leverKinds[k].viz}`} aria-hidden="true"></span>{leverKinds[k].label}</li>)}
+          </ul>
+        ) : (
+          <p class="vb__solo">All of it from {leverKinds[kinds[0] ?? 'time'].label.toLowerCase()}</p>
+        )}
+        <div class="vb__rows" aria-hidden="true">
+          <div class="vb__row">
+            <span class="vb__k">Base</span>
+            <span class="vb__track"><span class="vb__bar" style={`--w: ${baseWidth}`}>{byKind.map((g) => <i data-kind={g.kind} style={`--v: ${g.base}; --k: ${leverKinds[g.kind].viz}`}></i>)}</span></span>
+            <span class="vb__v">{currency(base)}</span>
+          </div>
+          <div class="vb__row vb__row--up">
+            <span class="vb__k">Upside</span>
+            <span class="vb__track"><span class="vb__bar" style="--w: 100%">{byKind.map((g) => <i data-kind={g.kind} style={`--v: ${g.upside}; --k: ${leverKinds[g.kind].viz}`}></i>)}</span></span>
+            <span class="vb__v">{currency(up)}</span>
+          </div>
+        </div>
+        <p class="sr-only">Where the value comes from: {levers.map((l) => `${l.label}, ${currency(l.base)} to ${currency(l.upside)}`).join('; ')}.</p>
+      </div>
+
+      {annualRow?.formula && (
+        <p class="math worth__math-line">
+          <span>{annualRow.formula} = <b>{annualRow.value}</b></span>
+          {upsideAnnualRow?.formula && <span><span class="worth__up-k">Upside</span> {upsideAnnualRow.formula} = <b>{upsideAnnualRow.value}</b></span>}
+        </p>
+      )}
     </div>
+
+    {ex.addedRevenue && (
+      <div class="worth__rev">
+        <p class="worth__rev-line"><span class="type-label worth__rev-k">Added revenue</span><span class="worth__rev-v">{currency(ex.addedRevenue.base)} to {currency(ex.addedRevenue.upside)} a year</span></p>
+        <p class="worth__rev-note">{capitalize(ex.addedRevenue.note)}</p>
+      </div>
+    )}
   </header>
 
   <div class="worth__body">
@@ -92,7 +167,39 @@ const revealAttr = reveal ? { 'data-reveal': '' } : {};
       <LedgerRows title={after} rows={ex.after} layout="stacked" />
     </div>
     <div class="worth__math">
-      <MathLedger caption="The math" rows={ex.math} />
+      <table class="lv">
+        <caption class="type-label lv__caption">Where the value comes from</caption>
+        <thead>
+          <tr><th scope="col"><span class="sr-only">Source</span></th><th scope="col">Base</th><th scope="col">Upside</th></tr>
+        </thead>
+        <tbody>
+          {levers.map((l) => (
+            <tr data-kind={l.kind}>
+              <th scope="row"><span class="vb__key" style={`--k: ${leverKinds[l.kind].viz}`} aria-hidden="true"></span>{l.label}<span class="sr-only"> ({leverKinds[l.kind].label})</span></th>
+              <td>{currency(l.base)}</td>
+              <td>{currency(l.upside)}</td>
+            </tr>
+          ))}
+        </tbody>
+        {levers.length > 1 && (
+          <tfoot>
+            <tr><th scope="row">Modeled value a year</th><td>{currency(base)}</td><td>{currency(up)}</td></tr>
+          </tfoot>
+        )}
+      </table>
+
+      <div class="vm" data-vm>
+        <div class="vm__head">
+          <p class="type-label vm__title">The math</p>
+          <div class="vm__switch" role="group" aria-label={`Math for ${ex.business}`} data-vm-switch hidden>
+            <button type="button" class="vm__btn" aria-pressed="true" data-vm-case="base">Base case</button>
+            <button type="button" class="vm__btn" aria-pressed="false" data-vm-case="upside">Upside case</button>
+          </div>
+        </div>
+        <div data-vm-panel="base"><MathLedger caption="Base case" rows={baseRows} /></div>
+        <div data-vm-panel="upside"><MathLedger caption="Upside case" rows={upsideRows} /></div>
+        <p class="vm__note">The upside case moves the rates that describe what the agent achieves to the optimistic end of the published evidence, all at once. The business’s own figures stay the same. Most results land in between.</p>
+      </div>
     </div>
   </div>
 
@@ -109,27 +216,152 @@ const revealAttr = reveal ? { 'data-reveal': '' } : {};
   .worth { display: grid; gap: 24px; padding: clamp(20px, 3vw, 36px); }
   .worth__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
   .worth__svc { font-size: 0.8125rem; color: var(--fg-3); }
-  .worth__head { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px 48px; align-items: end; }
+
+  /* Head: who and what on the left (added revenue at the foot of that column), the value on the right. */
+  .worth__head {
+    display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); grid-template-rows: auto 1fr;
+    grid-template-areas: "id fig" "rev fig"; gap: 24px 48px; align-items: start;
+  }
+  .worth__id { grid-area: id; }
+  .worth__fig { grid-area: fig; padding-left: 28px; border-left: 1px solid var(--line-accent); }
+  .worth__rev { grid-area: rev; align-self: end; }
   .worth__profile { margin-top: 6px; font-size: 0.875rem; line-height: 1.5; color: var(--fg-3); }
   .worth__summary { margin-top: 14px; max-width: 60ch; font-size: 1rem; line-height: 1.6; color: var(--fg-2); }
-  .worth__fig { padding-left: 28px; border-left: 1px solid var(--line-accent); }
-  .worth__fig .worth__value { margin-top: 0; }
-  /* "About" sits on the figure's baseline at unit size (not brass: brass is for units), so the rounded figure keeps one line */
-  .worth__about { font-family: var(--font-sans); font-size: 1rem; font-weight: 500; letter-spacing: 0; color: var(--fg-2); }
+
+  /* The range figure: "BASE CASE $27K to UPSIDE $57K a year". Labels sit above each end; the figure
+     scales with its column (container units) so both ends share one line. */
+  .vr { container-type: inline-size; }
+  .vr__fig {
+    display: flex; flex-wrap: wrap; align-items: flex-end; align-items: last baseline; gap: 4px 14px;
+    font-family: var(--font-serif); font-weight: 320; line-height: 0.95; letter-spacing: -0.035em;
+    font-variant-numeric: lining-nums proportional-nums; color: var(--fg);
+    font-size: 3rem; font-size: clamp(2.25rem, calc((100cqi - 7rem) / 6.4), 4.25rem);
+  }
+  .vr__end { display: inline-flex; flex-direction: column; gap: 10px; }
+  .vr__k { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.2; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-3); }
+  .vr__end--up .vr__k { color: var(--accent); }
+  .vr__to { font-family: var(--font-sans); font-size: 1rem; font-weight: 500; letter-spacing: 0; color: var(--fg-3); }
+  .vr__unit { font-family: var(--font-sans); font-size: 1rem; font-weight: 500; letter-spacing: 0; color: var(--accent); }
   .worth__value-note { margin-top: 12px; font-size: 0.9375rem; line-height: 1.45; color: var(--fg); }
-  .worth__fig .math { margin-top: 6px; }
-  /* The worksheet: inputs (today / after) on the left, the calculation on the right. */
+
+  /* Base and upside on one scale, split by source (DESIGN.md §3.5: 12px bars, 2px surface gaps, square
+     at the baseline, 4px data end; the legend sits above the plot). */
+  .vb { margin-top: 18px; }
+  .vb__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.75rem; line-height: 1.4; color: var(--fg-2); }
+  .vb__legend > li { display: inline-flex; align-items: center; gap: 7px; }
+  /* One kind of value: no legend (DESIGN.md §3.5), a plain line says what is plotted. */
+  .vb__solo { font-size: 0.75rem; line-height: 1.4; color: var(--fg-2); }
+  .vb__key { flex: none; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--k); }
+  .vb__rows { display: grid; gap: 8px; margin-top: 12px; }
+  .vb__row { display: grid; grid-template-columns: 3.75rem minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+  .vb__k { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); }
+  .vb__row--up .vb__k { color: var(--accent); }
+  .vb__track { display: block; height: 12px; }
+  .vb__bar { display: flex; gap: 2px; width: var(--w); height: 100%; transform-origin: left center; transition: transform 0.9s var(--ease-out-soft) 0.15s; }
+  .vb__row--up .vb__bar { transition-delay: 0.3s; }
+  .vb__bar > i { flex: var(--v) 1 0; min-width: 2px; background: var(--k); }
+  .vb__bar > i:last-child { border-radius: 0 var(--radius-data) var(--radius-data) 0; }
+  .vb__v { min-width: 4.75rem; font-size: 0.8125rem; font-weight: 600; text-align: right; color: var(--fg); font-variant-numeric: tabular-nums; }
+  /* The bars rise with their block's reveal (no reveal block: they simply show). */
+  :global(html.js [data-reveal]:not(.is-visible)) .vb__bar { transform: scaleX(0); }
+
+  .worth__math-line { display: grid; gap: 2px; margin-top: 14px; }
+  .worth__up-k { margin-right: 2px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+
+  /* Added revenue: reported apart from the value, which counts only its gross profit. */
+  .worth__rev { padding-top: 14px; border-top: 1px solid var(--line-strong); max-width: 60ch; }
+  .worth__rev-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+  .worth__rev-k { color: var(--fg-3); }
+  .worth__rev-v { font-size: 1rem; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .worth__rev-note { margin-top: 4px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+
+  /* The worksheet: inputs (today / after) on the left; where the value comes from and the calculation on the right. */
   .worth__body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px 48px; align-items: start; padding-top: 28px; border-top: 1px solid var(--line); }
   .worth__compare { display: grid; gap: 28px; }
+  .worth__math { display: grid; gap: 32px; }
+
+  /* Lever ledger: the bars' table twin. */
+  .lv { width: 100%; border-collapse: collapse; font-size: 0.875rem; line-height: 1.45; }
+  .lv__caption { caption-side: top; padding-bottom: 12px; text-align: left; color: var(--fg-2); }
+  .lv thead th { padding: 0 0 8px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.2; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); text-align: right; border-bottom: 1px solid var(--line-strong); }
+  .lv thead th:last-child { color: var(--accent); }
+  .lv tbody th, .lv tfoot th { padding: 9px 16px 9px 0; font-weight: 400; text-align: left; color: var(--fg-2); border-bottom: 1px solid var(--line); }
+  .lv tbody th .vb__key { margin-right: 9px; vertical-align: 0.05em; }
+  .lv td { padding: 9px 0 9px 14px; text-align: right; white-space: nowrap; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--line); }
+  .lv tbody tr:last-child > * { border-bottom-color: var(--line-strong); }
+  .lv tfoot th { font-weight: 600; color: var(--fg); border-bottom: 0; }
+  .lv tfoot td { border-bottom: 0; }
+  .lv:not(:has(tfoot)) tbody tr:last-child > * { border-bottom: 0; }
+
+  /* Pointing at a lever row or a legend key picks out its segments in both bars (the numbers are
+     always in the ledger, so this only links the two views). */
+  .vb__bar > i { transition: opacity 0.2s; }
+  .lv tbody th { transition: color 0.2s; }
+  @media (hover: hover) {
+    .lv tbody tr:hover th, .vb__legend > li:hover { color: var(--fg); }
+    .worth:has(.lv tbody tr[data-kind]:hover, .vb__legend > li[data-kind]:hover) .vb__bar > i { opacity: 0.25; }
+    .worth:has(.lv tr[data-kind='time']:hover, .vb__legend > li[data-kind='time']:hover) .vb__bar > i[data-kind='time'],
+    .worth:has(.lv tr[data-kind='growth']:hover, .vb__legend > li[data-kind='growth']:hover) .vb__bar > i[data-kind='growth'],
+    .worth:has(.lv tr[data-kind='savings']:hover, .vb__legend > li[data-kind='savings']:hover) .vb__bar > i[data-kind='savings'] { opacity: 1; }
+  }
+
+  /* The math: base case and upside case behind a two-button switch (both show without JS). */
+  .vm { display: grid; gap: 14px; }
+  .vm__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+  .vm__title { color: var(--fg-2); }
+  .vm__switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .vm__switch[hidden] { display: none; }
+  .vm__btn { min-height: 36px; padding: 0 14px; border-radius: 999px; font-size: 0.8125rem; font-weight: 550; color: var(--fg-2); transition: background-color 0.2s, color 0.2s; }
+  .vm__btn:hover { color: var(--fg); }
+  .vm__btn[aria-pressed='true'] { color: var(--color-on); background: var(--color-ink); }
+  .vm [data-vm-panel][hidden] { display: none; }
+  .vm [data-vm-panel] + [data-vm-panel] { margin-top: 8px; }
+  .vm__note { font-size: 0.8125rem; line-height: 1.55; color: var(--fg-3); max-width: 66ch; }
+  /* MathLedger's own formula padding loses to its `td` reset, so a wrapped formula can touch its value. */
+  @media (width >= 40rem) {
+    .vm :global(.mledger td.mledger__f) { padding-right: 20px; }
+  }
+  @media (pointer: coarse) {
+    .vm__btn { min-height: 40px; }
+  }
+
   .worth__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding-top: 16px; border-top: 1px solid var(--line); }
   .worth__note { flex: 1 1 36ch; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
   .worth__links { display: flex; flex-wrap: wrap; gap: 0 24px; }
   @media (width < 64rem) {
-    .worth__head, .worth__body { grid-template-columns: minmax(0, 1fr); }
+    .worth__head { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "id" "fig" "rev"; }
     .worth__fig { padding-left: 0; padding-top: 20px; border-left: 0; border-top: 1px solid var(--line-accent); }
+    .worth__rev { max-width: none; }
+    .worth__body { grid-template-columns: minmax(0, 1fr); }
     .worth__compare { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 40px; }
   }
   @media (width < 48rem) {
     .worth__compare { grid-template-columns: minmax(0, 1fr); }
   }
+  @media (width < 40rem) {
+    .vb__row { grid-template-columns: 3.5rem minmax(0, 1fr) auto; gap: 10px; }
+  }
 </style>
+
+<script>
+  // Base case / upside case switch for the math (also used by ScenarioCard; whichever script runs
+  // first binds each block once). Without JS both ledgers show, one under the other.
+  function initMathSwitch(root: ParentNode = document) {
+    root.querySelectorAll<HTMLElement>('[data-vm]').forEach((vm) => {
+      if (vm.dataset.vmReady === 'true') return;
+      vm.dataset.vmReady = 'true';
+      const sw = vm.querySelector<HTMLElement>('[data-vm-switch]');
+      const buttons = Array.from(vm.querySelectorAll<HTMLButtonElement>('[data-vm-case]'));
+      const panels = Array.from(vm.querySelectorAll<HTMLElement>('[data-vm-panel]'));
+      if (!sw || buttons.length < 2 || panels.length < 2) return;
+      const show = (which: string) => {
+        buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.vmCase === which)));
+        panels.forEach((p) => { p.hidden = p.dataset.vmPanel !== which; });
+      };
+      buttons.forEach((b) => b.addEventListener('click', () => show(b.dataset.vmCase ?? 'base')));
+      sw.hidden = false;
+      show('base');
+    });
+  }
+  initMathSwitch();
+</script>

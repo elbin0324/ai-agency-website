@@ -3,13 +3,17 @@
 // Industries (COPY.md §2.11, DESIGN.md §6.17 .cell-grid): the eight industries from
 // src/data/industries.ts, each with its fixed icon. Headline replaced per CRITIQUE.md ("Made for local
 // businesses..." was flagged as generic); compliance line per CRITIQUE.md edit 6. Examples, not client claims.
+// 2026-10-14 critique round: every industry now leads somewhere specific. Six open the matching illustrative
+// scenario on /results/ (#scenario-{id} opens it there); real estate and agencies, which have no scenario, open
+// the agent that fits them best. Under 640px the cells become two-up tiles (name and link only) so the
+// section stays short on phones; the descriptions show from 640px up.
 // Keep id="industries": it is the anchor from COPY.md and may be linked from other pages.
 import Section from '@/components/ui/Section.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
-import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
 import Icon from '@/components/ui/Icon.astro';
 import { homeNum } from './story/sections';
 import { industries, industriesCopy } from '@/data/industries';
+import { scenarios } from '@/data/scenarios';
 import { url } from '@/lib/url';
 
 // Card lines tightened from COPY.md §2.11 for the four-column grid (same meaning; the dental line keeps
@@ -24,21 +28,56 @@ const short: Record<string, { title?: string; body: string }> = {
   distribution: { title: 'Distribution and manufacturing', body: 'Quotes and orders from email, inventory analysis and margin by product and customer.' },
   'professional-services': { body: 'Proposals, client reporting, utilization tracking and new-business outreach.' },
 };
-const items = industries.map((i) => ({
-  icon: i.icon,
-  title: short[i.slug]?.title ?? i.name,
-  body: short[i.slug]?.body ?? (i.examples ? `${i.examples} ${i.body}` : i.body),
-}));
+// Where each industry leads: its scenario on /results/, or the agent that fits it best.
+const toScenario: Record<string, string> = {
+  'home-services': 'home-services',
+  practices: 'dental',
+  'law-accounting': 'law-firm',
+  restaurants: 'restaurant-group',
+  retail: 'ecommerce',
+  distribution: 'industrial-distributor',
+};
+const toAgent: Record<string, { href: string; label: string; short: string }> = {
+  'real-estate': { href: '/services/ai-agents/#customer-agent', label: 'See the Customer Agent', short: 'See the agent' },
+  'professional-services': { href: '/services/ai-agents/#executive-assistant', label: 'See the Executive Assistant', short: 'See the agent' },
+};
+const scenarioIds = new Set(scenarios.map((s) => s.id));
+const items = industries.map((i) => {
+  const sid = toScenario[i.slug];
+  const link = sid && scenarioIds.has(sid)
+    ? { href: `/results/#scenario-${sid}`, label: 'See an example', short: 'See an example' }
+    : toAgent[i.slug] ?? { href: industriesCopy.cta.href, label: industriesCopy.cta.label, short: 'Talk it through' };
+  return {
+    slug: i.slug,
+    icon: i.icon,
+    title: short[i.slug]?.title ?? i.name,
+    body: short[i.slug]?.body ?? (i.examples ? `${i.examples} ${i.body}` : i.body),
+    ...link,
+  };
+});
 ---
 <Section id="industries" tone="sunken" aria-labelledby="industries-title">
   <SectionHeader
     num={homeNum.industries}
     eyebrow={industriesCopy.eyebrow}
-    subtitle="If your team juggles customers, paperwork and numbers, there’s work an agent can take on. A few examples:"
+    subtitle="If your team juggles customers, paperwork and numbers, there’s work an agent can take on. Pick yours for a worked example."
     titleId="industries-title"
   ><span slot="title" data-motion="split">From the front desk to the loading dock.</span></SectionHeader>
 
-  <div data-motion="stagger" data-stagger-target="li"><FeatureGrid variant="cells" cols={4} items={items} label="Industries we work with" /></div>
+  <ul class="cell-grid ind-grid" style="--cols: 4" role="list" aria-label="Industries we work with" data-motion="stagger" data-stagger-target="li">
+    {items.map((it) => (
+      <li class="cell ind-cell">
+        <a class="ind-cell__link" href={url(it.href)}>
+          <h3 class="cell__title"><Icon name={it.icon} />{it.title}</h3>
+          <p class="cell__body ind-cell__body">{it.body}</p>
+          <span class="ind-cell__more">
+            {it.short === it.label ? it.label : <Fragment><span class="ind-more--long">{it.label}</span><span class="ind-more--short">{it.short}</span></Fragment>}
+            <Icon name="arrow-right" size={16} />
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
 
   <div class="ind-foot" data-reveal>
     <div class="ind-foot__notes">
@@ -50,6 +89,29 @@ const items = industries.map((i) => ({
 </Section>
 
 <style>
+  /* The whole cell is the link; the hairline cell keeps its global padding and rules. */
+  .ind-cell { padding: 0; }
+  .ind-cell__link {
+    display: flex; flex-direction: column; height: 100%; margin: 0 8px 0 -12px; padding: 22px 14px 20px 12px;
+    border-radius: var(--radius-tile); text-decoration: none; color: inherit; transition: background-color 0.2s;
+  }
+  .ind-cell__link:hover { background: var(--color-paper); }
+  .ind-cell__more { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 14px; font-size: 0.9375rem; font-weight: 550; color: var(--fg); }
+  .ind-cell__more :global(.icon) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
+  .ind-cell__link:hover .ind-cell__more :global(.icon) { transform: translateX(3px); }
+
+  /* Phones: two-up tiles, name and link only. */
+  @media (width < 40rem) {
+    .ind-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; }
+    .ind-cell__link { margin: 0 -8px; padding: 16px 8px; }
+    .ind-cell__body { display: none; }
+    .ind-grid :global(.cell__title) { align-items: flex-start; font-size: 1rem; line-height: 1.35; }
+    .ind-grid :global(.cell__title .icon) { flex: none; margin-top: 2px; }
+    .ind-cell__more { padding-top: 10px; font-size: 0.875rem; white-space: nowrap; }
+    .ind-more--long { display: none; }
+  }
+  @media (width >= 40rem) { .ind-more--short { display: none; } }
+
   .ind-foot { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px 24px; align-items: end; margin-top: 24px; }
   .ind-foot__notes { grid-column: 1 / span 9; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
   .ind-foot__notes p { font-size: 0.875rem; line-height: 1.55; color: var(--fg-3); text-wrap: pretty; }

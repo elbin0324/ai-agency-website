@@ -1,15 +1,14 @@
 ---
 // OWNER: home-story
-// Why us (COPY.md §2.9, DESIGN.md §6.5, §6.18): four reasons as cards, the "How the options compare"
-// table (id "comparison": DIY AI tools vs a generic automation agency vs us) and the consulting-cost
-// teaser that links to /services/consulting/#comparison. Sunken band.
+// Why us (COPY.md §2.9, DESIGN.md §6.5): four reasons as cards and one closing line. Sunken band.
+// 2026-10-14 critique round (home was 36 phone screens): the DIY / agency / us table (it restated these four
+// cards) and the consulting-cost teaser (now one line on the AI Consulting column in ServicesGrid, linking to
+// /services/consulting/#comparison) are off the home page; ./story/ConsultingTeaser.astro is kept, unused.
 // Keep id="why-us": it is the anchor from COPY.md and may be linked from other pages.
 import Section from '@/components/ui/Section.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
-import ComparisonTable from '@/components/blocks/ComparisonTable.astro';
 import Icon from '@/components/ui/Icon.astro';
-import ConsultingTeaser from './story/ConsultingTeaser.astro';
 import { homeNum } from './story/sections';
 import { site } from '@/config/site';
 import { url } from '@/lib/url';
@@ -31,33 +30,14 @@ const reasons = [
 
   <div data-motion="stagger" data-stagger-target="li"><FeatureGrid cols={4} items={[...reasons]} label={`Why work with ${site.name}`} /></div>
 
-  <div class="why-cmp">
-    <ComparisonTable
-      id="comparison"
-      caption="How the options compare"
-      columns={[{ label: 'DIY AI tools' }, { label: 'Generic automation agency', short: 'Generic agency' }, { label: site.name, us: true }]}
-      rows={[
-        { label: 'Who does the work', cells: ['You and your team, in spare moments', 'They build it, then hand it over', 'We build it, run it and keep it working'] },
-        { label: 'Fit to your business', cells: ['Generic prompts and templates', 'Prebuilt workflows, lightly adapted', 'Designed around your process, data, prices and voice'] },
-        { label: 'Human approval', cells: [{ mark: 'partial', text: 'Up to you' }, { mark: 'partial', text: 'Varies by project' }, { mark: 'yes', text: 'Built in for every sensitive action' }] },
-        { label: 'What gets measured', cells: ['Hard to say', 'Activity: tasks run, emails sent', 'Hours and dollars against an agreed baseline'] },
-        { label: 'Strategy', cells: ['You decide what to try', 'They build what you ask for', 'We tell you what’s worth automating, and what isn’t'] },
-        { label: 'When something breaks', cells: [{ mark: 'no', text: 'You troubleshoot' }, { mark: 'partial', text: 'A new ticket or change order' }, { mark: 'yes', text: 'We monitor and fix it as part of the work' }] },
-      ]}
-    >
-      <div class="why-cmp__foot">
-        <p>DIY tools are a good fit for one person’s tasks. They get harder when the work spans systems, people and customers. That’s where we come in.</p>
-        <a class="link-arrow" href={url(site.ctas.approach.href)}><span>See how we work</span><Icon name="arrow-right" /></a>
-      </div>
-    </ComparisonTable>
+  <div class="why-foot" data-reveal>
+    <p>DIY tools are a good fit for one person’s tasks. They get harder when the work spans systems, people and customers. That’s where we come in.</p>
+    <a class="link-arrow" href={url(site.ctas.approach.href)}><span>See how we work</span><Icon name="arrow-right" /></a>
   </div>
-
-  <ConsultingTeaser />
 </Section>
 
 <style>
-  .why-cmp { margin-top: clamp(48px, 6vw, 72px); }
-  .why-cmp__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 32px; margin-top: 16px; }
-  .why-cmp__foot p { max-width: 70ch; font-size: 0.8125rem; line-height: 1.55; color: var(--fg-3); }
-  @media (width < 40rem) { .why-cmp__foot { flex-direction: column; align-items: flex-start; } }
+  .why-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 32px; margin-top: 20px; }
+  .why-foot p { max-width: 70ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); text-wrap: pretty; }
+  @media (width < 40rem) { .why-foot { flex-direction: column; align-items: flex-start; } }
 </style>

@@ -1,0 +1,208 @@
+---
+// OWNER: pages-misc
+// /contact/ beside "What you leave with" (NextSteps.astro, anchor #sample-summary): what the free
+// assessment's written summary looks like, condensed to one screen. Styled like the agent spec on
+// /approach/ (SpecWindow.astro): a navy window holding a paper document (.aw-doc), badged Illustrative.
+//
+// Honesty: the business is fictional and every figure comes from its worked example in
+// src/data/scenarios.ts ("home-services", base case to upside), so the full math is one click away at
+// /results/#scenario-home-services. Nothing here is a client result. The window is real content, not
+// role="img": the numbers and the link to the math must stay readable to everyone.
+//
+// The numbered markers on the three parts (1 opportunities, 2 estimate, 3 first project) match the
+// numbered "What you leave with" list beside the figure.
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import { scenarios } from '@/data/scenarios';
+import { currency, number } from '@/lib/format';
+import { url } from '@/lib/url';
+
+const s = scenarios.find((x) => x.id === 'home-services');
+if (!s) throw new Error('SampleSummary: the home-services scenario is missing from src/data/scenarios.ts');
+const lever = (kind: 'time' | 'growth' | 'savings') => {
+  const l = s.levers.find((x) => x.kind === kind);
+  if (!l) throw new Error(`SampleSummary: no ${kind} lever in the home-services scenario`);
+  return l;
+};
+const jobs = lever('growth');
+const search = lever('savings');
+const office = lever('time');
+const range = (lo: number, hi: number) => `${currency(lo)} to ${currency(hi)}`;
+const mathHref = url(`/results/#scenario-${s.id}`);
+
+const opportunities = [
+  {
+    title: 'Reply to every new lead within a minute',
+    agent: 'Customer Agent',
+    value: range(jobs.base, jobs.upside),
+    kind: 'added gross profit a year',
+    effort: 'Low effort',
+    when: 'Live in about 2 weeks',
+  },
+  {
+    title: 'Cut search ads that never produce a lead',
+    agent: 'AI Marketing Director',
+    value: range(search.base, search.upside),
+    kind: 'less ad spend a year, same leads',
+    effort: 'Low effort',
+    when: 'Savings in 30 to 60 days',
+  },
+  {
+    title: 'Hand routine calls and texts to the agent',
+    agent: 'Customer Agent',
+    value: range(office.base, office.upside),
+    kind: `${number(s.hours)} to ${number(s.upside.hours)} office hours a year`,
+    effort: 'Comes with #1',
+    when: 'Same rollout',
+  },
+];
+
+// Read from the scenario's math rows (src/data/scenarios.ts, home-services); keep them in step.
+const assumptions = [
+  '500 new leads a month; 40% book an inspection, and 4 in 10 wait over an hour for a reply today',
+  'Those slow-reply leads book 10% to 20% more often when answered in a minute: 96 to 192 more inspections a year',
+  '25% of inspections close; $11,000 average job at a 34% gross margin',
+  '6% to 12% of the $45,000 monthly search budget buys no leads and is cut',
+];
+
+const plan = [
+  { when: 'Week 1', what: 'Agent spec signed off: approved answers, price ranges, what always goes to a person. Calendar access is book-only.' },
+  { when: 'Week 2', what: 'Live on after-hours leads, with your OK on each booking. Two weeks of today’s reply times logged as the baseline.' },
+  { when: 'Weeks 3–6', what: 'Every lead, day and night. A short weekly check-in; booked inspections measured against the baseline.' },
+];
+---
+<figure class="ssum" aria-labelledby="ssum-cap">
+  <div class="app-window ssum-win">
+    <div class="aw-bar">
+      <span class="aw-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="aw-crumb"><b>Assessment summary</b><span class="ssum-win__view"><span class="aw-crumb__sep" aria-hidden="true">/</span> {s.business}</span></span>
+      <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+    </div>
+    <div class="ssum-win__body">
+      <div class="aw-doc ssum-doc">
+        <div class="ssum-doc__head">
+          <span class="icon-tile icon-tile--sm" aria-hidden="true"><Icon name="file-text" size={18} /></span>
+          <div class="ssum-doc__name">
+            <p class="ssum-doc__title">{s.business}</p>
+            <p class="ssum-doc__sub">Fictional business · {s.employees} staff · roofing and exteriors · written after a 30-minute call</p>
+          </div>
+        </div>
+
+        <section class="ssum-part" aria-labelledby="ssum-p1">
+          <p class="ssum-part__k" id="ssum-p1"><span class="fig-legend__n" aria-hidden="true">1</span>Top three opportunities, ranked by value and effort</p>
+          <ol class="ssum-opps" role="list">
+            {opportunities.map((o, i) => (
+              <li class="ssum-opp">
+                <span class="ssum-opp__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                <div class="ssum-opp__what">
+                  <p class="ssum-opp__title">{o.title}</p>
+                  <p class="ssum-opp__agent">{o.agent} · {o.effort} · {o.when}</p>
+                </div>
+                <p class="ssum-opp__fig"><b>{o.value}</b><span>{o.kind}</span></p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section class="ssum-part" aria-labelledby="ssum-p2">
+          <p class="ssum-part__k" id="ssum-p2"><span class="fig-legend__n" aria-hidden="true">2</span>Rough value, with the assumptions</p>
+          <p class="ssum-total"><b>{range(s.annualValue, s.upside.annualValue)}</b> a year</p>
+          <p class="ssum-total__sub">
+            Base case to upside, in profit terms. Added revenue of {range(s.addedRevenue?.base ?? 0, s.addedRevenue?.upside ?? 0)} a year is context only and isn’t in the total.
+          </p>
+          <ul class="ssum-assume" role="list">
+            {assumptions.map((a) => <li>{a}</li>)}
+          </ul>
+          <p class="math ssum-math">{currency(jobs.base)} + {currency(search.base)} + {currency(office.base)} = <b>{currency(s.annualValue)}</b> base case</p>
+        </section>
+
+        <section class="ssum-part" aria-labelledby="ssum-p3">
+          <p class="ssum-part__k" id="ssum-p3"><span class="fig-legend__n" aria-hidden="true">3</span>Suggested first project, and what it would take</p>
+          <p class="ssum-first"><b>Start with #1:</b> it is the largest opportunity and the quickest to prove. The office time in #3 comes with it.</p>
+          <ol class="ssum-plan" role="list">
+            {plan.map((p) => (
+              <li><span class="ssum-plan__when">{p.when}</span><span class="ssum-plan__what">{p.what}</span></li>
+            ))}
+          </ol>
+          <p class="ssum-ask"><Icon name="user-check" />From your team: a couple of hours in week 1, then about 30 minutes a week of reviews.</p>
+        </section>
+
+        <div class="ssum-not">
+          <p class="ssum-not__k"><Icon name="circle-alert" />What we’d leave alone</p>
+          <p class="ssum-not__t">The inspection and the quote. Homeowners buy from the estimator at the kitchen table, so the agent books the visit and your people sell it.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption class="ssum__foot">
+    <div class="tag-row">
+      <IllustrativeLabel kind="Illustrative example" href={`/results/#scenario-${s.id}`} />
+      <a class="link ssum__math-link" href={mathHref}>See the full math</a>
+    </div>
+    <p class="fig-caption ssum__cap" id="ssum-cap">
+      <b>FIG. 1</b> Illustrative assessment summary, condensed to one screen. {s.business} is a fictional {s.employees}-person roofing company; every figure comes from its worked example on the results page.
+    </p>
+    <p class="ssum__note">Not a quote or a guarantee. Estimates exclude the cost of the engagement.</p>
+  </figcaption>
+</figure>
+
+<style>
+  .ssum { margin: 0; min-width: 0; }
+  .ssum-win__body { padding: 18px; background: var(--color-navy-850); }
+  .ssum-doc { overflow: hidden; }
+  .ssum-doc__head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--color-rule); }
+  .ssum-doc__title { font-size: 0.9375rem; font-weight: 600; line-height: 1.3; color: var(--color-ink); }
+  .ssum-doc__sub { font-size: 0.75rem; line-height: 1.45; color: var(--color-ink-3); }
+
+  .ssum-part { padding: 14px 18px 16px; border-bottom: 1px solid var(--color-rule); }
+  .ssum-part__k { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.35; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-ink-3); }
+  .ssum-part__k .fig-legend__n { width: 20px; height: 20px; letter-spacing: 0; }
+
+  .ssum-opps { margin-top: 8px; }
+  .ssum-opp { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--color-rule); }
+  .ssum-opp:first-child { border-top: 0; }
+  .ssum-opp__n { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--color-brass-700); }
+  .ssum-opp__title { font-size: 0.875rem; font-weight: 600; line-height: 1.4; color: var(--color-ink); }
+  .ssum-opp__agent { margin-top: 1px; font-size: 0.75rem; line-height: 1.45; color: var(--color-ink-3); }
+  .ssum-opp__fig { display: grid; justify-items: end; text-align: right; }
+  .ssum-opp__fig b { font-size: 0.875rem; font-weight: 600; line-height: 1.4; color: var(--color-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ssum-opp__fig span { max-width: 24ch; font-size: 0.75rem; line-height: 1.4; color: var(--color-ink-3); }
+
+  .ssum-total { margin-top: 10px; font-size: 0.875rem; color: var(--color-ink-2); }
+  .ssum-total b { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 420; line-height: 1.2; letter-spacing: -0.01em; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+  .ssum-total__sub { margin-top: 4px; font-size: 0.8125rem; line-height: 1.5; color: var(--color-ink-2); }
+  .ssum-assume { display: grid; gap: 4px; margin-top: 10px; }
+  .ssum-assume > li { position: relative; padding-left: 14px; font-size: 0.8125rem; line-height: 1.5; color: var(--color-ink-2); }
+  .ssum-assume > li::before { content: ""; position: absolute; left: 1px; top: 0.62em; width: 5px; height: 5px; border-radius: 50%; background: var(--color-brass-500); }
+  .ssum-math { margin-top: 10px; font-size: 0.75rem; }
+
+  .ssum-first { margin-top: 10px; font-size: 0.8125rem; line-height: 1.55; color: var(--color-ink-2); }
+  .ssum-first b { font-weight: 600; color: var(--color-ink); }
+  .ssum-plan { display: grid; gap: 0; margin-top: 10px; }
+  .ssum-plan > li { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 12px; padding: 7px 0; border-top: 1px dashed var(--color-rule); }
+  .ssum-plan__when { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.6; letter-spacing: 0.04em; color: var(--color-brass-700); white-space: nowrap; }
+  .ssum-plan__what { font-size: 0.8125rem; line-height: 1.5; color: var(--color-ink); }
+  .ssum-ask { display: flex; gap: 6px; margin-top: 10px; font-size: 0.75rem; font-weight: 550; line-height: 1.45; color: var(--color-attention); }
+  .ssum-ask :global(.icon) { flex: none; width: 14px; height: 14px; margin-top: 1px; }
+
+  .ssum-not { padding: 12px 18px 14px; background: var(--color-paper-sunken); }
+  .ssum-not__k { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-ink-3); }
+  .ssum-not__k :global(.icon) { width: 14px; height: 14px; color: var(--color-brass-700); }
+  .ssum-not__t { margin-top: 4px; font-size: 0.8125rem; line-height: 1.5; color: var(--color-ink); }
+
+  .ssum__foot { margin-top: 14px; }
+  .ssum__math-link { font-size: 0.875rem; font-weight: 550; }
+  .ssum__cap { margin-top: 10px; }
+  .ssum__note { margin-top: 6px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+
+  .ssum-win__view { display: contents; }
+  @media (width < 40rem) {
+    .ssum-win__view { display: none; }
+    .ssum-win__body { padding: 10px; }
+    .ssum-doc__head, .ssum-part, .ssum-not { padding-inline: 14px; }
+    .ssum-opp { grid-template-columns: 22px minmax(0, 1fr); }
+    .ssum-opp__fig { grid-column: 2; justify-items: start; text-align: left; }
+    .ssum-opp__fig span { max-width: none; }
+    .ssum-plan > li { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  }
+</style>

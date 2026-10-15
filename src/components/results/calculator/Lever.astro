@@ -1,0 +1,215 @@
+---
+// OWNER: results (calculator)
+// One lever of the full value calculator: an accordion row on the ivory worksheet.
+//   Head   a "count it" checkbox (outside the button), then the disclosure button with the lever's
+//          color key (its fixed chart slot), name, service and live range.
+//   Panel  what the agent does, the lever's two or three inputs, links to shared inputs it uses,
+//          its own stats (Modeled estimate) and "See the math": every line of computeLevers()' math
+//          for this lever, with the source ids (linked to the methodology list on /results/, or to
+//          the source itself when the list doesn't carry that id).
+// Without JavaScript every panel is open (the .js class on <html> is what collapses them).
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import { sources } from '@/data/benchmarks';
+import { leverInputMeta, type LeverResult } from '@/data/roi';
+import { referencedIds, sourceHref } from '../sources';
+import Field from './Field.astro';
+import { fieldText, leverInfo, leverStats, rangeMoney, type Values } from './view';
+
+interface Props {
+  lever: LeverResult;
+  values: Values;
+  prefix: string;
+  open?: boolean;
+}
+
+const { lever, values, prefix, open = false } = Astro.props;
+const info = leverInfo[lever.id];
+const stats = leverStats(lever, values);
+const base = `${prefix}-${lever.id}`;
+const listed = referencedIds();
+const srcLinks = [...new Set(lever.sources)].map((id) => {
+  const s = sources.find((x) => x.id === id);
+  if (listed.has(id)) return { id, href: sourceHref(id), external: false, title: s?.citation ?? id };
+  return { id, href: s?.url ?? '#methodology', external: Boolean(s?.url), title: s?.citation ?? id };
+});
+const owner: Record<string, string> = { grossMargin: 'Customer inquiries' };
+---
+<div class="lv" data-lever={lever.id} data-open={open ? 'true' : 'false'} data-on="true" style={`--k: var(--viz-${info.slot})`}>
+  <div class="lv__head">
+    <label class="check lv__check">
+      <input type="checkbox" id={`${base}-on`} checked aria-describedby={`${base}-range`} data-include />
+      <span class="sr-only">Count {info.name} in the total</span>
+    </label>
+    <h3 class="lv__h">
+      <button type="button" class="lv__btn" id={`${base}-btn`} aria-expanded={open ? 'true' : 'false'} aria-controls={`${base}-panel`} data-toggle>
+        <span class="lv__titles">
+          <span class="lv__name"><span class="lv__key" aria-hidden="true"></span>{info.name}</span>
+          <span class="lv__svc"><span class="lv__n">{info.n}</span>{info.service}</span>
+        </span>
+        <span class="lv__val" id={`${base}-range`}>
+          <b data-o="lv-range">{rangeMoney(lever.value)}</b>
+          <span data-o="lv-kind">a year · {info.kind}</span>
+        </span>
+        <span class="lv__chev" aria-hidden="true"><Icon name="chevron-down" size={18} /></span>
+      </button>
+    </h3>
+  </div>
+
+  <div class="lv__panel" id={`${base}-panel`} role="region" aria-labelledby={`${base}-btn`}>
+    <div class="lv__inner">
+      <div class="lv__body">
+        <p class="lv__off" hidden data-off-note><Icon name="info" size={14} /><span>Not in the total. Tick the box to count it.</span></p>
+        <p class="lv__lede">{info.lede}</p>
+
+        <div class="lv__fields">
+          {info.inputs.map((k) => <Field k={k} prefix={prefix} value={values[k]} />)}
+        </div>
+
+        {info.linked?.map((k) => (
+          <button type="button" class="lv__link" data-goto={k}>
+            <span>Counted at your <b data-o={`linked-${k}`}>{fieldText(values[k])}%</b> {leverInputMeta[k].label.toLowerCase()}, set under {owner[k] ?? 'another lever'}.</span>
+            <span class="lv__link-go">Change<Icon name="chevron-right" size={14} /></span>
+          </button>
+        ))}
+
+        <dl class="lv__stats">
+          {stats.map((s, i) => (
+            <div class:list={['lv__stat', s.context && 'lv__stat--context']}>
+              <dt>{s.label}{s.context && <span class="sr-only"> (not added to the total)</span>}</dt>
+              <dd data-o={`lv-stat-${i}`}>{s.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <details class="lv__math">
+          <summary>
+            <span class="lv__math-label"><Icon name="calculator" size={16} />See the math</span>
+            <IllustrativeLabel kind="Modeled estimate" link={false} />
+          </summary>
+          <table class="lv-ledger">
+            <caption class="sr-only">The math behind the {info.name} range, low case to high case</caption>
+            <tbody data-o="lv-math">
+              {lever.math.map((row) => (
+                <tr><th scope="row">{row.label}</th><td>{row.value}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="lv__src">
+            The base case uses the base rates in our research and the upside the optimistic ones, never beyond them. Each step is rounded down.
+            Sources:{' '}
+            {srcLinks.map((s, i) => (
+              <Fragment>{i > 0 && ' · '}<a class="link" href={s.href} title={s.title} {...(s.external ? { target: '_blank', rel: 'noopener' } : {})}>{s.id}</a></Fragment>
+            ))}
+          </p>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .lv { border-top: 1px solid var(--line); }
+  .lv:last-child { border-bottom: 1px solid var(--line); }
+
+  /* Head: checkbox column, then the disclosure button. */
+  .lv__head { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); align-items: center; }
+  .lv__check { align-self: center; }
+  .lv__check input { margin-top: 0; }
+  .lv__h { margin: 0; font: inherit; }
+  .lv__btn {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto 20px; align-items: center; gap: 4px 16px;
+    width: 100%; min-height: 68px; padding: 14px 0; text-align: left; color: var(--fg); cursor: pointer;
+  }
+  .lv__btn:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-control); }
+  .lv__titles { display: grid; gap: 3px; min-width: 0; }
+  .lv__name { display: flex; align-items: center; gap: 9px; font-size: 1rem; font-weight: 600; line-height: 1.3; color: var(--fg); }
+  .lv__key { flex: none; width: 10px; height: 10px; border-radius: 2px; background: var(--k); }
+  .lv__svc { display: flex; align-items: baseline; gap: 8px; padding-left: 19px; font-size: 0.8125rem; line-height: 1.35; color: var(--fg-3); }
+  .lv__n { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; color: var(--accent); }
+  .lv__val { display: grid; justify-items: end; gap: 3px; text-align: right; }
+  .lv__val b { font-size: 0.9375rem; font-weight: 600; line-height: 1.3; color: var(--fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lv__val span { font-size: 0.8125rem; line-height: 1.35; color: var(--fg-3); }
+  .lv__chev { display: grid; place-items: center; color: var(--accent-display); transition: transform 0.3s var(--ease-out-soft); }
+  .lv[data-open='true'] .lv__chev { transform: rotate(180deg); }
+  .lv__btn:hover .lv__name { text-decoration: underline; text-decoration-color: var(--accent-line); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+  /* Not counted: muted, value struck through (the words change too, so color is never the only signal). */
+  .lv[data-on='false'] .lv__titles, .lv[data-on='false'] .lv__val { opacity: 0.62; }
+  .lv[data-on='false'] .lv__val b { text-decoration: line-through; text-decoration-thickness: 1px; }
+  .lv[data-on='false'] .lv__key { background: transparent; box-shadow: inset 0 0 0 1.5px var(--k); }
+
+  /* Panel: collapses only when scripting is on (html.js), so no-JS readers see everything. */
+  .lv__panel { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.32s var(--ease-out-soft); }
+  .lv__inner { min-height: 0; overflow: hidden; margin: 0 -6px; padding: 0 6px; }
+  :global(.js) .lv[data-open='false'] .lv__panel { grid-template-rows: 0fr; }
+  :global(.js) .lv[data-open='false'] .lv__inner { visibility: hidden; transition: visibility 0s linear 0.32s; }
+  .lv__body { display: grid; gap: 20px; padding: 2px 0 26px 2.25rem; }
+
+  .lv__off { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--fg-2); }
+  .lv__off :global(.icon) { color: var(--accent-display); }
+  .lv__lede { max-width: 60ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .lv__fields { display: grid; gap: 20px; }
+
+  .lv__link {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; width: 100%;
+    min-height: 44px; padding: 10px 14px; border-radius: var(--radius-tile); background: var(--color-paper-sunken);
+    font-size: 0.875rem; line-height: 1.45; text-align: left; color: var(--fg-2); cursor: pointer;
+  }
+  .lv__link b { font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .lv__link-go { display: inline-flex; align-items: center; gap: 2px; font-weight: 550; color: var(--fg); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  .lv__link-go :global(.icon) { color: var(--accent-display); }
+  .lv__link:hover .lv__link-go { text-decoration-color: currentColor; }
+  .lv__link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+  .lv__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 14px 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .lv__stat dt { font-size: 0.8125rem; line-height: 1.4; color: var(--fg-3); }
+  .lv__stat dd { margin-top: 3px; font-size: 1rem; font-weight: 600; line-height: 1.35; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .lv__stat--context dd { font-weight: 500; color: var(--fg-2); }
+
+  .lv__math { border-top: 1px solid var(--line); }
+  .lv__math summary {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
+    min-height: 48px; padding: 10px 0 0; list-style: none; cursor: pointer;
+  }
+  .lv__math summary::-webkit-details-marker { display: none; }
+  .lv__math-label { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9375rem; font-weight: 550; color: var(--fg); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 4px; }
+  .lv__math-label :global(.icon) { color: var(--accent-display); }
+  .lv__math summary:hover .lv__math-label { text-decoration-color: currentColor; }
+  .lv__math summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-control); }
+  .lv__math[open] summary { padding-bottom: 12px; }
+
+  .lv-ledger { width: 100%; border-collapse: collapse; font-size: 0.8125rem; line-height: 1.45; }
+  .lv-ledger th, .lv-ledger td { padding: 9px 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--line); }
+  .lv-ledger tr:first-child > * { border-top: 1px solid var(--line-strong); }
+  .lv-ledger th { width: 38%; padding-right: 16px; font-weight: 500; color: var(--fg-2); }
+  .lv-ledger td { font-family: var(--font-mono); letter-spacing: 0.01em; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .lv__src { margin-top: 12px; font-size: 0.8125rem; line-height: 1.6; color: var(--fg-3); }
+  .lv__src .link { color: var(--fg-2); font-family: var(--font-mono); font-size: 0.75rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lv__panel, .lv__chev { transition: none; }
+    :global(.js) .lv[data-open='false'] .lv__inner { transition: none; }
+  }
+  /* The first paint (state restored from the URL) applies open and closed panels without animating,
+     so the layout is final before the page scrolls to a lever. */
+  :global(.vc[data-instant]) .lv__panel, :global(.vc[data-instant]) .lv__chev, :global(.vc[data-instant]) .lv__inner { transition: none !important; }
+  @media (width < 40rem) {
+    .lv__head { grid-template-columns: 2rem minmax(0, 1fr); align-items: start; }
+    .lv__check { align-self: start; padding-top: 15px; }
+    .lv__btn { grid-template-columns: minmax(0, 1fr) 20px; grid-template-areas: 'titles chev' 'val val'; align-items: start; padding: 14px 0 16px; }
+    .lv__titles { grid-area: titles; }
+    .lv__chev { grid-area: chev; padding-top: 1px; }
+    .lv__val { grid-area: val; justify-items: start; text-align: left; padding-left: 19px; margin-top: 6px; }
+    .lv__body { padding-left: 0; }
+    .lv-ledger, .lv-ledger tbody, .lv-ledger tr { display: block; }
+    .lv-ledger tr { padding: 9px 0; border-bottom: 1px solid var(--line); }
+    .lv-ledger tr:first-child { border-top: 1px solid var(--line-strong); }
+    .lv-ledger th, .lv-ledger td, .lv-ledger tr:first-child > * { display: block; width: auto; padding: 0; border: 0; }
+    .lv-ledger td { margin-top: 3px; }
+  }
+  @media (pointer: coarse) {
+    .lv__check { position: relative; }
+    .lv__check::after { content: ""; position: absolute; inset: -12px; }
+  }
+</style>

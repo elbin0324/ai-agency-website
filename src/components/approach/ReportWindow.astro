@@ -1,0 +1,165 @@
+---
+// OWNER: pages-misc
+// /approach/ "Run and improve" deliverable (Process.astro, anchor #monthly-report): a sample monthly
+// report, styled like the agent spec in the hero (SpecWindow.astro): a navy window holding a paper
+// document, badged Illustrative. It continues the sample on /contact/ (#sample-summary): the same
+// fictional roofing company, three months after its lead-response agent went live.
+//
+// Honesty: every outcome figure is the BASE case of the "home-services" worked example in
+// src/data/scenarios.ts, by month (96 more inspections a year = 8 a month; 362 office hours a year =
+// 30 a month, rounded down), so the full math is at /results/#scenario-home-services. The operational
+// counts (handoffs, corrections) are illustrative and carry no dollar value. Real content, not
+// role="img", so the numbers and the link stay readable to everyone.
+import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
+import { scenarios } from '@/data/scenarios';
+import { currency, number } from '@/lib/format';
+import { url } from '@/lib/url';
+
+const s = scenarios.find((x) => x.id === 'home-services');
+if (!s) throw new Error('ReportWindow: the home-services scenario is missing from src/data/scenarios.ts');
+
+// Monthly figures from the scenario's base case (see the header comment); rounding is always down.
+const extraInspections = 8; // 96 a year ÷ 12
+const extraJobs = extraInspections * 0.25; // 25% of inspections close
+const jobProfit = Math.floor(extraJobs * 11000 * 0.34); // $11,000 average job, 34% gross margin
+const officeHours = Math.floor(s.hours / 12); // 362 a year ÷ 12, rounded down
+const officeValue = Math.floor(officeHours * 33 * 0.5); // $33 loaded hourly cost, counted at 50%
+const monthValue = jobProfit + officeValue;
+const mathHref = url(`/results/#scenario-${s.id}`);
+
+const rows = [
+  { k: 'First reply to a new lead', base: 'Over an hour for 4 in 10', now: 'Under a minute, every lead' },
+  { k: 'Inspections booked', base: '200 a month', now: `${200 + extraInspections} a month` },
+  { k: 'Office time on calls and texts', base: 'All by hand', now: `${number(officeHours)} hours back` },
+  { k: 'Value this month', base: '', now: currency(monthValue), strong: true },
+];
+
+const caught = [
+  { icon: 'user-check', text: 'Handed to a person: 37 conversations (complaints, insurance claims, a roof leak in progress)' },
+  { icon: 'pen-line', text: 'Corrected by your team: 3 answers about warranty terms, now in the approved answers' },
+  { icon: 'shield-check', text: 'Stopped by the rules: 2 discount requests, sent to you instead of answered' },
+];
+
+const next = [
+  { text: 'Answer Saturday overflow calls, not just texts and chat', ok: true },
+  { text: 'Draft a follow-up for inspections that don’t book within 48 hours', ok: true },
+];
+---
+<figure class="rep" aria-labelledby="rep-cap">
+  <div class="app-window rep-win">
+    <div class="aw-bar">
+      <span class="aw-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="aw-crumb"><b>Monthly report</b><span class="rep-win__view"><span class="aw-crumb__sep" aria-hidden="true">/</span> Customer Agent · month 3</span></span>
+      <span class="aw-meta"><span class="aw-tag">Illustrative</span></span>
+    </div>
+    <div class="rep-win__body">
+      <div class="aw-doc rep-doc">
+        <div class="rep-doc__head">
+          <span class="icon-tile icon-tile--sm" aria-hidden="true"><Icon name="chart-column" size={18} /></span>
+          <div>
+            <p class="rep-doc__title">{s.business}</p>
+            <p class="rep-doc__sub">Fictional business · Customer Agent on web chat and text · month 3 since launch</p>
+          </div>
+        </div>
+
+        <section class="rep-part" aria-labelledby="rep-p1">
+          <p class="rep-part__k" id="rep-p1"><span class="fig-legend__n" aria-hidden="true">1</span>Against the baseline you signed off</p>
+          <table class="rep-tbl">
+            <thead>
+              <tr><th scope="col"><span class="sr-only">Measure</span></th><th scope="col">Before launch</th><th scope="col">This month</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr class:list={[r.strong && 'is-total']}>
+                  <th scope="row">{r.k}</th>
+                  <td data-label="Before launch">{r.base || <span class="rep-tbl__none">–</span>}</td>
+                  <td data-label="This month"><b>{r.now}</b></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="math rep-math">{extraInspections} more inspections × 25% close = {number(extraJobs)} jobs × $11,000 × 34% = <b>{currency(jobProfit)}</b> · {officeHours} h × $33 × 50% = <b>{currency(officeValue)}</b></p>
+        </section>
+
+        <section class="rep-part" aria-labelledby="rep-p2">
+          <p class="rep-part__k" id="rep-p2"><span class="fig-legend__n" aria-hidden="true">2</span>Caught and fixed</p>
+          <ul class="rep-list" role="list">
+            {caught.map((c) => <li><Icon name={c.icon as 'user-check'} />{c.text}</li>)}
+          </ul>
+        </section>
+
+        <section class="rep-part rep-part--next" aria-labelledby="rep-p3">
+          <p class="rep-part__k" id="rep-p3"><span class="fig-legend__n" aria-hidden="true">3</span>Proposed for next month</p>
+          <ul class="rep-next" role="list">
+            {next.map((n) => (
+              <li><span>{n.text}</span>{n.ok && <span class="chip chip-attention"><Icon name="user-check" />Your OK</span>}</li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+  <figcaption class="rep__foot">
+    <div class="tag-row">
+      <IllustrativeLabel kind="Illustrative example" href={`/results/#scenario-${s.id}`} />
+      <a class="link rep__math-link" href={mathHref}>See the full math</a>
+    </div>
+    <p class="fig-caption rep__cap" id="rep-cap">
+      <b>FIG. 2</b> Illustrative monthly report. {s.business} is a fictional {s.employees}-person roofing company; outcome figures are the base case of its worked example, by month.
+    </p>
+    <p class="rep__note">Not a quote or a guarantee. Estimates exclude the cost of the engagement.</p>
+  </figcaption>
+</figure>
+
+<style>
+  .rep { margin: 0; min-width: 0; }
+  .rep-win__body { padding: 18px; background: var(--color-navy-850); }
+  .rep-doc { overflow: hidden; }
+  .rep-doc__head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--color-rule); }
+  .rep-doc__title { font-size: 0.9375rem; font-weight: 600; line-height: 1.3; color: var(--color-ink); }
+  .rep-doc__sub { font-size: 0.75rem; line-height: 1.45; color: var(--color-ink-3); }
+
+  .rep-part { padding: 14px 18px 16px; border-bottom: 1px solid var(--color-rule); }
+  .rep-part:last-child { border-bottom: 0; }
+  .rep-part__k { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.35; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-ink-3); }
+  .rep-part__k .fig-legend__n { width: 20px; height: 20px; letter-spacing: 0; }
+
+  .rep-tbl { width: 100%; margin-top: 8px; border-collapse: collapse; font-size: 0.8125rem; line-height: 1.4; }
+  .rep-tbl th, .rep-tbl td { padding: 7px 0; border-top: 1px solid var(--color-rule); text-align: left; vertical-align: baseline; }
+  .rep-tbl thead th { padding-top: 0; border-top: 0; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.04em; color: var(--color-ink-3); }
+  .rep-tbl tbody th { width: 38%; padding-right: 12px; font-weight: 500; color: var(--color-ink-2); }
+  .rep-tbl td { width: 31%; padding-right: 12px; color: var(--color-ink-3); }
+  .rep-tbl td:last-child { padding-right: 0; }
+  .rep-tbl td b { font-weight: 600; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+  .rep-tbl .is-total th, .rep-tbl .is-total td { border-top-color: var(--color-ink-3); }
+  .rep-tbl .is-total td b { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 420; letter-spacing: -0.01em; }
+  .rep-tbl__none { color: var(--color-ink-3); }
+  .rep-math { margin-top: 8px; font-size: 0.75rem; }
+
+  .rep-list { display: grid; gap: 7px; margin-top: 10px; }
+  .rep-list > li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; font-size: 0.8125rem; line-height: 1.5; color: var(--color-ink); }
+  .rep-list :global(.icon) { width: 15px; height: 15px; margin-top: 2px; color: var(--color-brass-700); }
+
+  .rep-part--next { background: var(--color-paper-sunken); }
+  .rep-next { display: grid; gap: 8px; margin-top: 10px; }
+  .rep-next > li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; font-size: 0.8125rem; line-height: 1.5; color: var(--color-ink); }
+
+  .rep__foot { margin-top: 14px; }
+  .rep__math-link { font-size: 0.875rem; font-weight: 550; }
+  .rep__cap { margin-top: 10px; }
+  .rep__note { margin-top: 6px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-3); }
+
+  .rep-win__view { display: contents; }
+  @media (width < 40rem) {
+    .rep-win__view { display: none; }
+    .rep-win__body { padding: 10px; }
+    .rep-doc__head, .rep-part { padding-inline: 14px; }
+    .rep-tbl thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .rep-tbl tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 8px 0; border-top: 1px solid var(--color-rule); }
+    .rep-tbl tbody th { grid-column: 1 / -1; width: auto; padding: 0 0 2px; border: 0; }
+    .rep-tbl td { width: auto; padding: 0; border: 0; }
+    .rep-tbl td::before { content: attr(data-label); display: block; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.5; letter-spacing: 0.04em; color: var(--color-ink-3); }
+    .rep-tbl .is-total { border-top-color: var(--color-ink-3); }
+  }
+</style>

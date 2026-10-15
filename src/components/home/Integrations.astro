@@ -3,6 +3,8 @@
 // The 16 tools from src/data/integrations.ts as plain-text names with a mono category, never logos
 // (DESIGN.md §6.19, BRIEF.md honesty rules): label on 3 columns, list on 9, ported from the reference
 // .integ row. Copy: COPY.md §2.2, tightened; the strip stays quiet (no CTA).
+// Phones (under 640px, 2026-10-14 critique round): the 2-up grid of 16 tools took most of a screen, so it
+// becomes one wrapped line of names; the grid with its categories shows from 640px up.
 // Keep id="integrations": it is the anchor from COPY.md.
 import Marquee from '@/components/blocks/Marquee.astro';
 import { integrations, integrationsCopy } from '@/data/integrations';
@@ -29,7 +31,10 @@ const tools = [...integrations].sort((a, b) => rank(a.name) - rank(b.name));
         <h2 class="integ__title" id="integrations-title">{integrationsCopy.headline}</h2>
         <p>No new system to learn. Agents do the work where it already happens.</p>
       </div>
-      <Marquee mode="grid" items={tools} reveal={false} label="Tools we connect to" />
+      <div class="integ__grid"><Marquee mode="grid" items={tools} reveal={false} label="Tools we connect to" /></div>
+      <ul class="integ__inline" role="list" aria-label="Tools we connect to">
+        {tools.map((t) => <li>{t.name}</li>)}
+      </ul>
       <p class="integ__micro">
         Plus most other software with an API or a clean export, including many field-service,
         practice-management and ERP systems. Product names are trademarks of their owners, listed to
@@ -41,8 +46,7 @@ const tools = [...integrations].sort((a, b) => rank(a.name) - rank(b.name));
 
 <style>
   /* Sits right under the hero: the trust strip's bottom rule is this ledger's top rule. */
-  /* Bottom padding is short because Outcomes follows on the same paper with its own tight top
-     (keeps the gap under DESIGN.md §5's ~120px of empty paper). */
+  /* Short bottom padding: the demos band follows right away. */
   .integ-section { padding-top: 0; padding-bottom: clamp(24px, 3vw, 40px); }
   .integ { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; padding: 32px 0; border-bottom: 1px solid var(--color-rule); }
   .integ__label { grid-column: 1 / span 3; font-size: .9375rem; line-height: 1.5; color: var(--color-ink-2); }
@@ -50,13 +54,23 @@ const tools = [...integrations].sort((a, b) => rank(a.name) - rank(b.name));
   /* Fixed 4-up (2-up under 768px) instead of auto-fill, which drops to 3 columns between 640 and
      1080px and leaves 16 tools as 3+3+3+3+3+1. The longest name needs about 150px; 4-up columns
      stay at 157px or wider from 768px. */
-  .integ :global(.integrations) { grid-column: 4 / span 9; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .integ__grid { grid-column: 4 / span 9; min-width: 0; }
+  .integ :global(.integrations) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .integ__inline { display: none; }
   @media (width < 48rem) {
     .integ :global(.integrations) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   .integ__micro { grid-column: 4 / span 9; max-width: 92ch; font-size: .8125rem; line-height: 1.55; color: var(--color-ink-3); }
   @media (width < 64rem) {
-    .integ__label, .integ :global(.integrations), .integ__micro { grid-column: 1 / -1; }
+    .integ__label, .integ__grid, .integ__micro { grid-column: 1 / -1; }
     .integ__label { max-width: 46ch; }
+  }
+  @media (width < 40rem) {
+    .integ { row-gap: 16px; padding: 24px 0; }
+    .integ__grid { display: none; }
+    /* every name carries the same knot, so a wrapped line never starts with a stray separator */
+    .integ__inline { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 0.9375rem; font-weight: 550; line-height: 1.5; color: var(--color-ink); }
+    .integ__inline li { display: inline-flex; align-items: center; gap: 8px; }
+    .integ__inline li::before { content: ""; flex: none; width: 5px; height: 5px; border: 1.25px solid var(--color-brass-500); border-radius: 50%; }
   }
 </style>

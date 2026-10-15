@@ -23,8 +23,21 @@ export const site = {
   /** Default meta description (Home, COPY.md §1.5). */
   description:
     'We build and run AI agents that answer customers, work your numbers, clear your inbox, tune your ads and find new clients. Book a free AI assessment.',
-  /** Home <title> (COPY.md §1.5). Other pages use "{Page} | {site.name}". */
+  /** Home <title> (COPY.md §1.5). Other pages use "{Page} | {site.name}", or seoTitles below. */
   homeTitle: `${name} | Done-for-you AI for small and mid-size businesses`,
+  /** Search titles by route: what the page is, in the words people search with (a placeholder brand
+   *  alone ranks for nothing). "{title} | {site.name}" stays within 60 characters. Routes not listed
+   *  use the page name. Keyed by path, so a page renaming its heading never breaks its title. */
+  seoTitles: {
+    '/services/': 'AI services for small and mid-size businesses',
+    '/services/ai-agents/': 'AI agents for customer service, reports and email',
+    '/services/marketing/': 'AI Marketing Director for Google and Meta ads',
+    '/services/sales/': 'AI Sales Agent: researched, personal cold email',
+    '/services/consulting/': 'AI consulting: cost, pricing and margin review',
+    '/demos/': 'AI agent demos: watch six agents work',
+    '/results/': 'AI savings calculator and worked examples',
+    '/approach/': 'How we work: pilots, pricing and data security',
+  } as Record<string, string>,
   siteUrl: 'https://elbin0324.github.io/ai-agency-website/',
   locale: 'en_US',
 
@@ -55,6 +68,18 @@ export const site = {
     labelMobile: 'Free assessment', // header under 640px
     href: '/contact/',
     microcopy: 'Free 30-minute call. You get a written plan, whether or not you work with us.',
+  },
+  /** The written plan every assessment ends with. The navy CTA band shows it as a document beside the
+   *  call to action (CtaBand art="plan"), so the visitor sees what they get before they book. */
+  assessmentPlan: {
+    label: 'What you leave with',
+    title: 'A written plan for your business',
+    items: [
+      { title: 'Your top three opportunities, ranked', body: 'By estimated value and effort, specific to how your business runs.' },
+      { title: 'A rough savings estimate', body: 'A modeled estimate, with every assumption shown.' },
+      { title: 'A suggested first step', body: 'The first job to hand an agent, and what it would take.' },
+    ],
+    note: 'Yours to keep, whether or not we work together.',
   },
   /** Secondary CTAs (COPY.md §1.4). */
   ctas: {
@@ -98,8 +123,10 @@ export const site = {
       allLink: { label: 'All services', href: '/services/' },
     },
     { label: 'Demos', href: '/demos/' },
-    { label: 'Results', href: '/results/' },
-    { label: 'Approach', href: '/approach/' },
+    // "Savings", not "Results": the page is a calculator plus fictional worked examples, and a new firm
+    // has no client results to show (BRIEF.md honesty rules). The /results/ URL stays for old links.
+    { label: 'Savings', href: '/results/' },
+    { label: 'How we work', href: '/approach/' },
   ] as NavItem[],
 
   /** Footer link columns (COPY.md §1.2). The footer CTA and contact line come from site.cta / site.email. */
@@ -118,14 +145,14 @@ export const site = {
         title: 'See it work',
         links: [
           { label: 'Demos', href: '/demos/' },
-          { label: 'Results and examples', href: '/results/' },
           { label: 'Savings calculator', href: '/results/#calculator' },
+          { label: 'Worked examples', href: '/results/#examples' },
         ],
       },
       {
         title: 'Company',
         links: [
-          { label: 'Approach', href: '/approach/' },
+          { label: 'How we work', href: '/approach/' },
           { label: 'Security and data', href: '/approach/#security' },
           { label: 'Contact', href: '/contact/' },
         ],
@@ -150,7 +177,10 @@ export type Site = typeof site;
  *  business inbox before launch (DECISIONS.md: never a personal address). */
 export const emailReady = !/@example\.(com|org|net)$/i.test(site.email);
 
-/** "{Page} | {site.name}" (COPY.md §1.5). Pass nothing for the home title. */
-export function pageTitle(page?: string): string {
-  return page ? `${page} | ${site.name}` : site.homeTitle;
+/** "{Page} | {site.name}" (COPY.md §1.5). Pass nothing for the home title. With the page's route
+ *  (base stripped, trailing slash), a search title from site.seoTitles wins over the page name. */
+export function pageTitle(page?: string, route?: string): string {
+  if (!page) return site.homeTitle;
+  const seo = route ? site.seoTitles[route] : undefined;
+  return `${seo ?? page} | ${site.name}`;
 }

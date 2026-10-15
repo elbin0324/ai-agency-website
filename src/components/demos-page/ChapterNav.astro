@@ -1,20 +1,26 @@
 ---
-// OWNER: theater. /demos/ chapter nav: the six demos as pill links (the demo switcher look, DESIGN.md §6.12).
-// From 1024px it sticks under the site header and marks the demo in view (aria-current) as the visitor
-// scrolls. Under 1024px it hides: the hero's "Agents on shift" poster (HeroPoster) is the index there.
+// OWNER: theater. /demos/ chapter nav: the six demos as six equal segments in the Home picker's language
+// (src/components/home/theater/DemoPicker.astro): the agent's icon and name, a bar along the bottom that follows
+// that demo as it plays (src/components/home/theater/demo-progress.ts), and a check once it has run to its result.
+// From 1024px it sticks under the site header and marks the demo in view (aria-current: the picker's navy
+// "selected" look) as the visitor scrolls. Names shorten to one word under 1280px; the full name stays for
+// screen readers. Under 1024px it hides: the hero's "Agents on shift" poster (HeroPoster) is the index there.
+// Height: 58px, which demos.astro's scroll margin and anchor script assume (the script measures it).
 // Render it as the FIRST child of the wrapper that holds the six demo sections, so it stays stuck through
 // all of them and lets go before "What's real here".
 import Icon from '@/components/ui/Icon.astro';
 import { demoCopy } from './demo-copy';
 ---
 <nav class="chapter-nav" id="index" aria-label="Demos on this page" data-chapter-nav>
-  <div class="wrap chapter-nav__in">
-    <p class="chapter-nav__label type-label" aria-hidden="true">Six demos</p>
-    <ol class="chapter-nav__list">
+  <div class="wrap">
+    <ol class="cn">
       {demoCopy.map((d) => (
         <li>
-          <a class="demo-tab chapter-nav__link" href={`#${d.anchor}`} data-chapter={d.anchor}>
-            <Icon name={d.icon} /><span>{d.label}</span>
+          <a class="cn__link" href={`#${d.anchor}`} data-chapter={d.anchor}>
+            <Icon name={d.icon} class="cn__icon" />
+            <span class="cn__name"><span class="cn__full">{d.label}</span><span class="cn__short" aria-hidden="true">{d.short}</span></span>
+            <span class="cn__done"><Icon name="check" /><span class="sr-only">, watched</span></span>
+            <span class="cn__bar" aria-hidden="true"><span class="cn__fill"></span></span>
           </a>
         </li>
       ))}
@@ -24,13 +30,44 @@ import { demoCopy } from './demo-copy';
 
 <style>
   .chapter-nav { border-block: 1px solid var(--line); }
-  .chapter-nav__in { display: flex; align-items: center; gap: 12px 28px; padding-block: 8px; }
-  .chapter-nav__label { flex: none; color: var(--fg-3); }
-  .chapter-nav__list { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
-  .chapter-nav__link:focus-visible { outline-offset: 1px; }
-  /* The current demo takes the selected-tab look (.demo-tab[aria-selected="true"] in global.css). */
-  .chapter-nav__link[aria-current] { color: var(--color-on); background: var(--color-ink); }
-  .chapter-nav__link[aria-current] :global(.icon) { color: var(--color-brass-300); }
+  .cn { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; padding-block: 8px; }
+
+  /* One segment: the picker card, compacted to a 40px row. */
+  .cn__link {
+    position: relative; isolation: isolate; overflow: hidden;
+    display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px 2px;
+    border-radius: var(--radius-control);
+    font-size: var(--text-ui); font-weight: 550; line-height: 1.2; color: var(--color-ink-2); text-decoration: none;
+    background: color-mix(in srgb, var(--color-paper-raised) 62%, transparent);
+    box-shadow: inset 0 0 0 1px var(--color-rule);
+    transition: background-color 0.2s var(--ease-out-soft), box-shadow 0.2s var(--ease-out-soft), color 0.2s;
+  }
+  .cn__link:hover { color: var(--color-ink); background: var(--color-paper-raised); box-shadow: inset 0 0 0 1px var(--color-rule-strong); }
+  .cn__link:focus-visible { outline-offset: 1px; }
+  .cn__link > :global(.cn__icon) { flex: none; width: 15px; height: 15px; color: var(--color-ink-3); transition: color 0.2s; }
+  .cn__link:hover > :global(.cn__icon) { color: var(--color-ink); }
+  .cn__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cn__short { display: none; }
+  .cn__done { display: none; flex: none; margin-left: auto; color: var(--color-success); }
+  .cn__done > :global(.icon) { width: 14px; height: 14px; stroke-width: 2; }
+
+  /* Progress: a 3px bar along the bottom edge, clipped by the segment's radius. */
+  .cn__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--color-rule); }
+  .cn__fill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(var(--p, 0)); background: var(--color-ink-3); }
+
+  /* The demo in view */
+  .cn__link[aria-current] {
+    color: var(--color-on); background: var(--color-navy-800);
+    box-shadow: inset 0 0 0 1px var(--color-navy-950);
+  }
+  .cn__link[aria-current] > :global(.cn__icon) { color: var(--color-brass-300); }
+  .cn__link[aria-current] .cn__bar { background: var(--color-rule-dark-strong); }
+  .cn__link[aria-current] .cn__fill { background: var(--color-brass-300); }
+
+  /* Watched: ran to its result */
+  .cn__link[data-watched] .cn__done { display: inline-flex; }
+  .cn__link[data-watched][aria-current] .cn__done { color: var(--color-sage); }
+  .cn__link[data-watched]:not([aria-current]) .cn__fill { transform: none; background: var(--color-success); }
 
   /* Desktop: stick under the header, with the header's own surface (DESIGN.md §6.14) so the two read as one. */
   @media (width >= 64rem) {
@@ -41,20 +78,37 @@ import { demoCopy } from './demo-copy';
       -webkit-backdrop-filter: saturate(1.25) blur(14px); backdrop-filter: saturate(1.25) blur(14px);
     }
   }
+  /* Narrow desktops: one-word names (the full name stays readable to screen readers). */
+  @media (width < 80rem) {
+    .cn__full { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+    .cn__short { display: inline; }
+  }
   /* Tablets and phones: the hero poster already lists the six demos, so the index would repeat it. */
   @media (width < 64rem) {
     .chapter-nav { display: none; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    /* No playback to follow, so no bars: only the demo in view. */
+    .cn__bar { display: none; }
+  }
 </style>
 
 <script>
+  import { trackProgress } from '@/components/home/theater/demo-progress';
+
   // Scroll spy: the demo crossing a line 45% down the viewport is current. None in the hero or after the six.
+  // Progress: each segment's bar follows its demo; a demo that reaches its result marks its segment watched.
   function initChapterNav(nav: HTMLElement) {
     const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[data-chapter]'));
     const byTarget = new Map<Element, HTMLAnchorElement>();
     links.forEach((a) => {
       const target = document.getElementById(a.dataset.chapter ?? '');
-      if (target) byTarget.set(target, a);
+      if (!target) return;
+      byTarget.set(target, a);
+      const root = target.querySelector<HTMLElement>('[data-demo]');
+      if (!root) return;
+      trackProgress(root, (p) => a.style.setProperty('--p', p.toFixed(4)));
+      root.addEventListener('demo:ended', () => a.setAttribute('data-watched', ''));
     });
     if (!byTarget.size || !('IntersectionObserver' in window)) return;
     const inBand = new Set<Element>();

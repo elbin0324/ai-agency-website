@@ -1,0 +1,183 @@
+---
+// OWNER: results (calculator)
+// "Where the value comes from" (DESIGN.md §3): two stacked bars on one scale, the base case and the
+// upside, each split by lever. Colors follow the lever (categorical slots 1-5 in leverInfo), so
+// switching a lever off removes its segment without repainting the rest. The legend above the plot
+// is interactive: each key is a toggle button that counts its lever in the total or leaves it out (in
+// step with the worksheet's checkboxes), and hovering or focusing a key highlights that lever's
+// segments and opens the tooltip with its two values. Hovering a segment shows its value and share.
+// Values sit at the bar tips, a table twin sits behind the toggle, and a mono note carries the
+// provenance. HTML bars (.stackbar), not SVG, so labels never scale. The client script
+// (./client.ts) updates every [data-*] hook.
+import Icon from '@/components/ui/Icon.astro';
+import { leverIds, leverInfo, money, type Computed, type LeverId, type Readout } from './view';
+
+interface Props {
+  prefix: string;
+  all: Computed;
+  r: Readout;
+  enabled: LeverId[];
+}
+
+const { prefix, all, r, enabled } = Astro.props;
+const titleId = `${prefix}-chart-title`;
+const value = (id: LeverId) => all.levers.find((l) => l.id === id)!.value;
+const totalLow = all.levers.filter((l) => enabled.includes(l.id)).reduce((s, l) => s + l.value.low, 0);
+const totalHigh = all.levers.filter((l) => enabled.includes(l.id)).reduce((s, l) => s + l.value.high, 0);
+const rows = [
+  { key: 'low' as const, label: 'Base case', p: r.lowPct / 100, total: totalLow },
+  { key: 'high' as const, label: 'Upside', p: totalHigh > 0 ? 1 : 0, total: totalHigh },
+];
+---
+<figure class="chart vb" aria-labelledby={titleId} data-chart>
+  <div class="chart__head">
+    <div>
+      <p class="chart__title" id={titleId}>Where the value comes from</p>
+      <p class="chart__sub">Value a year by lever. Press a lever to count it or leave it out.</p>
+    </div>
+    <button type="button" class="chart__toggle vb__toggle" aria-pressed="false" data-chart-toggle>
+      <Icon name="list" size={14} /><span data-chart-toggle-label>Show table</span>
+    </button>
+  </div>
+
+  <div class="chart__plot vb__plot">
+    <ul class="chart__legend vb__legend" role="list" aria-label="Levers counted in the total">
+      {leverIds.map((id) => (
+        <li style={`--k: var(--viz-${leverInfo[id].slot})`}>
+          <button
+            type="button"
+            class="vb__chip"
+            aria-pressed={enabled.includes(id) ? 'true' : 'false'}
+            aria-describedby={`${prefix}-chip-${id}`}
+            data-legend={id}
+          >
+            <span class="chart__key vb__key" aria-hidden="true"></span><span class="vb__chip-t">{leverInfo[id].name}</span>
+          </button>
+          <span class="sr-only" id={`${prefix}-chip-${id}`} data-chip-desc={id}>{money(value(id).low)} to {money(value(id).high)} a year</span>
+        </li>
+      ))}
+    </ul>
+    <div class="vb__rows" role="img" aria-label={r.chartLabel} data-chart-label>
+      {rows.map((row) => (
+        <div class="vb__row" data-bar-row={row.key} style={`--p: ${row.p}`}>
+          <span class="vb__case" aria-hidden="true">{row.label}</span>
+          <span class="vb__track" aria-hidden="true">
+            <span class="stackbar vb__bar">
+              {leverIds.map((id) => (
+                <span data-seg={id} hidden={!enabled.includes(id)} style={`--v: ${value(id)[row.key]}; --k: var(--viz-${leverInfo[id].slot})`}></span>
+              ))}
+            </span>
+            <span class="vb__val" data-bar-val>{money(row.total)}</span>
+          </span>
+        </div>
+      ))}
+    </div>
+    <p class="vb__none" data-chart-empty hidden>No levers counted. Press one above, or tick it in the worksheet.</p>
+    <div class="chart-tip vb__tip" hidden aria-hidden="true" data-tip></div>
+  </div>
+
+  <div class="chart__table">
+    <table class="chart-table vb__table">
+      <caption class="sr-only">Modeled value a year by lever, base case and upside</caption>
+      <thead><tr><th scope="col">Lever</th><th scope="col">Base case</th><th scope="col">Upside</th></tr></thead>
+      <tbody>
+        {leverIds.map((id) => (
+          <tr data-row={id} hidden={!enabled.includes(id)}>
+            <th scope="row">{leverInfo[id].name}</th>
+            <td data-cell="low">{money(value(id).low)}</td>
+            <td data-cell="high">{money(value(id).high)}</td>
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr><th scope="row">Total counted</th><td data-cell="total-low">{money(totalLow)}</td><td data-cell="total-high">{money(totalHigh)}</td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <p class="chart__note">Modeled estimate: each bar adds up the levers you count. Base case at base rates, upside at optimistic rates.</p>
+</figure>
+
+<style>
+  .vb { gap: 14px; }
+  .vb .chart__title { font-size: 0.875rem; }
+  .vb__toggle { min-height: 32px; }
+  .vb__toggle :global(.icon) { color: var(--accent-display); }
+
+  /* Legend keys are toggle buttons: a solid key and plain text when counted, a hollow key and struck
+     text when not (the pressed state changes the words' styling and the key, never color alone). */
+  /* Each key is a small outline toggle (the .btn-outline-dark ring at chip scale), so it reads as
+     something to press, not just a caption. */
+  .vb__legend { gap: 6px; margin-bottom: 14px; }
+  .vb__chip {
+    display: inline-flex; align-items: center; gap: 7px; min-height: 28px; padding: 0 10px;
+    border-radius: var(--radius-control); font-size: 0.75rem; line-height: 1.3; color: var(--viz-text);
+    box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong);
+    cursor: pointer; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+  @media (hover: hover) {
+    .vb__chip:hover { background: var(--color-navy-600); color: var(--color-on); box-shadow: inset 0 0 0 1px rgb(224 191 127 / 0.55); }
+  }
+  .vb__chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .vb__key { flex: none; transition: background-color 0.2s, box-shadow 0.2s; }
+  .vb__chip[aria-pressed='false'] { color: var(--viz-text-muted); }
+  .vb__chip[aria-pressed='false'] .vb__chip-t { text-decoration: line-through; text-decoration-thickness: 1px; text-decoration-color: currentColor; }
+  .vb__chip[aria-pressed='false'] .vb__key { background: transparent; box-shadow: inset 0 0 0 1.5px var(--k); }
+  /* Without scripting the keys can't toggle anything, so they drop the button look. */
+  :global(html:not(.js)) .vb__chip { box-shadow: none; cursor: default; pointer-events: none; }
+
+  /* Rows: case label, then a track that holds the bar and its value at the tip. The bar's width is
+     --p (0-1) of the track minus room for the label, so the longest bar's value still fits. */
+  .vb__plot { position: relative; }
+  .vb__rows { display: grid; gap: 12px; }
+  .vb__row { display: grid; grid-template-columns: 4.75rem minmax(0, 1fr); align-items: center; gap: 12px; }
+  .vb__case { font-size: 0.8125rem; line-height: 1.3; color: var(--viz-text); }
+  .vb__track { --room: 5.75rem; position: relative; display: block; height: 24px; }
+  .vb__bar { width: calc(var(--p) * (100% - var(--room))); min-width: 0; transition: width 0.35s var(--ease-out-soft); }
+  /* Square at the baseline, a 4px round on the data end only (the last segment still showing). */
+  .vb__bar > span { border-radius: 0; transition: flex-grow 0.35s var(--ease-out-soft), opacity 0.2s; }
+  .vb__bar > span:not([hidden]):not(:has(~ span:not([hidden]))) { border-radius: 0 var(--radius-data) var(--radius-data) 0; }
+  .vb__bar > span[hidden] { display: none; }
+  .vb__val {
+    position: absolute; top: 50%; left: calc(var(--p) * (100% - var(--room)) + 8px); transform: translateY(-50%);
+    font-size: 0.75rem; font-weight: 550; line-height: 1; color: var(--viz-text); white-space: nowrap; font-variant-numeric: tabular-nums;
+    transition: left 0.35s var(--ease-out-soft);
+  }
+  .vb__row[data-bar-row='high'] .vb__val { color: var(--fg); }
+
+  /* Highlight: hovering or focusing a key (or a segment) dims the other levers' segments. */
+  .vb[data-focus] .vb__bar > span { opacity: 0.28; }
+  .vb[data-focus='time'] .vb__bar > [data-seg='time'],
+  .vb[data-focus='customers'] .vb__bar > [data-seg='customers'],
+  .vb[data-focus='marketing'] .vb__bar > [data-seg='marketing'],
+  .vb[data-focus='sales'] .vb__bar > [data-seg='sales'],
+  .vb[data-focus='consulting'] .vb__bar > [data-seg='consulting'] { opacity: 1; }
+  @media (hover: hover) and (pointer: fine) {
+    .vb__bar > span { cursor: default; }
+  }
+
+  .vb__none { margin-top: 4px; font-size: 0.8125rem; line-height: 1.5; color: var(--fg-2); }
+  .vb[data-empty='true'] .vb__rows { display: none; }
+
+  /* Tooltip: positioned by the client script inside the plot, never wider than it. */
+  .vb__tip { top: 0; left: 0; max-width: min(15rem, 100%); white-space: normal; }
+  .vb__tip :global(.vb-tip__name) { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.75rem; font-weight: 550; color: var(--color-on); }
+  .vb__tip :global(.vb-tip__rows) { display: grid; gap: 3px; }
+  .vb__tip :global(.chart-tip__row span) { white-space: nowrap; }
+  .vb__tip :global(.vb-tip__note) { margin-top: 6px; color: var(--color-on-2); }
+
+  .vb__table tbody tr[hidden] { display: none; }
+  .vb__table th[scope='row'] { font-weight: 400; color: var(--fg-2); }
+  .vb__table tfoot th, .vb__table tfoot td { font-weight: 600; color: var(--fg); border-bottom: 0; border-top: 1px solid var(--line-strong); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vb__bar, .vb__bar > span, .vb__val, .vb__chip, .vb__key { transition: none; }
+  }
+  @media (width < 40rem) {
+    .vb__row { grid-template-columns: 4.25rem minmax(0, 1fr); gap: 10px; }
+    .vb__track { --room: 5.25rem; }
+  }
+  @media (pointer: coarse) {
+    .vb__chip { min-height: 36px; }
+  }
+</style>
