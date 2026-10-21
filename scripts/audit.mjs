@@ -12,7 +12,7 @@
 //   node scripts/audit.mjs [--base <url>] [--routes /,/services/] [--all-impacts] [--json <file>]
 //                          [--engine chromium|webkit|firefox] [--device "<name>"]
 //
-// Defaults: --base http://localhost:4321/ai-agency-website, every route in the site map,
+// Defaults: --base http://localhost:4321, every route in the site map,
 // axe impacts "serious" and "critical" only. Exit code 1 when any problem is found.
 //
 // --engine <name>    chromium (default: the local Chrome, falling back to Edge), webkit
@@ -73,7 +73,7 @@ function normalizeRoute(raw) {
 }
 
 function parseArgs(argv) {
-  const opts = { base: 'http://localhost:4321/ai-agency-website', routes: DEFAULT_ROUTES, allImpacts: false, engine: 'chromium' };
+  const opts = { base: 'http://localhost:4321', routes: DEFAULT_ROUTES, allImpacts: false, engine: 'chromium' };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--base') opts.base = argv[++i].replace(/\/$/, '');

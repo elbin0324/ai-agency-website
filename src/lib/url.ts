@@ -1,12 +1,13 @@
-// Base-aware links (ARCHITECTURE.md). The site lives under /ai-agency-website/ on GitHub Pages,
-// so every internal href and every public/ asset goes through url().
+// Base-aware links (ARCHITECTURE.md). The site is served at the root of halyar.co (base '/'), but
+// every internal href and every public/ asset still goes through url(), so moving it under a base path
+// (for example /ai-agency-website/ on a GitHub Pages project URL) needs only astro.config.mjs.
 //
-//   url('/services/sales/')        -> '/ai-agency-website/services/sales/'
-//   url('/results/#methodology')   -> '/ai-agency-website/results/#methodology'
-//   url('/favicon.svg')            -> '/ai-agency-website/favicon.svg'
+//   url('/services/sales/')        -> '/services/sales/'           (base '/ai-agency-website': '/ai-agency-website/services/sales/')
+//   url('/results/#methodology')   -> '/results/#methodology'
+//   url('/favicon.svg')            -> '/favicon.svg'
 //   url('#faq'), url('mailto:…'), url('https://…')  -> returned unchanged
 
-const BASE = import.meta.env.BASE_URL; // '/ai-agency-website' or '/ai-agency-website/' depending on config
+const BASE = import.meta.env.BASE_URL; // '/' today; '/ai-agency-website' or '/ai-agency-website/' under a base path
 
 /** True for hrefs that must not get the base: absolute URLs, protocol links, in-page anchors, queries. */
 export function isExternal(href: string): boolean {
@@ -23,7 +24,7 @@ export function url(path = '/'): string {
   return `${base}${rel}`;
 }
 
-/** Strip the base and any hash/query, and normalize to a trailing slash: '/ai-agency-website/demos' -> '/demos/'. */
+/** Strip the base and any hash/query, and normalize to a trailing slash: '/demos' -> '/demos/' (and '/ai-agency-website/demos' -> '/demos/' under that base). */
 export function stripBase(pathname: string): string {
   const base = BASE.endsWith('/') ? BASE.slice(0, -1) : BASE;
   let p = pathname.split(/[?#]/)[0] || '/';
@@ -55,7 +56,7 @@ export function isActive(href: string, currentPath: string, opts: { section?: bo
 //   ?from=<page>          written into the hidden source field, e.g. "services/sales" or "demo-result"
 //
 //   contactUrl({ interest: 'sales', from: 'services/sales' })
-//     -> '/ai-agency-website/contact/?interest=sales&from=services%2Fsales'
+//     -> '/contact/?interest=sales&from=services%2Fsales'
 
 export type Interest = 'customer-agent' | 'analyst-agent' | 'executive-assistant' | 'marketing' | 'sales' | 'consulting';
 export type Plan = 'pilot' | 'managed' | 'partner';

@@ -7,8 +7,8 @@
 // saves a screenshot of it. After renaming the firm:  npm run dev,  then  npm run og,  then  npm run deploy.
 //
 // Usage:
-//   npm run og                                          renders http://localhost:4321/ai-agency-website/dev/og/
-//   npm run og -- http://localhost:4321/dev/og/         another URL (another port, or base '/')
+//   npm run og                                          renders http://localhost:4321/dev/og/
+//   npm run og -- http://localhost:4322/dev/og/         another URL (another port or base path)
 //   npm run og -- --out .shots/og/card.png              write somewhere other than public/og.png
 //
 // It writes nothing (exit 1) if the page is missing, shows an error, is not 1200 x 630, logs console
@@ -21,7 +21,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DEFAULT_URL = 'http://localhost:4321/ai-agency-website/dev/og/';
+const DEFAULT_URL = 'http://localhost:4321/dev/og/';
 const WIDTH = 1200;
 const HEIGHT = 630;
 
@@ -94,7 +94,7 @@ async function render(url) {
     if (!res || !res.ok()) {
       abort(
         `${url} answered HTTP ${res?.status() ?? '?'}. If the dev server uses another port, or base in ` +
-          'astro.config.mjs is no longer /ai-agency-website, pass the page URL: npm run og -- http://localhost:4321/dev/og/',
+          'astro.config.mjs uses a base path, pass the page URL: npm run og -- http://localhost:4321/<base>/dev/og/',
       );
     }
     try {
