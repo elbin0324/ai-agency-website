@@ -1,6 +1,6 @@
 # Halyard: AI integration and consulting website
 
-Marketing site for a done-for-you AI agents and consulting firm serving small and mid-size businesses. Multi-page, static, built with **Astro 7** and **Tailwind CSS 4**, and hosted on **GitHub Pages** at <https://elbin0324.github.io/ai-agency-website/>.
+Marketing site for a done-for-you AI agents and consulting firm serving small and mid-size businesses. Multi-page, static, built with **Astro 7** and **Tailwind CSS 4**, and hosted on **GitHub Pages** at <https://halyard.solutions/>.
 
 "Halyard" is a working name. It lives in one config value, so renaming the firm is a one-line change (see [Configuration](#configuration)).
 
@@ -17,7 +17,7 @@ Requires Node 22.12 or newer.
 
 ```sh
 npm install
-npm run dev          # http://localhost:4321/ai-agency-website/
+npm run dev          # http://localhost:4321/
 ```
 
 | Command | What it does |
@@ -50,7 +50,7 @@ After renaming the firm, run `node scripts/og-image.mjs` so the social share ima
 
 ## Share card
 
-`public/og.png` (1200 × 630) is the picture shown when a link to the site is shared in iMessage, LinkedIn, Slack and similar apps. It is a screenshot of the internal page `src/pages/dev/og.astro` (preview it at <http://localhost:4321/ai-agency-website/dev/og/>), which takes the name, headline and service line from `src/config/site.ts` and draws the sample agent console beside them. After changing the brand name:
+`public/og.png` (1200 × 630) is the picture shown when a link to the site is shared in iMessage, LinkedIn, Slack and similar apps. It is a screenshot of the internal page `src/pages/dev/og.astro` (preview it at <http://localhost:4321/dev/og/>), which takes the name, headline and service line from `src/config/site.ts` and draws the sample agent console beside them. After changing the brand name:
 
 ```sh
 npm run dev       # leave it running
@@ -103,7 +103,7 @@ That builds the site (the internal `/dev/` test pages are removed from the outpu
 
 GitHub Pages is already set to serve the `gh-pages` branch (**Settings → Pages**: "Deploy from a branch", `gh-pages`, `/ (root)`).
 
-The site appears at <https://elbin0324.github.io/ai-agency-website/> a minute or two later. `dist/404.html` is served for unknown paths.
+The site appears at <https://halyard.solutions/> a minute or two later. `dist/404.html` is served for unknown paths.
 
 ## Custom domain
 
