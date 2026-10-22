@@ -4,7 +4,8 @@
 // plainer (2026-10-14: "say plainly that these are the agents at work"); per-demo lines in
 // src/components/demos-page/demo-copy.ts; run times from the demo definitions (./theater/runtimes.ts).
 // Placement (2026-10-14, founder: demos "front and center"): right after the integrations strip, as the proof of
-// the hero's promise. In that slot it opens the page like the hero and the integrations strip, so its rule carries
+// the hero's promise (2026-10-21: the hero's cards and agent names open their demo here, and the control room
+// follows). In that slot it opens the page like the hero and the integrations strip, so its rule carries
 // no number by default; the home page passes 01 (home/story/sections.ts) so the sequence never skips.
 // Behavior (DEMO_ENGINE.md "Programmatic control"):
 //   - Only the selected demo plays. On tabs:change the old demo gets demo:pause and the new one demo:play
@@ -55,6 +56,10 @@ const components = {
   consulting: ConsultingDemo,
 };
 const panelId = (id: string) => `${PREFIX}-panel-${id}`;
+// "All six run in under four minutes": summed from the demo definitions, so it can't drift from the players.
+const totalMs = Object.values(runtimeMs).reduce((t, ms) => t + ms, 0);
+const underMinutes = Math.floor(totalMs / 60000) + 1;
+const say = (n: number) => ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'][n] ?? String(n);
 const items: PickerItem[] = demoCopy.map((d) => ({
   id: d.id,
   label: d.label,
@@ -65,10 +70,10 @@ const items: PickerItem[] = demoCopy.map((d) => ({
   panelId: panelId(d.id),
 }));
 ---
-<Section id="demos" tone="sunken" aria-labelledby="demos-title">
-  <SectionHeader num={num} eyebrow="Agent demos" titleId="demos-title"><span slot="title" data-motion="split">Watch the AI agents at work.</span>
-    <p>Six short simulations, one per agent, from the first message to the finished result, with the checks and handoffs we build in.</p>
-    <a class="link-arrow mt-3" href={url(site.ctas.demos.href)}><span>See all six demos</span><Icon name="arrow-right" /></a>
+<Section id="demos" tone="sunken" aria-labelledby="demos-title" class="theater-band">
+  <SectionHeader num={num} eyebrow="Agent demos" titleId="demos-title" align="center" size="h1" class="theater-head"><span slot="title" data-motion="split">Watch the AI agents at work.</span>
+    <p>Six short simulations, one per agent, from the first message to the finished result, with the checks and handoffs we build in. All six run in under {say(underMinutes)} minutes.</p>
+    <a class="link-arrow mt-2" href={url(site.ctas.demos.href)}><span>See all six demos</span><Icon name="arrow-right" /></a>
   </SectionHeader>
 
   <div class="theater" id="demos-player" data-theater>
@@ -97,6 +102,11 @@ const items: PickerItem[] = demoCopy.map((d) => ({
 </Section>
 
 <style>
+  /* 2026-10-21: the stage's head is centered and a size up (type-h1 on the h2), a beat no other section uses, so the
+     demos read as the page's main act; the band's hairline edges mark it off from the paper around it. */
+  .theater-band { border-block: 1px solid var(--color-rule); }
+  .theater-band :global(.theater-head) { margin-bottom: clamp(28px, 3.4vw, 44px); }
+  .theater-band :global(.theater-head .sec-head__aside) { display: grid; justify-items: center; }
   /* The hero's "Watch the agents work" (#demos-player) lands here, with the picker and the whole player on a
      1440 x 900 screen. The reveals sit on the children, so the anchor itself never moves while it is measured. */
   .theater { scroll-margin-top: -12px; }

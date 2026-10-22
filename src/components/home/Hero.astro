@@ -1,98 +1,554 @@
 ---
-// Home hero. OWNER: home-hero.
-// Copy: COPY.md §2.1 with CRITIQUE.md edit 8 (an AI agent defined in the subhead; the fixed-price
-// pilot chip), tightened. Layout and CSS ported from design-lab/reference/index.html (.hero*):
-// eyebrow and display H1 on 7 columns, lead and proof chips on 5, the CTA under the H1, then the
-// interactive agent console (FIG. 1, ./hero/HeroConsole.astro) and the trust strip (DESIGN.md §5, §6.11,
-// §6.17, §7.2).
-// The H1 is site.tagline; its last two words are the page's one brass italic phrase (§2.3).
-// Keep id="hero": it is the anchor from COPY.md.
-import Eyebrow from '@/components/ui/Eyebrow.astro';
+// Home hero, "Night shift" (concept A of the 2026-10-21 hero comparison, judged first, with the judges' grafts and
+// fixes). OWNER: home-hero.
+//
+// One bold promise on a full-bleed navy night: the H1 is site.tagline in a display size of its own (its last two
+// words are the page's one brass italic phrase, written in left to right), then a two-sentence subhead (the jobs,
+// then who decides and how results are reported; "inside the tools you already use" is the integrations strip right
+// under the hero), the brass CTA (the one brass button in this navy band), "Watch the agents work", the microcopy
+// and a small savings link, then the three trust practices, so security and approval are in the first viewport
+// (DESIGN.md §6.17's exact lines).
+// The visual is finished work, not software: three ivory result cards, each a different fictional business and
+// each one of the site's demos (./hero/work.ts reads every figure from the demo modules, so the hero can't drift
+// from them), under an "Illustrative example" caption that counts what it shows and links the methodology. A card
+// opens its own demo in the player below, as do the six agent names under the cards. A phone holds the one thing
+// that waits for the owner (sky, user-check: a person decides): it starts pending and flips on Approve, and no
+// card shows that work as done.
+// The brand's rising halyard line is drawn once, in brass, across the whole hero (an SVG the size of the hero, so
+// it leaves past the right edge at any width and never runs through the header), starting from the dictionary
+// caption (brand-story piece: only when site.brandStory is true, DESIGN.md §7.6).
+//
+// Motion is CSS-first: the headline paints with the first frame and every entrance is a CSS animation, so
+// nothing waits on JavaScript. The script adds the taps (Review, Approve, opening a demo) and re-inks the header
+// while it sits on the hero (index.astro renders <body class="on-dark-hero">, so the first paint is already
+// dark). With reduced motion everything renders in its final state. Without JavaScript the cards and agent names
+// lead to the same demos on /demos/, and the phone's buttons hide.
+// Layouts: the composed stage from 1280px; under that the work flows below the copy (cards beside the phone on
+// tablets, one column on phones). Keep id="hero": it is the anchor from COPY.md.
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
+import IllustrativeLabel from '@/components/ui/IllustrativeLabel.astro';
 import TrustStrip from '@/components/blocks/TrustStrip.astro';
-import HeroConsole from './hero/HeroConsole.astro';
 import { site } from '@/config/site';
+import { url } from '@/lib/url';
+import { agents, caption, cards, phone } from './hero/work';
 
 const words = site.tagline.trim().split(/\s+/);
 const cut = Math.max(1, words.length - 2);
 const titleLead = words.slice(0, cut).join(' ');
 const titleEm = words.slice(cut).join(' ');
-
-const proof = [
-  'Built and run for you',
-  'Human approval where it matters',
-  'Measured in hours and dollars',
-  'Starts with a fixed-price pilot',
-];
+const methodology = site.footer.legal.figuresLink;
 ---
-<section id="hero" data-section="hero" class="hero" aria-labelledby="hero-title">
-  <div class="wrap">
-    <div class="hero__grid">
-      <div class="hero__title">
-        <Eyebrow>AI agents and consulting for small and mid-size businesses</Eyebrow>
-        <h1 class="type-display hero__h1" id="hero-title">{titleLead} <em>{titleEm}</em></h1>
-      </div>
-      <p class="hero__lead type-lead">
-        {site.name} builds and runs AI agents: software that does a defined job, like answering customers,
-        building the weekly report or testing your ads, inside the tools you already use. Your people approve
-        anything that matters. Every month, we report the results in hours and dollars.
+<section id="hero" data-section="hero" class="hero ctx-dark" aria-labelledby="hero-title" data-hero>
+  <div class="hero__sky" aria-hidden="true"></div>
+
+  {/* The rising halyard (decorative), drawn once on load. The SVG is the size of the hero and stretches with it
+      (preserveAspectRatio none; the stroke stays 1.5px), so the line runs flat under the dictionary caption, rises
+      behind the finished work and always leaves past the right edge about 18% down the hero: at least 137px at the
+      hero's smallest height (760px), clear of the 73px header. The knots sit in percent at points of the same curve
+      (t = 0 and 0.9). Hidden under 1280px. */}
+  <div class="hn-rope" aria-hidden="true">
+    <svg class="hn-rope__svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" focusable="false">
+      <defs>
+        <linearGradient id="hn-rope-ink" gradientUnits="userSpaceOnUse" x1="0" y1="976" x2="1000" y2="150">
+          <stop offset="0" class="hn-rope__stop hn-rope__stop--from" />
+          <stop offset="0.45" class="hn-rope__stop hn-rope__stop--mid" />
+          <stop offset="1" class="hn-rope__stop hn-rope__stop--to" />
+        </linearGradient>
+      </defs>
+      <path class="hn-rope__path" d="M-20 976 H400 C560 976, 640 700, 1030 135" vector-effect="non-scaling-stroke" />
+    </svg>
+    <i class="hn-rope__knot" style="left:40%;top:97.6%"></i>
+    <i class="hn-rope__knot hn-rope__knot--high" style="left:92.2%;top:29.6%"></i>
+  </div>
+
+  <div class="wrap hero__inner">
+    <div class="hero__copy">
+      <p class="eyebrow hero__eyebrow">AI agents and consulting for business</p>
+      <h1 class="hero__title" id="hero-title"><span class="hero__t1">{titleLead}</span> <em class="hero__t2">{titleEm}</em></h1>
+      <p class="hero__lead">
+        {site.name} builds and runs AI agents that answer customers, work your numbers and clear your inbox. You approve
+        what matters; we report the results in hours and dollars.
       </p>
-      <div class="hero__actions">
-        <div class="hero__ctas">
-          <Button href={site.cta.href} size="lg" icon="arrow-right">{site.cta.label}</Button>
-          <Button href="#demos-player" variant="ghost" icon="play">Watch the agents work</Button>
-        </div>
-        <p class="hero__micro">{site.cta.microcopy}</p>
+      <div class="hero__ctas">
+        <Button href={site.cta.href} variant="brass" size="lg" icon="arrow-right">{site.cta.label}</Button>
+        <Button href="#demos-player" variant="ghost" icon="play">Watch the agents work</Button>
       </div>
-      <ul class="hero__chips" role="list" aria-label="What you can count on">
-        {proof.map((item) => <li><Icon name="check" />{item}</li>)}
-      </ul>
+      <p class="hero__micro">
+        {site.cta.microcopy}
+        <a class="hero__calc" href={url(site.ctas.calculator.href)}>Estimate your own savings<Icon name="arrow-right" /></a>
+      </p>
+      <TrustStrip class="hero__trust" />
     </div>
 
-    <HeroConsole />
-    <TrustStrip class="hero__trust" />
+    <figure class="hn-stage" aria-labelledby="hn-caption">
+      <figcaption class="hn-cap" id="hn-caption">
+        <IllustrativeLabel link={false} />
+        <span>{caption} <a class="link" href={url(methodology.href)}>{methodology.label}</a></span>
+      </figcaption>
+
+      <div class="hn-work">
+        <ol class="hn-stack" role="list">
+          {cards.map((c, i) => (
+            <li class="hn-card" style={`--i:${i}`}>
+              <div class="hn-card__paper ctx-light">
+                <p class="hn-card__meta">
+                  <span class="icon-tile icon-tile--sm hn-card__glyph"><Icon name={c.icon} size={16} /></span>
+                  <span class="hn-card__who"><b>{c.agent}</b><span>{c.kind}</span></span>
+                  <span class="hn-card__took"><Icon name="clock" /><span class="sr-only">Agent time: </span>{c.took}</span>
+                </p>
+                <p class="hn-card__title">{c.title}</p>
+                <p class="hn-card__facts">
+                  <span>{c.facts}</span>
+                  <span class="chip chip-done"><Icon name="check" />{c.chip}</span>
+                </p>
+                {c.basis && <p class="hn-card__basis">{c.basis}</p>}
+              </div>
+              {/* The whole card is the link. Its drawer (the detail and "Watch it work") hangs below the card on hover or
+                  keyboard focus and overlaps the card under it, so nothing on the page moves. */}
+              <a class="hn-card__hit" href={url(c.href)} data-play={c.id} aria-label={c.watch} aria-describedby={`hn-more-${c.id}`}>
+                <span class="hn-card__more" id={`hn-more-${c.id}`}>{c.detail} <span class="hn-card__go" aria-hidden="true">Watch it work<Icon name="play" fill /></span></span>
+              </a>
+            </li>
+          ))}
+        </ol>
+
+        <div class="hn-agents">
+          <p class="hn-agents__k" id="hn-agents-label">All six agents</p>
+          <ul class="hn-agents__list" role="list" aria-labelledby="hn-agents-label">
+            {agents.map((a) => (
+              <li><a href={url(a.href)} data-play={a.id} aria-label={a.watch}><Icon name={a.icon} />{a.short}</a></li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div class="hn-phone">
+        <div class="hn-phone__screen">
+          <span class="hn-phone__island" aria-hidden="true"></span>
+          <Icon name="lock" size={14} class="hn-phone__lock" />
+          <p class="hn-phone__date">{phone.date}</p>
+          <p class="hn-phone__time"><span aria-hidden="true">{phone.time}</span><span class="sr-only">{phone.timeFull}</span></p>
+
+          <div class="hn-note ctx-light" data-hn-note data-state="pending" role="group" aria-label={`Notification from ${site.name}`}>
+            <p class="hn-note__head">
+              <span class="hn-note__app" aria-hidden="true">
+                <svg viewBox="0 0 32 32"><rect x="6" y="10" width="4" height="17" rx=".6" fill="currentColor" /><rect x="22" y="4" width="4" height="23" rx=".6" fill="currentColor" /><path d="M10 19.2 22 11.2v4.4l-12 8z" fill="var(--color-brass-400)" /></svg>
+              </span>
+              <span class="hn-note__name">{site.name}</span>
+              <span class="hn-note__when">now</span>
+            </p>
+            <p class="hn-note__title">{phone.agent} <span class="chip chip-attention"><Icon name="user-check" />Your OK</span></p>
+            <p class="hn-note__ask">{phone.ask}</p>
+            <div class="hn-note__preview" id="hn-preview">
+              <div>
+                <p class="hn-note__to">{phone.preview.to}</p>
+                <p class="hn-note__line">“{phone.preview.line}”</p>
+                <p class="hn-note__src"><Icon name="check" size={12} />{phone.preview.sources}</p>
+              </div>
+            </div>
+            <div class="hn-note__actions">
+              <button class="hn-note__btn" type="button" aria-expanded="false" aria-controls="hn-preview" data-hn-review>Review</button>
+              <button class="hn-note__btn hn-note__btn--ok" type="button" data-hn-approve>Approve</button>
+            </div>
+            <p class="hn-note__done" tabindex="-1" data-hn-done><Icon name="check" size={14} /><span>{phone.approved}</span></p>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    {site.brandStory && (
+      <p class="hn-def" data-brand-story>
+        <b>hal·yard</b> <i>(n.)</i> The line that raises the sail.
+        {/* Under 1280px the line runs under the caption and lifts off the right edge. */}
+        <svg class="hn-def__line" viewBox="0 0 390 32" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <path d="M0 28 H 226 C 296 28, 338 20, 392 3" vector-effect="non-scaling-stroke" />
+        </svg>
+      </p>
+    )}
   </div>
 </section>
 
 <style>
-  .hero { position: relative; isolation: isolate; padding-top: clamp(32px, 4vw, 56px); }
-  .hero::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(900px 520px at 80% 6%, rgb(255 255 255 / .62), transparent 70%), radial-gradient(760px 460px at 8% 0%, rgb(255 255 255 / .4), transparent 70%); }
-  .hero__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
-  .hero__title { grid-column: 1 / span 7; }
-  .hero__title .type-display { margin-top: 20px; max-width: 12ch; }
-  /* The headline is the page's largest paint, so it animates with CSS alone: it paints with the
-     first frame instead of waiting for the motion script (which below-the-fold headings use). */
+  /* ---------- Frame: full-bleed navy night, slipped under the sticky header (72px plus its 1px rule). */
+  .hero {
+    --hero-h: clamp(47.5rem, 100svh, 62rem);
+    /* Space under the header before the eyebrow; the stage's caption uses it too, so the two stay level. */
+    --hero-pad: clamp(32px, 6vh, 64px);
+    position: relative; isolation: isolate; overflow: hidden;
+    min-height: var(--hero-h);
+    margin-top: calc(-1 * var(--header-h) - 1px);
+    background: var(--color-navy-900);
+    color: var(--color-on);
+  }
+  /* The light: a cool lamp behind the finished work, the band-navy haze at the top, a deeper floor. */
+  .hero__sky {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(760px 600px at 70% 46%, rgb(38 71 110 / 0.6), transparent 70%),
+      radial-gradient(1100px 520px at 40% -12%, rgb(38 71 110 / 0.42), transparent 72%),
+      linear-gradient(180deg, var(--color-navy-950) 0%, transparent 38%, transparent 70%, rgb(7 17 29 / 0.55) 100%);
+  }
+  .hero__inner { position: relative; min-height: var(--hero-h); padding-top: calc(var(--header-h) + var(--hero-pad)); padding-bottom: 64px; }
+  /* Without JavaScript the header stays paper, so the hero starts below it instead of running under it. */
+  :global(html:not(.js)) .hero { margin-top: 0; min-height: calc(var(--hero-h) - var(--header-h)); }
+  :global(html:not(.js)) .hero__inner { min-height: calc(var(--hero-h) - var(--header-h)); padding-top: var(--hero-pad); }
+  :global(html:not(.js)) .hn-stage { top: 0; }
+
+  /* ---------- Copy. Never wider than the space left of the stage, which it would otherwise cover. */
+  .hero__copy { position: relative; z-index: 2; max-width: min(46rem, calc(100% - 664px)); container-type: inline-size; }
+  .hero__title {
+    /* A display size of its own for this one headline: 56px at 390 to 112px at 1440, held to the viewport's height
+       on short screens and to the column's width (DESIGN.md caps .type-display at 72px; the hero is the exception). */
+    margin-top: clamp(16px, 2.2vh, 24px);
+    font-family: var(--font-serif); font-optical-sizing: auto;
+    font-size: min(clamp(3.5rem, 2.636rem + 4.571vw, 7rem), 12vh, 20cqi); line-height: 0.96; letter-spacing: -0.034em; font-weight: 340;
+    color: var(--color-on); text-wrap: initial;
+  }
+  .hero__t1, .hero__t2 { display: block; width: fit-content; }
+  .hero__t2 { font-style: italic; font-weight: 320; letter-spacing: -0.026em; color: var(--color-brass-300); padding-right: 0.06em; }
+  .hero__lead { max-width: 37rem; margin-top: clamp(18px, 2.6vh, 28px); font-size: var(--text-lead); line-height: 1.6; color: var(--color-on-2); text-wrap: pretty; }
+  .hero__ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; margin-top: clamp(22px, 3.2vh, 32px); }
+  .hero__micro { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px; margin-top: 14px; font-size: var(--text-caption); line-height: 1.45; color: var(--color-on-3); }
+  .hero__calc {
+    display: inline-flex; align-items: center; gap: 6px; font-weight: 550; color: var(--color-on-2); text-decoration: underline;
+    text-decoration-color: var(--color-brass-400); text-decoration-thickness: 1px; text-underline-offset: 3px;
+    transition: color 0.2s, text-decoration-color 0.2s;
+  }
+  .hero__calc:hover { color: var(--color-on); text-decoration-color: currentColor; }
+  .hero__calc :global(.icon) { width: 13px; height: 13px; color: var(--color-brass-300); transition: transform 0.25s var(--ease-out-soft); }
+  .hero__calc:hover :global(.icon) { transform: translateX(3px); }
+  /* The three practices (DESIGN.md §6.17), compact: one row under the CTA block on desktop. */
+  .hero :global(.hero__trust) {
+    grid-template-columns: repeat(3, minmax(0, auto)); justify-content: start; gap: 10px 26px;
+    margin-top: clamp(20px, 3vh, 30px); padding: 16px 0 0; border-top: 1px solid var(--color-rule-dark); border-bottom: 0;
+  }
+  .hero :global(.hero__trust > li) { gap: 9px; max-width: 15.5rem; font-size: 0.8125rem; font-weight: 500; line-height: 1.4; color: var(--color-on-2); }
+  .hero :global(.hero__trust .icon) { width: 16px; height: 16px; margin-top: 1px; color: var(--color-brass-300); }
+
+  /* ---------- Stage: the finished work and the phone (desktop coordinates; flows below 1280px).
+     The caption and cards hang from the top (level with the eyebrow); the phone rises from the bottom edge. */
+  .hn-stage { position: absolute; z-index: 1; top: var(--header-h); bottom: 0; right: var(--spacing-gutter); width: 640px; margin: 0; }
+  .hn-cap {
+    position: absolute; left: 0; right: 0; top: calc(var(--hero-pad) - 2px); z-index: 2;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; max-width: 34rem;
+    font-size: var(--text-caption); line-height: 1.45; color: var(--color-on-2);
+  }
+  .hn-cap .link { color: var(--color-on); white-space: nowrap; }
+  .hn-work { position: absolute; left: 0; top: calc(var(--hero-pad) + 64px); z-index: 2; width: 420px; pointer-events: none; }
+  .hn-stack { display: grid; gap: 14px; }
+
+  /* Cards: only the cards and links take pointer events (the phone under the column stays tappable). */
+  .hn-card { position: relative; width: 368px; pointer-events: auto; }
+  .hn-card:nth-child(2) { margin-left: 52px; }
+  .hn-card:nth-child(3) { margin-left: 14px; }
+  .hn-card__paper {
+    position: relative; padding: 14px 18px 15px; border-radius: var(--radius-card);
+    background: var(--color-paper-raised); color: var(--color-ink);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.7), 0 1px 2px rgb(7 17 29 / 0.4), 0 22px 44px -16px rgb(7 17 29 / 0.85), 0 48px 80px -40px rgb(7 17 29 / 0.7);
+    transition: transform 0.35s var(--ease-out-soft), box-shadow 0.35s var(--ease-out-soft);
+  }
+  /* The result card's 2px brass rule (DESIGN.md §6.12), drawn as each card lands. */
+  .hn-card__paper::before { content: ""; position: absolute; left: 18px; right: 18px; top: 0; height: 2px; background: var(--color-brass-500); transform-origin: left; }
+  .hn-card__hit { position: absolute; inset: 0; z-index: 3; display: block; border-radius: var(--radius-card); transition: transform 0.35s var(--ease-out-soft); }
+  .hn-card__hit:focus-visible { outline: 2px solid var(--color-focus-dark); outline-offset: 3px; }
+  .hn-card__meta { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; column-gap: 10px; }
+  .hn-card__glyph { width: 30px; height: 30px; border-radius: 8px; color: var(--color-on); }
+  .hn-card__glyph :global(.icon) { color: var(--color-on); }
+  .hn-card__who { display: grid; min-width: 0; font-size: 0.8125rem; line-height: 1.3; color: var(--color-ink-3); }
+  .hn-card__who b { font-weight: 600; color: var(--color-ink); }
+  .hn-card__who > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .hn-card__took { align-self: start; display: inline-flex; align-items: center; gap: 5px; padding-top: 1px; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.02em; color: var(--color-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .hn-card__took :global(.icon) { width: 12px; height: 12px; }
+  .hn-card__title { margin-top: 9px; font-family: var(--font-serif); font-optical-sizing: auto; font-size: 1.5rem; font-weight: 400; line-height: 1.15; letter-spacing: -0.016em; color: var(--color-ink); }
+  .hn-card__facts { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: 0.875rem; line-height: 1.4; color: var(--color-ink-2); }
+  .hn-card__basis { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--color-rule); font-size: 0.8125rem; line-height: 1.4; color: var(--color-ink-3); }
+  /* The drawer: paper like the card, joined to its bottom edge (the card's bottom corners square off while it shows). */
+  .hn-card__more {
+    position: absolute; left: 0; right: 0; top: calc(100% - 1px); padding: 0 18px 14px;
+    border-radius: 0 0 var(--radius-card) var(--radius-card); background: var(--color-paper-raised);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.7) inset, 0 24px 40px -18px rgb(7 17 29 / 0.9);
+    font-size: 0.8125rem; line-height: 1.45; color: var(--color-ink-2); text-align: left;
+    opacity: 0; visibility: hidden; transform: translateY(-6px);
+    transition: opacity 0.25s var(--ease-out-soft), transform 0.25s var(--ease-out-soft), visibility 0s linear 0.25s;
+  }
+  .hn-card__more::before { content: ""; display: block; margin-bottom: 9px; border-top: 1px solid var(--color-rule); }
+  .hn-card__go { display: inline-flex; align-items: center; gap: 5px; margin-left: 4px; font-weight: 550; color: var(--color-ink); white-space: nowrap; }
+  .hn-card__go :global(.icon) { width: 10px; height: 10px; color: var(--color-brass-700); }
+  .hn-card:has(.hn-card__hit:focus-visible) { z-index: 4; }
+  .hn-card:has(.hn-card__hit:focus-visible) .hn-card__more { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  .hn-card:has(.hn-card__hit:focus-visible) .hn-card__paper { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  @media (hover: hover) and (pointer: fine) {
+    .hn-card:hover { z-index: 4; }
+    .hn-card:hover .hn-card__paper,
+    .hn-card:hover .hn-card__hit { transform: translateY(-4px); }
+    .hn-card:hover .hn-card__paper { border-bottom-left-radius: 0; border-bottom-right-radius: 0; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.7), 0 1px 2px rgb(7 17 29 / 0.4), 0 28px 54px -16px rgb(7 17 29 / 0.9); }
+    .hn-card:hover .hn-card__more { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  }
+
+  /* All six agents: a quiet row of dark pills under the cards (the demo tabs' shape), each opening its demo.
+     They are opaque, so the rope passes behind them like it passes behind the cards. */
+  .hn-agents { margin-top: 20px; pointer-events: auto; }
+  .hn-agents__k { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.2; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-on-3); }
+  .hn-agents__list { display: flex; flex-wrap: wrap; gap: 8px; max-width: 392px; margin-top: 10px; }
+  .hn-agents__list a {
+    display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 13px 0 11px; border-radius: 999px;
+    font-size: 0.8125rem; font-weight: 500; line-height: 1; color: var(--color-on-2); text-decoration: none;
+    background: var(--color-navy-850); box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong);
+    transition: color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  }
+  .hn-agents__list a:hover { color: var(--color-on); background: var(--color-navy-800); box-shadow: inset 0 0 0 1px rgb(224 191 127 / 0.5); }
+  .hn-agents__list :global(.icon) { width: 13px; height: 13px; color: var(--color-brass-300); }
+
+  /* ---------- Phone: lock screen, Tuesday night */
+  .hn-phone {
+    position: absolute; z-index: 1; left: 368px; bottom: -146px; width: 272px; height: 590px; padding: 10px; border-radius: 48px;
+    background: linear-gradient(165deg, var(--color-navy-600), var(--color-navy-950) 42%);
+    box-shadow: inset 0 0 0 1px rgb(169 180 194 / 0.28), inset 0 0 0 3px rgb(7 17 29 / 0.9), 0 50px 90px -30px rgb(7 17 29 / 0.95), 0 0 0 1px rgb(7 17 29 / 0.6);
+  }
+  .hn-phone__screen {
+    position: relative; height: 100%; overflow: hidden; border-radius: 39px; text-align: center;
+    background: radial-gradient(130% 70% at 50% 0%, var(--color-navy-600) 0%, var(--color-navy-800) 46%, var(--color-navy-950) 100%);
+  }
+  .hn-phone__island { position: absolute; top: 11px; left: 50%; width: 88px; height: 26px; margin-left: -44px; border-radius: 13px; background: var(--color-navy-950); }
+  .hn-phone :global(.hn-phone__lock) { display: block; margin: 50px auto 0; color: var(--color-on-2); }
+  .hn-phone__date { margin-top: 8px; font-size: 0.9375rem; font-weight: 500; line-height: 1.2; color: var(--color-on-2); }
+  .hn-phone__time { margin-top: 2px; font-size: 4.25rem; font-weight: 300; line-height: 1; letter-spacing: -0.035em; color: var(--color-on); font-variant-numeric: tabular-nums; }
+
+  .hn-note {
+    /* Anchored by its bottom edge, so Review grows it upward over the clock, as a lock screen does. */
+    position: absolute; left: 10px; right: 10px; bottom: 232px; padding: 12px 13px; border-radius: 20px; text-align: left;
+    background: var(--color-on); color: var(--color-ink);
+    box-shadow: 0 12px 30px -12px rgb(7 17 29 / 0.8);
+  }
+  .hn-note__head { display: flex; align-items: center; gap: 7px; font-size: 0.75rem; line-height: 1; color: var(--color-ink-3); }
+  .hn-note__app { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--color-navy-800); color: var(--color-on); }
+  .hn-note__app svg { width: 15px; height: 15px; }
+  .hn-note__name { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-ink-2); }
+  .hn-note__when { margin-left: auto; }
+  .hn-note__title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 0.9375rem; font-weight: 600; line-height: 1.3; color: var(--color-ink); }
+  .hn-note__ask { margin-top: 3px; font-size: 0.875rem; line-height: 1.4; color: var(--color-ink-2); }
+  .hn-note__preview { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 0.3s var(--ease-out-soft), visibility 0s linear 0.3s; }
+  .hn-note__preview > div { overflow: hidden; min-height: 0; }
+  .hn-note:has([data-hn-review][aria-expanded="true"]) .hn-note__preview { grid-template-rows: 1fr; visibility: visible; transition-delay: 0s; }
+  .hn-note__to { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--color-rule); font-size: 0.75rem; font-weight: 600; color: var(--color-ink-2); }
+  .hn-note__line { margin-top: 3px; font-size: 0.8125rem; line-height: 1.45; color: var(--color-ink-2); }
+  .hn-note__src { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 0.75rem; font-weight: 550; color: var(--color-success); }
+  .hn-note__src :global(.icon) { stroke-width: 2; }
+  .hn-note__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 11px; }
+  .hn-note__btn { height: 36px; border-radius: var(--radius-control); font-size: 0.8125rem; font-weight: 550; color: var(--color-ink); background: rgb(14 33 54 / 0.07); cursor: pointer; transition: background-color 0.2s; }
+  .hn-note__btn:hover { background: rgb(14 33 54 / 0.12); }
+  .hn-note__btn--ok { color: #F8F3E9; background: var(--color-ink); }
+  .hn-note__btn--ok:hover { background: #15304F; }
+  .hn-note__btn:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .hn-note__done { display: none; align-items: flex-start; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-rule); font-size: 0.8125rem; font-weight: 500; line-height: 1.45; color: var(--color-success); }
+  .hn-note__done :global(.icon) { flex: none; margin-top: 2px; stroke-width: 2; }
+  .hn-note__done:focus { outline: none; }
+  .hn-note__done:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; border-radius: 4px; }
+  /* Approved: the request leaves with its buttons, and the confirmation takes its place (same height, so the note
+     doesn't grow over the clock). */
+  .hn-note[data-state="approved"] .hn-note__ask,
+  .hn-note[data-state="approved"] .hn-note__actions,
+  .hn-note[data-state="approved"] .hn-note__preview,
+  .hn-note[data-state="approved"] .chip-attention { display: none; }
+  .hn-note[data-state="approved"] .hn-note__done { display: flex; margin-top: 4px; padding-top: 0; border-top: 0; }
+  /* Without JavaScript the buttons can't work, so the request simply waits. */
+  :global(html:not(.js)) .hn-note__actions { display: none; }
+
+  /* ---------- The rope: the whole hero, behind everything else. */
+  .hn-rope { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .hn-rope__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .hn-rope__path { fill: none; stroke: url(#hn-rope-ink); stroke-width: 1.5; stroke-linecap: round; }
+  .hn-rope__stop { stop-color: var(--color-brass-300); }
+  .hn-rope__stop--from { stop-opacity: 0.5; }
+  .hn-rope__stop--mid { stop-opacity: 0.85; }
+  .hn-rope__stop--to { stop-color: var(--color-brass-200); }
+  .hn-rope__knot { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--color-navy-900); box-shadow: inset 0 0 0 1.3px var(--color-brass-300); }
+  .hn-rope__knot--high { background: var(--color-navy-800); }
+
+  /* Sits on the flat run of the line (2.4% above the hero's bottom edge). */
+  .hn-def { position: absolute; z-index: 2; left: var(--spacing-gutter); bottom: calc(2.4% + 11px); font-family: var(--font-serif); font-size: 1.0625rem; line-height: 1.3; color: var(--color-on-2); }
+  .hn-def b { font-weight: 470; color: var(--color-on); }
+  .hn-def i { margin: 0 2px; color: var(--color-brass-300); }
+  .hn-def__line { display: none; }
+  /* Short laptop screens (1366 x 768, 1280 x 800): the copy reaches the bottom edge, so the caption stands down and
+     the line runs on alone. */
+  @media (width >= 80rem) and (height < 52rem) { .hn-def { display: none; } }
+
+  /* ---------- Entrance: CSS only, so the headline paints with the first frame and nothing waits on JS. */
   @media (prefers-reduced-motion: no-preference) {
-    .hero__h1 { animation: hero-rise 0.9s cubic-bezier(.2, .7, .2, 1) both; }
-    .hero__h1 em { display: inline-block; animation: hero-rise 0.9s cubic-bezier(.2, .7, .2, 1) 0.18s both; }
+    .hero__eyebrow { animation: hn-fade 0.8s var(--ease-out-soft) both; }
+    .hero__t1 { animation: hn-rise 0.9s var(--ease-out-soft) both; }
+    /* The brass phrase is written in, left to right (the "ink" reveal). */
+    .hero__t2 { animation: hn-ink 1s var(--ease-out-soft) 0.18s both; }
+    .hero__lead, .hero__ctas, .hero__micro { animation: hn-rise-sm 0.8s var(--ease-out-soft) 0.32s both; }
+    .hero :global(.hero__trust) { animation: hn-fade 0.8s var(--ease-out-soft) 0.55s both; }
+    .hn-rope__svg { animation: hn-wipe 2.4s cubic-bezier(0.45, 0.05, 0.25, 1) 0.45s both; }
+    .hn-rope__knot { animation: hn-fade 0.5s var(--ease-out-soft) 0.9s both; }
+    .hn-rope__knot--high { animation-delay: 2.5s; }
+    .hn-phone { animation: hn-raise 1.2s var(--ease-out-soft) 0.25s both; }
+    .hn-card { animation: hn-land 0.85s var(--ease-out-soft) both; animation-delay: calc(0.85s + var(--i) * 0.36s); }
+    .hn-card__paper::before { animation: hn-rule 0.7s var(--ease-out-soft) both; animation-delay: calc(1.3s + var(--i) * 0.36s); }
+    .hn-note { animation: hn-note-in 0.6s var(--ease-out-soft) 2.15s both; }
+    .hn-cap { animation: hn-fade 0.6s var(--ease-out-soft) 0.6s both; }
+    .hn-agents { animation: hn-fade 0.7s var(--ease-out-soft) 2.1s both; }
+    .hn-def { animation: hn-fade 0.8s var(--ease-out-soft) 0.9s both; }
   }
-  @keyframes hero-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-  .hero__lead { grid-column: 8 / span 5; align-self: end; padding-bottom: 6px; }
-  .hero__actions { grid-column: 1 / span 7; margin-top: 30px; }
-  .hero__ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
-  .hero__micro { margin-top: 12px; font-size: .8125rem; color: var(--color-ink-3); }
-  /* content-sized columns keep each proof point on one line down to about 1280px */
-  .hero__chips { grid-column: 8 / span 5; align-self: start; display: grid; grid-template-columns: repeat(2, auto); justify-content: start; gap: 10px 28px; margin-top: 34px; font-size: .875rem; color: var(--color-ink-2); }
-  .hero__chips li { display: flex; align-items: center; gap: 8px; }
-  .hero__chips :global(.icon) { color: var(--color-brass-600); }
-  /* The trust strip's own bottom rule doubles as the top rule of the integrations ledger below. */
-  .hero :global(.hero__trust) { margin-top: clamp(24px, 3vw, 36px); }
-  /* 1024-1279px: the right column is too narrow for two proof points side by side, so they stack,
-     one line each (no break inside "fixed-price") */
-  @media (64rem <= width < 80rem) {
-    .hero__chips { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-    .hero__chips li { white-space: nowrap; }
+  @keyframes hn-fade { from { opacity: 0; } }
+  @keyframes hn-rise { from { opacity: 0; transform: translateY(0.22em); } }
+  @keyframes hn-rise-sm { from { opacity: 0; transform: translateY(12px); } }
+  @keyframes hn-ink { from { clip-path: inset(-0.25em 100% -0.35em -0.1em); } to { clip-path: inset(-0.25em -0.2em -0.35em -0.1em); } }
+  @keyframes hn-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -2% 0 0); } }
+  @keyframes hn-raise { from { opacity: 0; transform: translateY(48px); } }
+  @keyframes hn-land { from { opacity: 0; transform: translateY(-30px) scale(0.97); } 55% { opacity: 1; } }
+  @keyframes hn-rule { from { transform: scaleX(0); } }
+  @keyframes hn-note-in { from { opacity: 0; transform: translateY(-10px) scale(0.97); } }
+
+  /* ---------- Under 1280px the work flows under the copy (tablets: cards beside the phone; phones: stacked) */
+  @media (width < 80rem) {
+    .hero { --hero-h: auto; }
+    .hero__inner { padding-bottom: 0; }
+    .hero__copy { max-width: 42rem; }
+    .hn-rope { display: none; }
+    .hn-stage {
+      position: relative; inset: auto; width: auto; margin-top: 52px;
+      display: grid; grid-template-columns: minmax(0, 28rem) 272px; column-gap: clamp(24px, 6vw, 72px); align-items: start;
+    }
+    .hn-cap { position: relative; inset: auto; grid-column: 1 / -1; margin-bottom: 16px; }
+    .hn-work { position: relative; inset: auto; width: auto; pointer-events: auto; }
+    .hn-card, .hn-card:nth-child(n) { width: auto; margin-left: 0; }
+    .hn-agents__list { max-width: none; }
+    .hn-phone {
+      position: relative; left: auto; bottom: auto; width: 272px; height: 440px;
+      -webkit-mask-image: linear-gradient(#000 84%, transparent); mask-image: linear-gradient(#000 84%, transparent);
+    }
+    .hn-note { bottom: 92px; }
+    .hn-def { position: relative; left: auto; bottom: auto; margin-top: 8px; padding-bottom: 38px; }
+    .hn-def__line {
+      display: block; position: absolute; left: calc(-1 * var(--spacing-gutter)); right: calc(-1 * var(--spacing-gutter)); bottom: 0;
+      width: calc(100% + 2 * var(--spacing-gutter)); height: 32px; overflow: visible;
+    }
+    .hn-def__line path { fill: none; stroke: var(--color-brass-300); stroke-opacity: 0.8; stroke-width: 1.5; stroke-linecap: round; }
   }
-  @media (width < 64rem) {
-    .hero__title, .hero__lead, .hero__actions, .hero__chips { grid-column: 1 / -1; }
-    .hero__lead { margin-top: 20px; }
-    .hero__chips { margin-top: 22px; }
+  /* Phones: one column. The phone follows the cards (the one thing left for you), then the six agents. */
+  @media (width < 48rem) {
+    .hn-stage { display: flex; flex-direction: column; max-width: 30rem; margin-top: 40px; }
+    .hn-work { display: contents; }
+    .hn-stack { order: 1; }
+    .hn-phone { order: 2; align-self: center; height: 404px; margin-top: 24px; }
+    .hn-agents { order: 3; margin-top: 6px; }
+    .hn-phone__time { font-size: 3.5rem; }
+    .hn-note { bottom: 56px; }
+    .hero :global(.hero__trust) { grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: 18px; padding-top: 13px; }
+    .hero :global(.hero__trust > li) { max-width: none; line-height: 1.35; }
   }
+  /* Small phones: tighter rhythm, so the trust practices still land in the first screen. */
   @media (width < 40rem) {
-    .hero__ctas :global(.btn-primary) { width: 100%; }
-    /* Phones: the console (the product proof) gets the first screen instead. The trust strip under
-       it already covers approval and logging. */
-    .hero__chips { display: none; }
+    .hero { --hero-pad: clamp(24px, 3.6vh, 36px); }
+    .hero__eyebrow::before { display: none; }
+    .hero__ctas { gap: 4px 24px; }
+    .hero__ctas :global(.btn-brass) { width: 100%; }
+    .hero__micro { margin-top: 8px; }
+    .hn-card__paper { padding: 13px 15px 14px; }
+    .hn-card__title { font-size: 1.375rem; }
   }
 </style>
+
+<style is:global>
+  /* The site header while it sits on the navy hero: ivory type, an outline CTA, no glass until the page scrolls.
+     body.on-dark-hero comes from index.astro (so the first paint is dark) and Hero.astro's script removes it once
+     the hero has scrolled away. Only with JavaScript (without it the header stays the usual paper one), and never
+     while the mobile menu is open (that header is paper). */
+  html.js:not(.menu-open) body.on-dark-hero .site-header { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom-color: transparent; }
+  html.js:not(.menu-open) body.on-dark-hero .site-header.is-scrolled {
+    background: rgb(7 17 29 / 0.9); -webkit-backdrop-filter: saturate(1.2) blur(14px); backdrop-filter: saturate(1.2) blur(14px);
+    border-bottom-color: var(--color-rule-dark);
+  }
+  html.js:not(.menu-open) body.on-dark-hero .site-header .brand { color: var(--color-on); --mark-accent: var(--color-brass-400); }
+  html.js:not(.menu-open) body.on-dark-hero .site-header .nav-link { color: var(--color-on-2); }
+  html.js:not(.menu-open) body.on-dark-hero .site-header .nav-link:hover,
+  html.js:not(.menu-open) body.on-dark-hero .site-header .nav-link[aria-expanded="true"] { color: var(--color-on); }
+  html.js:not(.menu-open) body.on-dark-hero .site-header .nav-link::after { background: var(--color-brass-400); }
+  html.js:not(.menu-open) body.on-dark-hero .site-header .btn-primary { color: var(--color-on); background: transparent; box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+  html.js:not(.menu-open) body.on-dark-hero .site-header .btn-primary:hover { background: rgb(243 237 225 / 0.06); box-shadow: inset 0 0 0 1px rgb(224 191 127 / 0.55); }
+  html.js:not(.menu-open) body.on-dark-hero .site-header .nav-menu-btn { box-shadow: inset 0 0 0 1px var(--color-rule-dark-strong); }
+  html.js:not(.menu-open) body.on-dark-hero .site-header .nav-menu-btn > span,
+  html.js:not(.menu-open) body.on-dark-hero .site-header .nav-menu-btn > span::before,
+  html.js:not(.menu-open) body.on-dark-hero .site-header .nav-menu-btn > span::after { background: var(--color-on); }
+  html.js:not(.menu-open) body.on-dark-hero .site-header :focus-visible { outline-color: var(--color-focus-dark); }
+  /* The scroll-progress hairline is ink: on navy it would vanish, so it waits for the paper header. */
+  html.js:not(.menu-open) body.on-dark-hero .site-header .m-progress { opacity: 0; }
+</style>
+
+<script>
+  // Night-shift hero: progressive enhancement only (the hero is complete without this script).
+  //  - Re-inks the header (body.on-dark-hero) and the browser's theme color while the hero is under the header.
+  //  - The phone: Review opens the email preview; Approve flips the request to approved.
+  //  - Cards and agent names open their own demo in the home player (#demos-player) instead of /demos/.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+  function headerOnDark(hero: HTMLElement) {
+    const body = document.body;
+    const header = document.querySelector<HTMLElement>('.site-header');
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const paper = meta?.content;
+    // The browser's own bars take the hero's ground (--color-navy-900) while it is under the header.
+    const navy = getComputedStyle(document.documentElement).getPropertyValue('--color-navy-900').trim() || paper;
+    if (!header) return;
+    let frame = 0;
+    let last: boolean | null = null;
+    const update = () => {
+      frame = 0;
+      const under = hero.getBoundingClientRect().bottom > header.getBoundingClientRect().bottom;
+      if (under === last) return;
+      last = under;
+      body.classList.toggle('on-dark-hero', under);
+      if (meta && paper && navy) meta.content = under ? navy : paper;
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    addEventListener('scroll', schedule, { passive: true });
+    addEventListener('resize', schedule, { passive: true });
+    update();
+  }
+
+  function phone(hero: HTMLElement) {
+    const note = hero.querySelector<HTMLElement>('[data-hn-note]');
+    const review = note?.querySelector<HTMLButtonElement>('[data-hn-review]');
+    const approve = note?.querySelector<HTMLButtonElement>('[data-hn-approve]');
+    const done = note?.querySelector<HTMLElement>('[data-hn-done]');
+    if (!note || !review || !approve) return;
+    review.addEventListener('click', () => review.setAttribute('aria-expanded', String(review.getAttribute('aria-expanded') !== 'true')));
+    approve.addEventListener('click', () => {
+      note.dataset.state = 'approved';
+      // Review and Approve leave with the request, so focus moves to the confirmation (it is read out).
+      done?.focus({ preventScroll: true });
+    });
+  }
+
+  // A card or an agent name: play that demo in the home player. A modified click (new tab) and pages without the
+  // player keep the link's own destination, the same demo on /demos/.
+  function openDemos(hero: HTMLElement) {
+    hero.addEventListener('click', (e) => {
+      const link = (e.target as Element).closest<HTMLAnchorElement>('a[data-play]');
+      if (!link || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const picker = document.querySelector<HTMLElement>('[data-theater] [data-picker]');
+      const player = document.getElementById('demos-player');
+      const id = link.dataset.play;
+      const tab = picker?.querySelector<HTMLElement>(`[role="tab"][data-tab="${id}"]`);
+      if (!picker || !player || !tab) return;
+      e.preventDefault();
+      picker.dispatchEvent(new CustomEvent('tabs:select', { detail: { id } }));
+      player.scrollIntoView({ behavior: reduce.matches ? 'auto' : 'smooth', block: 'start' });
+      // Keyboard and screen-reader users land on the demo they asked for.
+      tab.focus({ preventScroll: true });
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-hero]').forEach((hero) => {
+    headerOnDark(hero);
+    phone(hero);
+    openDemos(hero);
+  });
+</script>

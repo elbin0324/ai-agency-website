@@ -1,43 +1,113 @@
 ---
 // OWNER: home-story
-// Why us (COPY.md §2.9, DESIGN.md §6.5): four reasons as cards and one closing line. Sunken band.
-// 2026-10-14 critique round (home was 36 phone screens): the DIY / agency / us table (it restated these four
-// cards) and the consulting-cost teaser (now one line on the AI Consulting column in ServicesGrid, linking to
-// /services/consulting/#comparison) are off the home page; ./story/ConsultingTeaser.astro is kept, unused.
-// Keep id="why-us": it is the anchor from COPY.md and may be linked from other pages.
+// Why us, with security and control (COPY.md §2.9 and §2.10, DESIGN.md §6.5, §6.17). Sunken band.
+// 2026-10-21 (new hero): the two trust sections, side by side in one. The new hero already carries the three
+// practices in its first screen and the control room shows approvals at work, so "Why us" and "Security and
+// control" no longer each need a full section: on the left, the case (title, standfirst and the four reasons as
+// a hairline ledger); on the right, the four guardrails as a raised card, the one object here: what you can hold
+// us to. It keeps id="security" (COPY.md anchors; /#security lands on the card). Under 1024px they stack.
+// Earlier rounds: the DIY / agency / us table and the consulting-cost teaser left on 2026-10-14
+// (./story/ConsultingTeaser.astro is kept, unused); the security window (./story/AuditLog.astro, kept, unused)
+// gave way to the four guardrails an owner asks about, logging folded into the access line. Practices only,
+// never certifications (BRIEF.md honesty rules); plain meaning first, the technical term in the body
+// (CRITIQUE.md edits 4 and 15). The full list stays on /approach/#security.
+// Keep id="why-us" and id="security": anchors from COPY.md that other pages may link to.
 import Section from '@/components/ui/Section.astro';
-import SectionHeader from '@/components/ui/SectionHeader.astro';
 import FeatureGrid from '@/components/blocks/FeatureGrid.astro';
 import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
 import { homeNum } from './story/sections';
 import { site } from '@/config/site';
 import { url } from '@/lib/url';
 
-const reasons = [
+const reasons: { icon: IconName; title: string; body: string }[] = [
   { icon: 'check', title: 'Outcomes, not logins', body: 'Finished work inside the tools you already use. Nothing new for your team to learn.' },
   { icon: 'wrench', title: 'Built for your business', body: 'Agents learn your services, prices, policies and voice, and prove themselves on your past work first.' },
   { icon: 'user-check', title: 'People in control', body: 'You set the approval rules and the hard limits. Autonomy grows only when the results justify it.' },
   { icon: 'chart-column', title: 'Accountable for results', body: 'One named lead, a baseline agreed up front and a monthly report against it, in hours and dollars.' },
-] as const;
+];
+
+const guards: { icon: IconName; title: string; body: string }[] = [
+  { icon: 'key-round', title: 'Only the keys each job needs', body: 'The minimum access a job requires (least privilege), read-only by default, with every action logged.' },
+  { icon: 'user-check', title: 'You approve what matters', body: 'Payments, refunds, price changes, bulk sends and anything else you choose wait for a person to say yes.' },
+  { icon: 'database', title: 'Your data doesn’t train AI', body: 'Business-grade AI services whose terms exclude training on your data, and a list of every outside service that touches it.' },
+  { icon: 'power', title: 'An off switch you control', body: 'Pause or turn off any agent at any time. Your team picks up right where it left off.' },
+];
 ---
-<Section id="why-us" tone="sunken" aria-labelledby="why-us-title">
-  <SectionHeader
-    num={homeNum.whyUs}
-    eyebrow={`Why ${site.name}`}
-    subtitle="AI tools give you capability. Agencies give you a workflow. We give you a working result, and we stay accountable for it."
-    titleId="why-us-title"
-  ><span slot="title" data-motion="split">The difference is who does the work.</span></SectionHeader>
+<Section id="why-us" tone="sunken" aria-labelledby="why-us-title" class="why-band">
+  <div class="sec-rule" data-reveal>
+    <span class="sec-rule__num">{homeNum.whyUs}</span><span class="sec-rule__name">Why {site.name}</span>
+    <span class="sec-rule__line"></span><span class="sec-rule__knot"></span>
+  </div>
 
-  <div data-motion="stagger" data-stagger-target="li"><FeatureGrid cols={4} items={[...reasons]} label={`Why work with ${site.name}`} /></div>
+  <div class="why">
+    <div class="why__case" data-reveal>
+      <h2 class="type-h2 why__title" id="why-us-title" data-motion="split">The difference is who does the work.</h2>
+      <p class="type-lead why__aside">
+        AI tools give you capability. Agencies give you a workflow. We give you a working result, and we stay
+        accountable for it.
+      </p>
+      <ul class="why__reasons" role="list" aria-label={`Why work with ${site.name}`}>
+        {reasons.map((r) => (
+          <li>
+            <Icon name={r.icon} size={18} class="why__icon" />
+            <h3 class="why__reason">{r.title}</h3>
+            <p>{r.body}</p>
+          </li>
+        ))}
+      </ul>
+      <p class="why__note">
+        DIY tools are a good fit for one person’s tasks. They get harder when the work spans systems, people and
+        customers. That’s where we come in.
+        <a class="link-arrow" href={url(site.ctas.approach.href)}><span>See how we work</span><Icon name="arrow-right" /></a>
+      </p>
+    </div>
 
-  <div class="why-foot" data-reveal>
-    <p>DIY tools are a good fit for one person’s tasks. They get harder when the work spans systems, people and customers. That’s where we come in.</p>
-    <a class="link-arrow" href={url(site.ctas.approach.href)}><span>See how we work</span><Icon name="arrow-right" /></a>
+    <div class="card why__guard" id="security" aria-labelledby="security-title" data-reveal data-reveal-delay="80">
+      <p class="type-label why__guard-k">Security and control</p>
+      <h3 class="type-h3 why__guard-title" id="security-title">Your data stays yours. Your people stay in charge.</h3>
+      <p class="why__guard-lead">Giving an agent access to your business is like handing over a key. Here’s how we handle it.</p>
+      <FeatureGrid variant="guard" cols={2} level={4} items={guards} label="Guardrails that come standard" reveal={false} class="why__grid" />
+      <div class="why__guard-foot">
+        <p>Have a security questionnaire? Send it over and we’ll answer in writing.</p>
+        <a class="link-arrow" href={url('/approach/#security')}><span>Read how we handle data</span><Icon name="arrow-right" /></a>
+      </div>
+    </div>
   </div>
 </Section>
 
 <style>
-  .why-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 32px; margin-top: 20px; }
-  .why-foot p { max-width: 70ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); text-wrap: pretty; }
-  @media (width < 40rem) { .why-foot { flex-direction: column; align-items: flex-start; } }
+  /* The page's sunken stages share hairline edges (2026-10-21). */
+  .why-band { border-block: 1px solid var(--color-rule); }
+  .why { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 40px; align-items: start; }
+  .why__case { grid-column: 1 / span 5; }
+  .why__title { max-width: 14ch; }
+  .why__aside { margin-top: 18px; }
+  .why__reasons { margin-top: 28px; border-top: 1px solid var(--line-strong); }
+  .why__reasons > li { display: grid; grid-template-columns: 18px minmax(0, 1fr); column-gap: 14px; row-gap: 3px; padding: 15px 0 16px; border-bottom: 1px solid var(--line); }
+  .why__reasons :global(.why__icon) { grid-row: span 2; margin-top: 3px; color: var(--accent-display); }
+  .why__reason { font-size: 1.0625rem; font-weight: 600; line-height: 1.35; color: var(--fg); }
+  .why__reasons p { font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); text-wrap: pretty; }
+  .why__note { display: grid; justify-items: start; gap: 2px; margin-top: 16px; max-width: 52ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+
+  /* The one object here: what you can hold us to. */
+  .why__guard { grid-column: 6 / -1; padding: clamp(22px, 2.6vw, 34px); }
+  .why__guard-k { color: var(--accent); }
+  .why__guard-title { margin-top: 12px; max-width: 24ch; }
+  .why__guard-lead { margin-top: 10px; max-width: 52ch; font-size: 0.9375rem; line-height: 1.55; color: var(--fg-2); }
+  .why__guard :global(.why__grid) { margin-top: 22px; }
+  .why__guard :global(.why__grid .guard) { padding: 18px 20px 20px 0; }
+  .why__guard :global(.why__grid .guard:nth-child(2n)) { padding-right: 0; }
+  .why__guard-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 20px; margin-top: 14px; }
+  .why__guard-foot p { font-size: 0.875rem; line-height: 1.5; color: var(--fg-3); }
+
+  @media (width < 64rem) {
+    .why__case, .why__guard { grid-column: 1 / -1; }
+    .why__title { max-width: 18ch; }
+  }
+  @media (width < 40rem) {
+    .why__guard { padding: 20px 18px; }
+    .why__guard :global(.why__grid .guard) { padding: 16px 0 18px; }
+    .why__guard-foot { flex-direction: column; align-items: flex-start; }
+  }
 </style>

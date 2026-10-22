@@ -6,8 +6,8 @@
 //
 // Everything that can change comes from data, so a rename only needs a re-run: the wordmark is site.name,
 // the headline is site.tagline (its last two words are the brass italic phrase, as in the Home hero),
-// the service line is site.brandLine, and the console shows the hero console's sample data
-// (src/components/home/hero/console-data.ts) for the same fictional business, unnamed here.
+// the service line is site.brandLine, and the console shows the control-room console's sample data
+// (src/components/home/console/console-data.ts) for the same fictional business, unnamed here.
 //
 // Scale: the console is the site's own window, classes and chips at 2x (zoom: 2), so the 600 x 315
 // thumbnail shows it at the site's real size and no text on the card is under 24px (DESIGN.md §8.3).
@@ -23,7 +23,7 @@ import { site } from '@/config/site';
 import { url } from '@/lib/url';
 import {
   agent, approvals, counters, hoursTotal, roster, sparkline,
-} from '@/components/home/hero/console-data';
+} from '@/components/home/console/console-data';
 
 // Headline: the hero's split (Hero.astro), with the brass phrase on its own line.
 const words = site.tagline.trim().split(/\s+/);

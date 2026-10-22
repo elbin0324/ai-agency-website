@@ -1,7 +1,7 @@
 // Scroll motion for the day story. OWNER: home-daystory. Self-contained on purpose: it does not use
 // the shared motion system, only GSAP (ScrollTrigger + SplitText).
 //
-// - Pinned (PIN_QUERY): the stage pins for about 3.3 screen heights and one scrubbed timeline is the
+// - Pinned (PIN_QUERY): the stage pins for about 2.9 screen heights and one scrubbed timeline is the
 //   day. Every scroll position moves something:
 //     - the window clock runs minute by minute through each moment, then fast-forwards (still minute by
 //       minute) to the next one while the windows hand off;
@@ -31,8 +31,9 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const MOTION_QUERY = '(prefers-reduced-motion: no-preference)';
 
-/** Pinned scroll length in viewport heights (five moments of about 0.66 screens each). */
-const SCREENS = 3.3;
+/** Pinned scroll length in viewport heights (five moments of about 0.58 screens each; 3.3 until 2026-10-21, when
+ *  the control room joined the page and the home page had to stay no longer than before). */
+const SCREENS = 2.9;
 /** Within each moment (one timeline unit): the work builds over [BUILD_AT, BUILD_AT + BUILD_LEN]... */
 const BUILD_AT = 0.03;
 const BUILD_LEN = 0.6;

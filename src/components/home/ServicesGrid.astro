@@ -6,6 +6,7 @@
 // 2026-10-14 critique round: the consulting-cost teaser left Why us; its point lives on here as one line on
 // the AI Consulting column (time from src/data/consulting.ts; no price while site.consultingPrice is null,
 // "a fraction of the cost" per DECISIONS.md 2026-10-12), linking to the sourced comparison.
+// 2026-10-21: on phones the four columns are a swipeable rail (they ran three and a half screens stacked).
 // Keep id="services": it is the anchor from COPY.md and may be linked from other pages.
 import Section from '@/components/ui/Section.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
@@ -36,6 +37,7 @@ const consultTime = ours.time.match(/^Typically \d+ to \d+ weeks/)?.[0] ?? 'Typi
     titleId="services-title"
   ><span slot="title" data-motion="split">Four ways to put AI to work.</span></SectionHeader>
 
+  <p class="svc-hint" aria-hidden="true"><span class="type-label">Four services</span><span class="type-label svc-hint__swipe">Swipe<Icon name="arrow-right" /></span></p>
   <div class="svc-ledger" data-reveal data-motion="stagger">
     {services.map((s) => (
       <article class="svc-col" aria-labelledby={`svc-${s.slug}`}>
@@ -77,10 +79,31 @@ const consultTime = ours.time.match(/^Typically \d+ to \d+ weeks/)?.[0] ?? 'Typi
   }
   .svc-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; margin-top: 18px; }
   .svc-foot p { font-size: 0.9375rem; color: var(--fg-2); }
+  .svc-hint { display: none; }
   @media (width < 40rem) {
     .svc-foot { flex-direction: column; align-items: flex-start; }
     /* DESIGN.md §6.6: vignettes size to their content on phones. (global.css declares the 216px desktop
        height after its own phone override, so the override never applies; restated here.) */
     .svc-col > :global(.app-window--mini) { height: auto; }
+    /* Phones (2026-10-21): the four columns stacked ran three and a half screens, so they become a swipeable rail,
+       each column a card-width panel with the next one peeking. */
+    .svc-hint { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .svc-hint .type-label { color: var(--fg-3); }
+    .svc-hint__swipe { display: inline-flex; align-items: center; gap: 6px; }
+    .svc-hint__swipe :global(.icon) { width: 14px; height: 14px; color: var(--accent-display); }
+    .svc-ledger {
+      grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: min(84%, 22rem);
+      column-gap: 20px; margin-inline: calc(-1 * var(--spacing-gutter)); padding-inline: var(--spacing-gutter);
+      overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--spacing-gutter);
+      scrollbar-width: none; border-top: 0; border-bottom: 0;
+    }
+    .svc-ledger::-webkit-scrollbar { display: none; }
+    /* One card shows at a time, so each sizes to its own content (cross-card subgrid rows would leave gaps). */
+    .svc-ledger { grid-template-rows: none; align-items: start; }
+    .svc-col, .svc-col:nth-child(n) {
+      display: flex; flex-direction: column; grid-row: auto; scroll-snap-align: start;
+      padding: 20px 0 22px; border: 0; border-top: 1px solid var(--line-strong);
+    }
+    .svc-col > :global(.link-arrow) { align-self: flex-start; margin-top: 0; }
   }
 </style>

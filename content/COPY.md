@@ -47,7 +47,7 @@ We build and run AI agents inside your business, so your team gets more done and
 
 ### 0.3 Tagline options
 
-1. **AI that earns its keep.** (Primary)
+1. **AI that earns its keep.** (Primary until 2026-10-21. The home H1 and `site.tagline` are now **Wake up to finished work.**, from the Night shift hero; the home eyebrow and meta description say "for business", not "for small and mid-size businesses".)
 2. Done-for-you AI, measured in hours and dollars.
 3. Less busywork. More business.
 
@@ -193,7 +193,7 @@ Never use: game-changer, unlock, in today's fast-paced world, world-class, best-
 
 - **id:** `site-footer`
 - **Brand line:** Done-for-you AI agents and consulting for small and mid-size businesses.
-- **Tagline:** AI that earns its keep.
+- **Tagline:** Wake up to finished work. (2026-10-21; was "AI that earns its keep.")
 - **Column "Services":** AI Agents → `/services/ai-agents/` · AI Marketing Director → `/services/marketing/` · AI Sales Agent → `/services/sales/` · AI Consulting → `/services/consulting/`
 - **Column "See it work":** Demos → `/demos/` · Results and examples → `/results/` · Savings calculator → `/results/#calculator`
 - **Column "Company":** Approach → `/approach/` · Security and data → `/approach/#security` · Contact → `/contact/`
@@ -265,7 +265,7 @@ Title pattern: "{Page} | Halyard". Descriptions stay under about 155 characters.
 
 - **id:** `hero`
 - **Eyebrow:** AI agents and consulting for small and mid-size businesses
-- **Headline (H1):** AI that earns its keep.
+- **Headline (H1):** Wake up to finished work. (2026-10-21; was "AI that earns its keep.")
 - **Subhead:** Halyard builds and runs AI agents that answer your customers, work your numbers, clear your inbox, tune your ads and find your next clients. They work inside the tools you already use, and your people stay in control.
 - **Body:** None. The hero stays tight.
 - **Bullets (proof chips under the subhead):**

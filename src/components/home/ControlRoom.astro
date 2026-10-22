@@ -1,0 +1,62 @@
+---
+// Control room (#control): the interactive agent console (./console/AgentConsole.astro), moved out of the hero on
+// 2026-10-21 so the hero can make one bold promise. OWNER: home-hero.
+// It follows the demo theater: after one agent at a time, every agent on one screen, with the control point in view
+// (sky, "Waiting on you", DESIGN.md §1.2). The console keeps all its interactivity, its FIG. 1 legend and caption.
+// The head is a different beat from the page's other sections: the title on the left and, on the right, a short
+// numbered "Try it" card instead of an aside, so the section reads as an invitation to play. (No lead: the
+// console's FIG. 1 legend already says what it shows.) The card shows only
+// with JavaScript (without it the console can't respond), and the period step hides on phones, where the console
+// keeps to 7 days.
+// Keep id="control".
+import Section from '@/components/ui/Section.astro';
+import AgentConsole from './console/AgentConsole.astro';
+import { homeNum } from './story/sections';
+---
+<Section id="control" aria-labelledby="control-title" class="pb-[var(--spacing-section-tight)]">
+  <div class="sec-rule" data-reveal>
+    <span class="sec-rule__num">{homeNum.control}</span><span class="sec-rule__name">Control room</span>
+    <span class="sec-rule__line"></span><span class="sec-rule__knot"></span>
+  </div>
+  <div class="cr-head" data-reveal data-reveal-delay="80">
+    <h2 class="type-h2 cr-head__title" id="control-title" data-motion="split">See every agent. Approve what matters.</h2>
+    <div class="cr-try" role="note" aria-labelledby="cr-try-k">
+      <p class="cr-try__k" id="cr-try-k">Try it</p>
+      <ol class="cr-try__steps">
+        <li>Approve or decline a request</li>
+        <li>Pick an agent to see only its work</li>
+        <li class="cr-try__period">Switch today, 7 days or 30 days</li>
+      </ol>
+    </div>
+  </div>
+
+  <AgentConsole />
+</Section>
+
+<style>
+  .cr-head { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 24px; align-items: end; margin-bottom: clamp(32px, 4vw, 52px); }
+  .cr-head__title { grid-column: 1 / span 7; max-width: 16ch; }
+  /* The invitation: a small raised card that points at the console's requests (its right-hand rail on desktop). */
+  .cr-try {
+    position: relative; grid-column: 9 / span 4; padding: 16px 20px 18px; border-radius: var(--radius-card);
+    background: var(--color-paper-raised); box-shadow: var(--card-shadow);
+  }
+  .cr-try::after {
+    content: ""; position: absolute; right: 34px; bottom: -7px; width: 14px; height: 14px; transform: rotate(45deg);
+    background: var(--color-paper-raised); box-shadow: 1px 1px 0 var(--color-rule);
+  }
+  .cr-try__k { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; line-height: 1.2; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+  .cr-try__steps { display: grid; gap: 6px; margin-top: 12px; counter-reset: try; }
+  .cr-try__steps li { display: flex; align-items: baseline; gap: 10px; font-size: 0.9375rem; font-weight: 500; line-height: 1.4; color: var(--fg); counter-increment: try; }
+  .cr-try__steps li::before { content: counter(try); flex: none; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; color: var(--accent); }
+  :global(html:not(.js)) .cr-try { display: none; }
+
+  @media (width < 64rem) {
+    .cr-head__title, .cr-try { grid-column: 1 / -1; }
+    .cr-try { justify-self: start; min-width: min(100%, 22rem); }
+    .cr-try::after { right: auto; left: 34px; }
+  }
+  @media (width < 48rem) {
+    .cr-try__steps .cr-try__period { display: none; }
+  }
+</style>

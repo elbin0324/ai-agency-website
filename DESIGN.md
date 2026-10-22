@@ -337,7 +337,7 @@ Fixed in this pass: the earlier 7-step ramps failed the light-end contrast floor
 
 | Role | Utility or class | Size | Line height | Tracking | Face, weight | Use |
 |---|---|---|---|---|---|---|
-| Display | `.type-display` | clamp 40 → 72px | 1.02 | -0.03em | Fraunces 360 | Home hero H1 only |
+| Display | `.type-display` | clamp 40 → 72px | 1.02 | -0.03em | Fraunces 360 | Large display headings. The home hero H1 has its own scale (56 → 112px, capped at 12vh; Hero.astro) |
 | H1 | `.type-h1` | 36 → 60px | 1.04 | -0.028em | Fraunces 360 | inner-page hero H1 |
 | H2 | `.type-h2` | 32 → 52px | 1.08 | -0.024em | Fraunces 360 | section titles |
 | H3 | `.type-h3` | 22 → 26px | 1.2 | -0.014em | Fraunces 420 | column and card titles |
@@ -374,7 +374,7 @@ Fixed in this pass: the earlier 7-step ramps failed the light-end contrast floor
 - **Background sequence:** paper, then `.band-sunken` (demos, why-us, industries), then paper, then `.band-navy` (calculator, final CTA). Never put two navy bands next to each other, and use at most two per page. The footer is navy-900, so the band before it is the final CTA (navy-800) or paper.
 - **Header height:** 72px (64px under 640px), set as `--header-h`. Anchor targets use `scroll-padding-top: header + 16px`.
 - **Z-index scale** (`:root`): raised 1, sticky 20, header 40, dropdown 45, mobile menu 50, toast and tooltip 60, skip link 100. Inside a window (an isolated stacking context): figure knots 6, result overlay and toast 7, top hairline 8.
-- **Home at 1440 × 900:** the hero must show the H1, the CTA, the console title bar, the KPI row and the console's **`Waiting on you` header with its first approval card** without scrolling. Check with `node scripts/shot.mjs`.
+- **Home at 1440 × 900:** the dark "Night shift" hero must show the H1, both CTAs, the trust lines, all three result cards and the six-agent row without scrolling (the phone may run past the fold). At 1366 × 768 the trust lines must still be in the first screen. The interactive console is no longer in the hero: it lives in the control room section (`#control`), right after the demos. Check with `node scripts/shot.mjs`.
 
 ---
 
@@ -426,8 +426,8 @@ All classes below exist in `global.css`. Astro components (names from ARCHITECTU
 | `Illustrative example` | any outcome figure from a scenario, vignette or demo result | `<a class="tag" href={url('/results/#methodology')}>Illustrative example</a>` |
 | `Modeled estimate` | any figure computed from a formula (calculator, stat ledger, savings math, consulting comparison) | `.tag`, plus a `.math` line that shows the formula with the actual numbers |
 | `Simulated demo` | the badge on all six demo windows | `<span class="aw-tag">Simulated demo</span>` in `.aw-meta` |
-| `Illustrative` | the badge on the hero console and every vignette | `.aw-tag` |
-| `Fictional business` | the FIG caption under the hero console and scenario figures | `.fig-caption`: `<b>FIG. 1</b> Illustrative interface. Fernhill Heating & Air is a fictional 18-person HVAC company.` |
+| `Illustrative` | the badge on the control-room console and every vignette | `.aw-tag` |
+| `Fictional business` | the FIG caption under the control-room console and scenario figures | `.fig-caption`: `<b>FIG. 1</b> Illustrative interface. Fernhill Heating & Air is a fictional 18-person HVAC company.` |
 | `Source:` | any third-party statistic (consulting fees and similar) | `.cmp-foot`: tag, then `<p>` with a dated source link from `content/BENCHMARKS.md` |
 
 - `.tag`: 24px pill, mono 12px caps at +0.08em in `text-accent`, brass wash with a ring and a 5px leading dot. Tags sit in a `.tag-row` above or below the figure they label, never more than one block away.
@@ -478,10 +478,10 @@ All classes below exist in `global.css`. Astro components (names from ARCHITECTU
 
 - `.chip` + `.chip-done | .chip-attention | .chip-handoff | .chip-blocked | .chip-running`: 22px pill, Geist 12px weight 550, 12px icon at stroke 2, never wraps. Colors follow §2.4.
 - `.count`: a 20px sky badge with navy-900 digits, used for "Waiting on you (2)".
-- `.live`: a sage dot with a 2.4s ping and the word "Live". It appears only on the hero console and only while the feed runs.
+- `.live`: a sage dot with a 2.4s ping and the word "Live". It appears only on the control-room console and only while the feed runs.
 - `.typing-dots`: three 3px dots with a 1.2s blink, staggered 0.2s.
 
-### 6.10 App window: `AppWindow.astro`, the chrome for the hero console, vignettes and all six demos
+### 6.10 App window: `AppWindow.astro`, the chrome for the control-room console, vignettes and all six demos
 
 ```html
 <div class="app-window app-window--demo" data-demo="sales">
@@ -522,8 +522,8 @@ All classes below exist in `global.css`. Astro components (names from ARCHITECTU
 
 ### 6.11 Annotated figure and insight card
 
-- **Hero FIG:** up to 3 numbered `.fig-knot`s (a 24px navy disc with a brass-300 ring and mono digit), absolutely placed on the console over the item they explain. Under the window goes `.fig-legend` (the same digits, `fig-legend__n`) with exactly these three lines: "Every agent action, logged as it happens", "Anything sensitive waits for your OK" and "Results tracked in hours and dollars". Then the `.fig-caption` (§6.4). Reuse the pattern on any demo poster or scenario figure that needs explaining (at most 3 knots).
-- **Insight card** (`.insight-card`, new in this pass): a paper-raised card, 300px wide, with `--shadow-float`, that overlaps a window edge (for example `right: -24px; bottom: 56px` on the hero console). It contains `.insight-card__k` ("Analyst Agent" plus `.tag` Illustrative), `.insight-card__t` (one plain-English finding: "Why September margin slipped: parts +11%, plan price flat."), and one `.math` line. It is hidden below 1280px, where the same finding appears in the Analyst demo instead. At most one per page.
+- **Console FIG:** up to 3 numbered `.fig-knot`s (a 24px navy disc with a brass-300 ring and mono digit), absolutely placed on the console over the item they explain. Under the window goes `.fig-legend` (the same digits, `fig-legend__n`) with exactly these three lines: "Every agent action, logged as it happens", "Anything sensitive waits for your OK" and "Results tracked in hours and dollars". Then the `.fig-caption` (§6.4). Reuse the pattern on any demo poster or scenario figure that needs explaining (at most 3 knots).
+- **Insight card** (`.insight-card`, new in this pass): a paper-raised card, 300px wide, with `--shadow-float`, that overlaps a window edge (for example `right: -24px; bottom: 56px` on the control-room console). It contains `.insight-card__k` ("Analyst Agent" plus `.tag` Illustrative), `.insight-card__t` (one plain-English finding: "Why September margin slipped: parts +11%, plan price flat."), and one `.math` line. It is hidden below 1280px, where the same finding appears in the Analyst demo instead. At most one per page.
 
 ### 6.12 Demo switcher and result card: `DemoTheater`, `ResultCard.astro`
 
@@ -728,7 +728,7 @@ document.querySelectorAll('[data-reveal]').forEach(el => {
 - `.btn-primary` and `.btn-brass` rise 1px; arrow icons nudge 3px; ghost and arrow-link underlines grow from the left over 350ms; the secondary button's ring darkens; the service column's brass top rule draws; nav links get a brass underline; link cards rise 2px with the float shadow; in-app buttons get a brass ring at 50%.
 - Focus is always a 2px outline in `var(--focus)` at a 3px offset (inputs use a 2px offset), visible on every interactive element on both surfaces. Never `outline: none` without this replacement.
 
-### 9.4 Live console (hero)
+### 9.4 Live console (control room)
 
 - A new feed row arrives every **4.6s** (`--animate-row-in`: drop 8px, fade in, brass wash at 8%). Hours and task counters tick with the `count` effect (700ms, tabular). The list shows 6 rows, and the oldest fades out. The `.live` dot pings every 2.4s. The feed pauses when less than 20% of the console is visible or the tab is hidden.
 

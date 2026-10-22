@@ -5,9 +5,9 @@
 // find their own problem instead of reading all five agents' stories. Same six lines as the /services/
 // hero card (src/components/services/overview/WhereToStart.astro), restated here at section scale.
 // Names, icons and links come from src/data/services.ts. No figures (BRIEF.md numbers policy).
-// Layout: three rows per column on desktop (hairline ledger, DESIGN.md §1.4), one column under 768px.
+// Layout (2026-10-21): the intro and CTA on the left, the six lines as a two-column hairline ledger on the right
+// (DESIGN.md §1.4), stacked under 1024px, one column of lines under 768px.
 // Keep id="start".
-import SectionHeader from '@/components/ui/SectionHeader.astro';
 import Section from '@/components/ui/Section.astro';
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
@@ -29,60 +29,81 @@ const rows: { pain: string; name: string; icon: IconName; href: string }[] = [
   { pain: 'Margins are thin, and I’m not sure why.', name: svc('consulting').name, icon: svc('consulting').icon, href: svc('consulting').href },
 ];
 ---
-<Section id="start" aria-labelledby="start-title">
-  <SectionHeader
-    num={homeNum.start}
-    eyebrow="Where to start"
-    subtitle="Six everyday problems, each matched to the agent that takes it on. Pick yours to see how it works."
-    titleId="start-title"
-  ><span slot="title" data-motion="split">Find the line that sounds like your week.</span></SectionHeader>
+<Section id="start" tightTop aria-labelledby="start-title">
+  <div class="sec-rule" data-reveal>
+    <span class="sec-rule__num">{homeNum.start}</span><span class="sec-rule__name">Where to start</span>
+    <span class="sec-rule__line"></span><span class="sec-rule__knot"></span>
+  </div>
 
-  <nav class="wts" aria-labelledby="start-title" data-reveal>
-    <ul class="wts__list" role="list">
-      {rows.map((r) => (
-        <li>
-          <a class="wts__row" href={url(r.href)}>
-            <span class="icon-tile icon-tile--sm wts__tile" aria-hidden="true"><Icon name={r.icon} size={18} /></span>
-            <span class="wts__pain">“{r.pain}”</span>
-            <span class="wts__to"><span class="sr-only">: </span>{r.name}<Icon name="arrow-right" size={16} class="wts__arrow" /></span>
-          </a>
-        </li>
-      ))}
-    </ul>
-  </nav>
+  <div class="wts-grid">
+    <div class="wts-intro" data-reveal>
+      <h2 class="type-h2 wts-intro__title" id="start-title" data-motion="split">Find the line that sounds like your week.</h2>
+      <p class="type-lead wts-intro__lead">Six everyday problems, each matched to the agent that takes it on. Pick yours to see how it works.</p>
+      <div class="wts-foot">
+        <p>More than one? The free assessment tells you which pays off first.</p>
+        <Button href={site.cta.href} icon="arrow-right">{site.cta.label}</Button>
+      </div>
+    </div>
 
-  <div class="wts-foot" data-reveal>
-    <p>More than one? The free assessment tells you which pays off first.</p>
-    <Button href={site.cta.href} icon="arrow-right">{site.cta.label}</Button>
+    <nav class="wts" aria-labelledby="start-title" data-reveal data-reveal-delay="80">
+      <ul class="wts__list" role="list">
+        {rows.map((r) => (
+          <li>
+            <a class="wts__row" href={url(r.href)}>
+              <span class="icon-tile icon-tile--sm wts__tile" aria-hidden="true"><Icon name={r.icon} size={18} /></span>
+              <span class="wts__pain">“{r.pain}”</span>
+              <span class="wts__to"><span class="sr-only">: </span>{r.name}<Icon name="arrow-right" size={16} class="wts__arrow" /></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   </div>
 </Section>
 
 <style>
+  /* 2026-10-21: side by side, a different beat from the stacked section heads around it: the intro and the CTA on
+     4 columns, the six lines as a two-column hairline ledger on 8. Stacked under 1024px. */
+  .wts-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 32px; align-items: start; }
+  .wts-intro { grid-column: 1 / span 4; }
+  .wts-intro__title { max-width: 12ch; }
+  .wts-intro__lead { margin-top: 18px; }
+  .wts { grid-column: 5 / -1; padding-top: 6px; }
   .wts__list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: column; grid-template-rows: repeat(3, auto); column-gap: 24px; border-top: 1px solid var(--line-strong); }
   .wts__list > li { border-bottom: 1px solid var(--line); }
   .wts__row {
     display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: center; column-gap: 16px; row-gap: 4px;
-    min-height: 88px; margin: 0 -12px; padding: 16px 12px; border-radius: var(--radius-tile);
+    min-height: 96px; margin: 0 -12px; padding: 16px 12px; border-radius: var(--radius-tile);
     text-decoration: none; color: inherit; transition: background-color 0.2s;
   }
   .wts__row:hover { background: var(--color-paper-sunken); }
   .wts__tile { grid-row: span 2; align-self: start; margin-top: 2px; }
-  .wts__pain { font-size: 1.125rem; font-weight: 550; line-height: 1.4; letter-spacing: -0.01em; color: var(--fg); text-wrap: pretty; }
+  .wts__pain { font-size: 1.0625rem; font-weight: 550; line-height: 1.4; letter-spacing: -0.01em; color: var(--fg); text-wrap: pretty; }
   .wts__to { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9375rem; line-height: 1.4; color: var(--fg-2); }
   .wts__to :global(.wts__arrow) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
   .wts__row:hover .wts__to { color: var(--fg); }
   .wts__row:hover :global(.wts__arrow) { transform: translateX(3px); }
 
-  .wts-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; margin-top: 24px; }
-  .wts-foot p { font-size: 1rem; color: var(--fg-2); }
+  .wts-foot { display: grid; justify-items: start; gap: 14px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .wts-foot p { font-size: 0.9375rem; line-height: 1.5; color: var(--fg-2); }
 
+  @media (width < 64rem) {
+    .wts-intro, .wts { grid-column: 1 / -1; }
+    .wts-intro__title { max-width: 18ch; }
+    .wts { padding-top: 0; }
+    /* The CTA follows the list here, so the problems come before "More than one?". */
+    .wts-intro { display: contents; }
+    .wts-intro__title, .wts-intro__lead { grid-column: 1 / -1; }
+    .wts-intro__lead { margin-top: -14px; }
+    .wts { order: 1; }
+    .wts-foot { grid-column: 1 / -1; order: 2; margin-top: -8px; padding-top: 0; border-top: 0; }
+  }
   @media (width < 48rem) {
     .wts__list { grid-template-columns: minmax(0, 1fr); grid-auto-flow: row; grid-template-rows: none; }
     .wts__row { min-height: 0; padding: 14px 12px; }
-    .wts__pain { font-size: 1.0625rem; }
   }
   @media (width < 40rem) {
-    .wts-foot { flex-direction: column; align-items: stretch; }
-    .wts-foot :global(.btn) { width: 100%; }
+    .wts-foot :global(.btn) { width: 100%; justify-content: center; }
+    .wts-foot { justify-items: stretch; }
   }
 </style>

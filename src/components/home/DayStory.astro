@@ -5,7 +5,7 @@
 // waiting for approval, 6:00 the day's summary. Numbers and their derivations: daystory/day-data.ts.
 //
 // Layout
-// - Pinned (JS, motion allowed, >= 1024 x 560 or >= 768 x 880): the stage pins for ~3.3 screens and the
+// - Pinned (JS, motion allowed, >= 1024 x 560 or >= 768 x 880): the stage pins for ~2.9 screens and the
 //   scroll is the clock (daystory/day-motion.ts): the time runs minute by minute, the rail fills, the
 //   light moves from a warm morning to a navy evening, each window's work builds as you scroll and the
 //   moments hand off in depth. Copy and rail on the left, the five windows stacked on the right.
@@ -135,12 +135,16 @@ const preflight = `(function(){var s=document.currentScript&&document.currentScr
 
 <style>
   .ds { --ds-win-h: clamp(460px, calc(100svh - var(--header-h) - 104px), 580px); }
+  /* The page's sunken stages share hairline edges (2026-10-21), so the band reads as deliberate, not a second beige. */
+  .ds { border-block: 1px solid var(--color-rule); }
   .ds-head { margin-bottom: clamp(40px, 5vw, 72px); }
   .ds-aside { display: grid; gap: 14px; }
   .ds-hint { display: none; }
 
   /* ---- Static sequence: no JS, reduced motion, phones and short screens. Final states, readable. */
-  .ds-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: clamp(56px, 7vw, 104px); }
+  /* 2026-10-21: 48 to 72px between moments (was 56 to 104px): each row already carries a window, so less paper still
+     separates them, and the static sequence stays within the page's length. */
+  .ds-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: clamp(48px, 5vw, 72px); }
   .ds-narr, .ds-copies, .ds-win { display: contents; }
   .ds-railwrap, .ds-sky, .ds-glow, .ds-cue { display: none; }
   .ds-copy { grid-column: 1 / span 5; align-self: center; }

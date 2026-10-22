@@ -1,5 +1,6 @@
-// The interactive hero console (DESIGN.md §9.4; founder, 2026-10-14: "if there's a dashboard on it,
-// make it interactive"). OWNER: home-hero. Vanilla, no dependencies beyond the shared figures.
+// The interactive agent console in the home control room (#control; DESIGN.md §9.4; founder, 2026-10-14: "if
+// there's a dashboard on it, make it interactive"; 2026-10-21: moved out of the hero into its own section, whose
+// heading carries the "Try it" invitation). OWNER: home-hero. Vanilla, no dependencies beyond the shared figures.
 //
 // - Agent buttons (sidebar, or chips below 1280px) filter the log, KPIs, hours and head. Pressing the
 //   selected agent again, or "All agents", resets the filter.
@@ -61,7 +62,6 @@ function init(root: HTMLElement): void {
   const list = $('[data-appr-list]');
   const rail = $('[data-rail]');
   const kpis = $('[data-kpis]');
-  const hint = $('[data-hint]');
   const liveBtn = $<HTMLButtonElement>('[data-live]');
   const clockEl = root.querySelector<HTMLElement>('[data-clock]');
   const status = $('[data-announce]');
@@ -461,36 +461,11 @@ function init(root: HTMLElement): void {
     announce(userLive ? 'Live updates on.' : 'Live updates paused.');
   }
 
-  // ------------------------------------------------------------------ hint
-
-  let hintDone = false;
-  try {
-    hintDone = sessionStorage.getItem('halyard-console-hint') === '1';
-  } catch {
-    /* storage blocked: show the hint */
-  }
-  if (!hintDone) {
-    hint.hidden = false;
-    window.setTimeout(() => hint.classList.add('is-on'), reduce.matches ? 0 : 900);
-  }
-  function dismissHint(): void {
-    if (hintDone) return;
-    hintDone = true;
-    hint.classList.remove('is-on');
-    window.setTimeout(() => (hint.hidden = true), reduce.matches ? 0 : 500);
-    try {
-      sessionStorage.setItem('halyard-console-hint', '1');
-    } catch {
-      /* fine: it only comes back on the next visit */
-    }
-  }
-
   // ------------------------------------------------------------------ events
 
   root.addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button');
     if (!b || !root.contains(b)) return;
-    dismissHint();
     hold();
     const d = b.dataset;
     if (d.agent) setAgent(d.agent as AgentKey);
@@ -526,7 +501,6 @@ function init(root: HTMLElement): void {
     const j = keys[e.key];
     if (i < 0 || j === undefined) return;
     e.preventDefault();
-    dismissHint();
     hold();
     setTab(all[(j + all.length) % all.length].dataset.tab!, true);
   });

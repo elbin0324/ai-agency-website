@@ -5,6 +5,8 @@
 // .integ row. Copy: COPY.md §2.2, tightened; the strip stays quiet (no CTA).
 // Phones (under 640px, 2026-10-14 critique round): the 2-up grid of 16 tools took most of a screen, so it
 // becomes one wrapped line of names; the grid with its categories shows from 640px up.
+// 2026-10-21: it now follows the navy hero. The trademark sentence left the note: the footer's legal row says it on
+// every page, this one included.
 // Keep id="integrations": it is the anchor from COPY.md.
 import Marquee from '@/components/blocks/Marquee.astro';
 import { integrations, integrationsCopy } from '@/data/integrations';
@@ -37,18 +39,17 @@ const tools = [...integrations].sort((a, b) => rank(a.name) - rank(b.name));
       </ul>
       <p class="integ__micro">
         Plus most other software with an API or a clean export, including many field-service,
-        practice-management and ERP systems. Product names are trademarks of their owners, listed to
-        show what we connect to, not a partnership or endorsement.
+        practice-management and ERP systems.
       </p>
     </div>
   </div>
 </section>
 
 <style>
-  /* Sits right under the hero: the trust strip's bottom rule is this ledger's top rule. */
-  /* Short bottom padding: the demos band follows right away. */
-  .integ-section { padding-top: 0; padding-bottom: clamp(24px, 3vw, 40px); }
-  .integ { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; padding: 32px 0; border-bottom: 1px solid var(--color-rule); }
+  /* Right under the navy hero (the ledger's own padding gives it room). Short bottom padding and no closing rule:
+     the demos band follows right away, and its hairline edge closes the strip. */
+  .integ-section { padding-top: clamp(8px, 1.4vw, 16px); padding-bottom: clamp(24px, 3vw, 40px); }
+  .integ { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; padding: 32px 0; }
   .integ__label { grid-column: 1 / span 3; font-size: .9375rem; line-height: 1.5; color: var(--color-ink-2); }
   .integ__title { margin-bottom: 4px; font-size: .9375rem; font-weight: 600; line-height: 1.5; letter-spacing: 0; color: var(--color-ink); }
   /* Fixed 4-up (2-up under 768px) instead of auto-fill, which drops to 3 columns between 640 and

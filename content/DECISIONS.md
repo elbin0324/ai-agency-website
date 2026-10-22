@@ -19,3 +19,8 @@ Decisions the founder made during the build. Agents follow these over any defaul
   - Stay honest: never use a rate beyond BENCHMARKS.md's optimistic column, label everything "Modeled estimate" or "Illustrative example", show the math, and keep revenue and gross profit distinct ("added revenue" vs "added gross profit").
 - **The calculator covers more than time.** Add sections for customer inquiries, marketing, sales and consulting (margin, pricing, vendor costs) next to team time, with a combined total.
 - **The free assessment asks real questions** about the business, where the team's hours go, customers and growth, and priorities, so the first call starts with a draft estimate.
+
+## 2026-10-21
+
+- **Say "business", not "small and mid-size businesses", on the landing page** (founder: "get rid of 'for small and mis-size businesses and just say business'"). The home eyebrow, page title, meta description and the footer brand line say "for business". Other pages keep their wording unless he asks.
+- **Landing page: a bolder first impression; the dashboard stays but moves.** The interactive console is kept (it must stay interactive) in its own "Control room" section right after the demos. The hero is the "Night shift" concept ("Wake up to finished work."), picked by two judges over two alternatives, with the brand line "hal·yard (n.) The line that raises the sail."

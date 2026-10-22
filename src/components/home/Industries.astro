@@ -7,6 +7,8 @@
 // scenario on /results/ (#scenario-{id} opens it there); real estate and agencies, which have no scenario, open
 // the agent that fits them best. Under 640px the cells become two-up tiles (name and link only) so the
 // section stays short on phones; the descriptions show from 640px up.
+// 2026-10-21: on paper (it was a sunken band). Sunken now marks only the page's three stages (demos, day story,
+// why us), so the two beiges no longer alternate section by section.
 // Keep id="industries": it is the anchor from COPY.md and may be linked from other pages.
 import Section from '@/components/ui/Section.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
@@ -56,7 +58,7 @@ const items = industries.map((i) => {
   };
 });
 ---
-<Section id="industries" tone="sunken" aria-labelledby="industries-title">
+<Section id="industries" aria-labelledby="industries-title">
   <SectionHeader
     num={homeNum.industries}
     eyebrow={industriesCopy.eyebrow}
@@ -95,7 +97,7 @@ const items = industries.map((i) => {
     display: flex; flex-direction: column; height: 100%; margin: 0 8px 0 -12px; padding: 22px 14px 20px 12px;
     border-radius: var(--radius-tile); text-decoration: none; color: inherit; transition: background-color 0.2s;
   }
-  .ind-cell__link:hover { background: var(--color-paper); }
+  .ind-cell__link:hover { background: var(--color-paper-sunken); }
   .ind-cell__more { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 14px; font-size: 0.9375rem; font-weight: 550; color: var(--fg); }
   .ind-cell__more :global(.icon) { color: var(--accent-display); transition: transform 0.25s var(--ease-out-soft); }
   .ind-cell__link:hover .ind-cell__more :global(.icon) { transform: translateX(3px); }

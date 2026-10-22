@@ -1,15 +1,20 @@
 ---
 // Home: the whole story in one scroll (BRIEF.md site map, ARCHITECTURE.md). OWNER: foundation (layout).
 // Each section is its own component in src/components/home/, built by its owner; keep this order.
-// Background sequence (DESIGN.md §5): paper → sunken (demos) → paper (where to start) → sunken (day story)
-// → paper → navy (calculator) → paper → sunken (why-us) → paper → sunken (industries) → paper → navy (final CTA)
-// → footer.
+// Background sequence (DESIGN.md §5): navy night (hero) → paper (integrations) → sunken (demos) → paper (control
+// room, where to start) → sunken (day story) → paper (services) → navy (calculator) → paper (examples, process)
+// → sunken (why us, with security) → paper (industries, FAQ) → navy (final CTA) → footer. Sunken is kept for three
+// stages, so each change of paper means something.
 // 2026-10-14 critique round: shorter and less repetitive. "Same team. More gets done." (Outcomes) gave way to
 // "Where to start"; Why us, Security and Industries were cut down; pricing structure sits under How it works.
+// 2026-10-21: the "Night shift" hero (concept A of the hero comparison) runs under the header, which it re-inks
+// while it is in view (body.on-dark-hero, so the first paint is already dark); the agent console moved out of
+// the hero into the control room, right after the theater it extends; Why us and Security share one section.
 // Section numbers: src/components/home/story/sections.ts.
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Hero from '@/components/home/Hero.astro';
 import Integrations from '@/components/home/Integrations.astro';
+import ControlRoom from '@/components/home/ControlRoom.astro';
 import WhereToStart from '@/components/home/WhereToStart.astro';
 import DayStory from '@/components/home/DayStory.astro';
 import ServicesGrid from '@/components/home/ServicesGrid.astro';
@@ -18,16 +23,16 @@ import Savings from '@/components/home/Savings.astro';
 import ScenariosPreview from '@/components/home/ScenariosPreview.astro';
 import Process from '@/components/home/Process.astro';
 import Differentiators from '@/components/home/Differentiators.astro';
-import Security from '@/components/home/Security.astro';
 import Industries from '@/components/home/Industries.astro';
 import HomeFaq from '@/components/home/HomeFaq.astro';
 import FinalCta from '@/components/home/FinalCta.astro';
 import { homeNum } from '@/components/home/story/sections';
 ---
-<BaseLayout>
+<BaseLayout bodyClass="on-dark-hero">
   <Hero />
   <Integrations />
   <DemoTheater num={homeNum.demos} />
+  <ControlRoom />
   <WhereToStart />
   <DayStory num={homeNum.day} />
   <ServicesGrid />
@@ -35,7 +40,6 @@ import { homeNum } from '@/components/home/story/sections';
   <ScenariosPreview />
   <Process />
   <Differentiators />
-  <Security />
   <Industries />
   <HomeFaq />
   <FinalCta />

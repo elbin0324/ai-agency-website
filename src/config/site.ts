@@ -14,17 +14,19 @@ const name = 'Halyard';
 
 export const site = {
   name,
-  /** Primary tagline: home H1 and footer line (COPY.md §0.3). */
-  tagline: 'AI that earns its keep.',
+  /** Primary tagline: home H1 (its last two words are the page's brass italic phrase) and footer line.
+   *  2026-10-21: the "Night shift" hero's promise, which won the hero comparison; COPY.md §0.3's earlier primary
+   *  was "AI that earns its keep." After changing it, run `npm run og` so the share card matches. */
+  tagline: 'Wake up to finished work.',
   /** Secondary tagline for meta and banners (COPY.md §0.3, option 2). */
   taglineAlt: 'Done-for-you AI, measured in hours and dollars.',
-  /** Footer brand line (COPY.md §1.2). */
-  brandLine: 'Done-for-you AI agents and consulting for small and mid-size businesses.',
-  /** Default meta description (Home, COPY.md §1.5). */
+  /** Footer brand line (COPY.md §1.2; 2026-10-21: "for business", as the home eyebrow says). */
+  brandLine: 'Done-for-you AI agents and consulting for business.',
+  /** Default meta description (Home, COPY.md §1.5; 2026-10-21: "for business", under 155 characters). */
   description:
-    'We build and run AI agents that answer customers, work your numbers, clear your inbox, tune your ads and find new clients. Book a free AI assessment.',
-  /** Home <title> (COPY.md §1.5). Other pages use "{Page} | {site.name}", or seoTitles below. */
-  homeTitle: `${name} | Done-for-you AI for small and mid-size businesses`,
+    'Done-for-you AI agents for business: they answer customers, work your numbers, clear your inbox, tune your ads and find clients. Book a free AI assessment.',
+  /** Home <title> (COPY.md §1.5; 2026-10-21: "for business"). Other pages use "{Page} | {site.name}", or seoTitles below. */
+  homeTitle: `${name} | Done-for-you AI agents for business`,
   /** Search titles by route: what the page is, in the words people search with (a placeholder brand
    *  alone ranks for nothing). "{title} | {site.name}" stays within 60 characters. Routes not listed
    *  use the page name. Keyed by path, so a page renaming its heading never breaks its title. */
