@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://halyard.solutions/sitemap-index.xml
