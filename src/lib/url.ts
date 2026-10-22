@@ -1,4 +1,4 @@
-// Base-aware links (ARCHITECTURE.md). The site is served at the root of halyar.co (base '/'), but
+// Base-aware links (ARCHITECTURE.md). The site is served at the root of halyard.solutions (base '/'), but
 // every internal href and every public/ asset still goes through url(), so moving it under a base path
 // (for example /ai-agency-website/ on a GitHub Pages project URL) needs only astro.config.mjs.
 //

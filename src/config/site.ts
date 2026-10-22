@@ -38,7 +38,7 @@ export const site = {
     '/results/': 'AI savings calculator and worked examples',
     '/approach/': 'How we work: pilots, pricing and data security',
   } as Record<string, string>,
-  siteUrl: 'https://halyar.co/',
+  siteUrl: 'https://halyard.solutions/',
   locale: 'en_US',
 
   // TODO(founder): placeholder contact address (content/DECISIONS.md 2026-10-12).

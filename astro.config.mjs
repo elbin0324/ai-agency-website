@@ -5,12 +5,12 @@ import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
-// Served at the custom domain halyar.co (GitHub Pages; public/CNAME keeps the domain on every deploy).
+// Served at the custom domain halyard.solutions (GitHub Pages; public/CNAME keeps the domain on every deploy).
 // To go back to the project URL: site = 'https://elbin0324.github.io', base = '/ai-agency-website'.
 // Nothing else should need to change (every link goes through url() in src/lib/url.ts).
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://halyar.co',
+  site: 'https://halyard.solutions',
   base: '/',
   trailingSlash: 'ignore',
 
