@@ -6,6 +6,7 @@ Marketing site for Jay's done-for-you AI business: AI agents (Customer, Analyst,
 - **Repo:** github.com/elbin0324/ai-agency-website (public, branch `main`)
 - **Stack:** Astro 7 (static), Tailwind CSS 4 (`@theme` tokens), GSAP 3 (ScrollTrigger, SplitText), vanilla TypeScript, `@astrojs/sitemap`
 - **Last shipped (2026-10-21, `da99346`):** the "Night shift" landing page, with a dark hero ("Wake up to finished work."), the interactive console moved into a "Control room" section after the demos, and "for business" wording.
+- **Current state, pending decisions and next steps:** see `HANDOFF.md`. Read it first.
 
 ## Setting up a new machine
 
